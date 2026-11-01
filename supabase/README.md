@@ -16,11 +16,18 @@ SQL versionado do banco. Aplicar sempre na ordem do nome do arquivo.
 2. Cole o conteúdo do arquivo e execute.
 3. Confira em **Table Editor** se `profiles` existe e se o seu usuário aparece.
 
-### Opção 2 — Supabase CLI
+### Opção 2 — Supabase CLI / conexão direta
+
+Este projeto fica na região **ca-central-1**. A conexão direta
+(`db.<ref>.supabase.co`) resolve apenas em IPv6 e falha em redes IPv4. Use o
+**Session Pooler**:
 
 ```bash
-npx supabase db push --db-url "postgresql://postgres:SENHA@db.PROJETO.supabase.co:5432/postgres"
+npx supabase db push --db-url "postgresql://postgres.fohqznrdiyudnquynkdt:SENHA@aws-1-ca-central-1.pooler.supabase.com:5432/postgres"
 ```
+
+O host e a porta podem ser confirmados em **Dashboard → Connect → Direct →
+Session pooler**.
 
 ## Depois de aplicar
 

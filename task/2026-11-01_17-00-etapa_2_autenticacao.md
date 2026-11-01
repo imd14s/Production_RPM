@@ -70,10 +70,17 @@ npm run build       # / estática; /home, /login e /auth/signout dinâmicas; pro
 
 ## Pendência bloqueante
 
-A migration não pôde ser aplicada por linha de comando: a conexão direta
-(`db.<ref>.supabase.co`) resolve apenas em IPv6 e a rede local não tem rota IPv6.
+A migration não pôde ser aplicada por linha de comando. Diagnóstico:
 
-Aplicar pelo **SQL Editor** do painel ou informar a string do **Session Pooler**.
+- `db.<ref>.supabase.co` resolve apenas em IPv6 — rede local sem rota IPv6.
+- O tenant foi localizado no pooler **`aws-1-ca-central-1`**; a conexão chega ao banco
+  mas retorna `password authentication failed`, ou seja, a senha do `DATABASE_URL` está
+  incorreta.
+
+Resolver de uma das duas formas:
+
+1. **SQL Editor** do painel (não exige senha).
+2. Resetar/reconferir a senha do banco e atualizar `DATABASE_URL`.
 
 Depois disso:
 

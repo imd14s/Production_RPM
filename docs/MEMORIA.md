@@ -167,6 +167,11 @@ SQL Editor do painel. `supabase/README.md` documenta as duas opções.
 **Lição:** para automação em redes IPv4, usar sempre o **Session Pooler**, nunca a conexão
 direta.
 
+**Complemento (2026-11-01):** o tenant foi localizado em
+`aws-1-ca-central-1.pooler.supabase.com` (usuário `postgres.fohqznrdiyudnquynkdt`). A
+conexão passou a falhar em `password authentication failed`, indicando senha do banco
+incorreta. O host correto já está no `DATABASE_URL`; falta apenas a senha válida.
+
 ---
 
 ## [Decisão] - `profiles` é somente leitura para a aplicação (2026-11-01)
