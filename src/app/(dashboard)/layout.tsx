@@ -23,7 +23,8 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
-  if (!session.profile.isActive) {
+  // Sem perfil (migration não aplicada) ou conta inativa: encerra a sessão.
+  if (!session.profile || !session.profile.isActive) {
     redirect("/auth/signout");
   }
 

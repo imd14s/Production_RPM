@@ -5,7 +5,7 @@ import { parseProfile, type UserProfile } from "@/types/auth";
 export type SessionContext = {
   userId: string;
   email: string;
-  profile: UserProfile;
+  profile: UserProfile | null;
 };
 
 /**
@@ -13,7 +13,7 @@ export type SessionContext = {
  * O resultado é cacheado por requisição, evitando consultas repetidas no layout
  * e na página.
  *
- * @returns contexto da sessão ou null quando não há usuário ou perfil válido
+ * @returns contexto da sessão, ou null quando não há usuário autenticado
  */
 export const getSessionContext = cache(async (): Promise<SessionContext | null> => {
   const supabase = await createClient();
@@ -32,11 +32,9 @@ export const getSessionContext = cache(async (): Promise<SessionContext | null> 
     .eq("id", user.id)
     .maybeSingle();
 
-  const profile = parseProfile(data);
-
-  if (!profile) {
-    return null;
-  }
-
-  return { userId: user.id, email: user.email ?? "", profile };
+  return {
+    userId: user.id,
+    email: user.email ?? "",
+    profile: parseProfile(data),
+  };
 });

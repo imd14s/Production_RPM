@@ -15,7 +15,8 @@ export const metadata: Metadata = {
  */
 export default async function HomePage() {
   const session = await getSessionContext();
-  const firstName = session?.profile.fullName.split(" ")[0] ?? "";
+  const profile = session?.profile ?? null;
+  const firstName = profile?.fullName.split(" ")[0] ?? "";
 
   return (
     <div className={styles.page}>
@@ -31,7 +32,7 @@ export default async function HomePage() {
         <dl className={styles.details}>
           <div className={styles.detail}>
             <dt>Perfil</dt>
-            <dd>{session ? describeRole(session.profile.role) : "—"}</dd>
+            <dd>{profile ? describeRole(profile.role) : "—"}</dd>
           </div>
           <div className={styles.detail}>
             <dt>E-mail</dt>
