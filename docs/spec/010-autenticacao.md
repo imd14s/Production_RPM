@@ -1,7 +1,7 @@
 # Spec 010 — Autenticação e acesso
 
 **Etapa:** 2
-**Status:** Implementado — validação de login pendente (provedor de e-mail desabilitado)
+**Status:** Implementado
 **Última atualização:** 2026-11-01
 
 ## Objetivo

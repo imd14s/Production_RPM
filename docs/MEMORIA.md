@@ -229,5 +229,61 @@ afetado por RLS.
 **Lição:** privilégio mínimo também vale para RLS: se a interface não escreve, o banco não
 deve permitir escrita.
 
+---
+
+## [Decisão] - Menu lateral derivado de catálogo único (2026-11-01)
+
+**Problema Identificado:** a Etapa 3 pede navegação para módulos que ainda não existem.
+Links para rotas inexistentes geram 404 e contrariam a regra de não ter botão sem função.
+
+**Alternativas avaliadas:** (a) criar páginas vazias "em construção" — gera tela fictícia;
+(b) esconder módulos futuros — o usuário perde a visão do plano; (c) catálogo com
+`available`.
+
+**Correção:** `src/lib/navigation.ts` concentra o catálogo. Item `available: true` vira
+link; `available: false` é renderizado como texto com etiqueta "em breve". A contagem de
+módulos da tela inicial e o filtro por perfil saem da mesma fonte.
+
+**Validação:** `src/lib/navigation.test.ts` cobre rota ativa, subrota, visibilidade por
+perfil e separação entre disponíveis e planejados.
+
+**Lição:** navegação é dado, não marcação repetida em cada tela. Um catálogo único evita
+menu e página inicial contando coisas diferentes.
+
+---
+
+## [Armadilha] - Hora do servidor em UTC engana a saudação (2026-11-01)
+
+**Problema Identificado:** a primeira versão da tela inicial usava `new Date().getHours()`
+no servidor. Em produção (Vercel) o servidor roda em UTC: às 20h de Brasília o sistema
+diria "Boa noite" corretamente por acaso, mas às 9h diria "Boa tarde".
+
+**Causa Raiz:** `getHours()` depende do fuso do processo, não do usuário.
+
+**Correção:** `getHourInTimeZone(date, "America/Sao_Paulo")` via `Intl.DateTimeFormat`, e
+`formatLongDate` recebe o mesmo fuso. Teste cobre conversão de UTC para São Paulo e o caso
+de meia-noite.
+
+**Validação:** `src/lib/date.test.ts` (conversão, meia-noite, hora inválida).
+
+**Lição:** data e hora exibidas ao usuário sempre declaram fuso. Nunca confie no fuso do
+ambiente de execução — em hospedagem ele costuma ser UTC.
+
+---
+
+## [Decisão] - Componentes de tabela, modal e notificação adiados (2026-11-01)
+
+**Problema Identificado:** a Etapa 3 do `task.md` menciona tabelas, formulários, modais e
+notificações, mas nenhuma tela desta etapa precisa deles.
+
+**Correção:** criar apenas `Button`, `Badge`, `Card` e os componentes de layout. Tabela,
+modal, formulário genérico e notificações entram junto com a primeira tela real que os use
+(Etapa 4 em diante).
+
+**Validação:** spec 020 registra o escopo e o motivo.
+
+**Lição:** componente sem consumidor é código morto. A ordem correta é tela real →
+componente necessário, não o contrário.
+
 
 

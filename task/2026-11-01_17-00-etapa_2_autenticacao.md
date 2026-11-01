@@ -2,7 +2,7 @@
 
 **Data de Criação:** 2026-11-01 17:00
 **Agente:** OpenCode — DeepSeek V4.1 Flash Free
-**Status:** Implementação concluída; migration pendente de aplicação
+**Status:** Concluída (migration aplicada e login validado)
 **Etapa:** 2 de 9 (ver `task.md`)
 
 ## Objetivo
@@ -72,6 +72,6 @@ npm run build       # / estática; /home, /login e /auth/signout dinâmicas; pro
 
 - ~~Migration~~ — **aplicada em 2026-11-01** via Session Pooler (`aws-1-ca-central-1`).
 - ~~Promover administrador~~ — `eversond14s@gmail.com` está como `administrador`.
-- **Provedor de e-mail desabilitado**: `POST /auth/v1/token` retorna
-  `email_provider_disabled`. Reativar em Authentication → Sign In / Providers → Email,
-  mantendo "Allow new users to sign up" desligado.
+- ~~Login~~ — validado pelo responsável em 2026-11-01.
+- ~~Provedor de e-mail desabilitado~~ — reativado; `external.email: true` e
+  `disable_signup: true` confirmados por API.
