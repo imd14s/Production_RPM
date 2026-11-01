@@ -40,9 +40,8 @@ Leia silenciosamente, nesta ordem:
 4. **`./docs/spec/[dominio].md`** — spec da funcionalidade afetada
 5. **`./task/`** — tasks e status atual
 
-> Esses arquivos ainda **não existem**: são criados na **Etapa 1 (Fundação)**.
-> Enquanto não existirem, trabalhe apenas com `task.md` e reporte a ausência — não
-> invente documentação paralela.
+> Todos já existem a partir da Etapa 1. Ao criar uma nova área, crie também a spec em
+> `./docs/spec/` e registre-a em `./docs/MASTER_INDEX.md`.
 
 ---
 
@@ -164,19 +163,25 @@ denominador inválido.
 
 ---
 
-## 8. Testes
+## 8. Testes — **somente unitários, de lógica**
 
-| Camada | Onde | Foco |
-|--------|------|------|
-| Unit | `src/**/*.test.ts(x)` — Jest + Testing Library | Componente e funções isoladas, motor de cálculo |
-| Integration | `src/**/*.integration.test.tsx` — MSW (futuro) | Contrato de dados sem backend real |
-| E2E | `tests-e2e/*.spec.ts` — Playwright | Login, RBAC, rotas privadas, fluxo completo |
+| Item | Regra |
+|------|-------|
+| Ferramenta | Jest (`npm run test`) |
+| Arquivos | `src/**/*.test.ts` |
+| Ambiente | `node` — sem DOM |
+| Alvo | Lógica pura: motor de cálculo, validações, conversões, utilitários |
+| Cobertura | Focada em `src/services/` e `src/lib/` |
+
+**Fora de escopo nesta versão:** testes de componente (Testing Library), integração
+(MSW) e end-to-end (Playwright). Não instale essas ferramentas sem autorização.
 
 - Testes e specs são **fonte de verdade**: teste falhou → corrija a implementação.
+- Todo módulo de lógica nova nasce com teste; caso de borda (valor inválido, zero,
+  negativo, divisor nulo) também é testado.
 - **Nunca** altere um teste existente para fazê-lo passar. Se precisar, explique o
   motivo e aguarde autorização.
-- Integration/E2E não podem usar `jest.mock` de serviço — isso recria a regra de negócio
-  em TypeScript e divergência silenciosa.
+- Não use mocks que reimplementem regra de negócio — teste a função real.
 
 ---
 
@@ -229,6 +234,7 @@ schema + migrations + RLS (banco)
 | 9 | Nunca alterar migration aplicada sem estratégia de migração |
 | 10 | Nenhuma tela fictícia, botão sem função ou dado simulado apresentado como real |
 | 11 | Concluir, testar e documentar uma etapa antes de iniciar a seguinte |
+| 12 | Testes são **somente unitários de lógica** (Jest); sem E2E, integração ou teste de componente sem autorização |
 
 ---
 
@@ -268,3 +274,14 @@ sem validar a anterior.
 | "Hierarquia: tests backend (API) → backend" | **Adaptada** | Não existe API separada; a verdade é schema + motor de cálculo |
 | "Skills `backend-clean-arch-guard`, `api-melhor-envio`" | **Removidas** | Sem backend próprio e sem integração de frete |
 | "Nunca modificar `dev` e `main`" | **Ajustada** | `dev` é a branch de trabalho; `main` permanece protegida |
+| "Unit + Integration (MSW) + E2E (Playwright)" | **Reduzida** | Apenas testes unitários de lógica com Jest |
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+## This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->
