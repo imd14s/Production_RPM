@@ -25,7 +25,7 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
   {
     label: "Configurações",
     href: "/configuracoes",
-    available: false,
+    available: true,
     minimumRole: "administrador",
   },
 ];

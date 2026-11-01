@@ -46,21 +46,19 @@ describe("buildNavigation", () => {
     expect(navigation.planned.length).toBeGreaterThan(0);
   });
 
-  it("hides planned admin settings from operators", () => {
-    const navigation = buildNavigation("operador");
-
-    expect(navigation.planned.some((item) => item.href === "/configuracoes")).toBe(false);
-  });
-
-  it("shows planned admin settings to administrators", () => {
+  it("shows settings to administrators as an available item", () => {
     const navigation = buildNavigation("administrador");
 
-    expect(navigation.planned.some((item) => item.href === "/configuracoes")).toBe(true);
+    expect(navigation.available.map((item) => item.href)).toEqual([
+      "/home",
+      "/configuracoes",
+    ]);
   });
 });
 
 describe("countAvailableModules", () => {
-  it("counts only available modules", () => {
-    expect(countAvailableModules("administrador")).toBe(1);
+  it("counts only available modules per role", () => {
+    expect(countAvailableModules("administrador")).toBe(2);
+    expect(countAvailableModules("operador")).toBe(1);
   });
 });
