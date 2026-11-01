@@ -12,6 +12,7 @@ type SelectFieldProps = {
   options: SelectOption[];
   defaultValue?: string;
   error?: string;
+  hint?: string;
   required?: boolean;
   onChange?: ChangeEventHandler<HTMLSelectElement>;
 };
@@ -24,6 +25,7 @@ type SelectFieldProps = {
  * @param options valores disponíveis
  * @param defaultValue opção selecionada inicialmente
  * @param error mensagem de validação
+ * @param hint texto auxiliar
  * @param required indica preenchimento obrigatório
  * @param onChange ação executada quando a seleção muda
  * @returns select acessível
@@ -34,6 +36,7 @@ export function SelectField({
   options,
   defaultValue,
   error,
+  hint,
   required = false,
   onChange,
 }: SelectFieldProps) {
@@ -52,7 +55,9 @@ export function SelectField({
         required={required}
         onChange={onChange}
         aria-invalid={error ? true : undefined}
-        aria-describedby={error ? `${name}-error` : undefined}
+        aria-describedby={
+          error ? `${name}-error` : hint ? `${name}-hint` : undefined
+        }
       >
         {options.map((option) => (
           <option key={option.value} value={option.value}>
@@ -60,6 +65,12 @@ export function SelectField({
           </option>
         ))}
       </select>
+
+      {hint && !error ? (
+        <p className={styles.hint} id={`${name}-hint`}>
+          {hint}
+        </p>
+      ) : null}
 
       {error ? (
         <p className={styles.error} id={`${name}-error`}>

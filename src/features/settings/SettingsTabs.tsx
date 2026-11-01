@@ -8,6 +8,7 @@ import styles from "./SettingsTabs.module.css";
 const SETTINGS_TABS = [
   { label: "Empresa", href: "/configuracoes" },
   { label: "Impostos", href: "/configuracoes/impostos" },
+  { label: "Canais", href: "/configuracoes/canais" },
 ];
 
 /**

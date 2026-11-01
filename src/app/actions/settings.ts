@@ -21,7 +21,7 @@ const UNEXPECTED_MESSAGE = "Não foi possível concluir a operação. Tente nova
  *
  * @returns contexto da sessão quando autorizado, ou null
  */
-async function getAdminSession() {
+export async function getAdminSession() {
   const session = await getSessionContext();
 
   if (!session || !session.profile || session.profile.role !== "administrador") {
