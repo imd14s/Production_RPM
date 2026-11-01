@@ -1,0 +1,68 @@
+/**
+ * Tokens globais do sistema.
+ * Somente variáveis: cores, espaçamentos, raios, sombras e tipografia.
+ * Nenhum seletor de componente deve viver aqui.
+ */
+
+:root {
+  /* Cores base */
+  --color-background: #f7f7f8;
+  --color-surface: #ffffff;
+  --color-border: #e4e4e7;
+  --color-text: #18181b;
+  --color-text-muted: #6b7280;
+
+  /* Cores de ação e estado */
+  --color-primary: #6d28d9;
+  --color-primary-hover: #5b21b6;
+  --color-success: #15803d;
+  --color-warning: #b45309;
+  --color-danger: #b91c1c;
+
+  /* Espaçamentos */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  /* Raios */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+
+  /* Sombras */
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 6%);
+  --shadow-md: 0 8px 24px rgb(0 0 0 / 8%);
+
+  /* Tipografia */
+  --font-sans: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-md: 16px;
+  --font-size-lg: 20px;
+  --font-size-xl: 28px;
+  --font-size-2xl: 40px;
+
+  /* Camadas */
+  --z-modal: 1000;
+  --z-toast: 1100;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-background: #0a0a0b;
+    --color-surface: #141417;
+    --color-border: #2a2a30;
+    --color-text: #ededf0;
+    --color-text-muted: #9ca3af;
+
+    --color-primary: #a78bfa;
+    --color-primary-hover: #c4b5fd;
+  }
+}
