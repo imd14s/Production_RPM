@@ -1,7 +1,7 @@
 # Spec 010 — Autenticação e acesso
 
 **Etapa:** 2
-**Status:** Em andamento
+**Status:** Em andamento — código pronto, migration pendente de aplicação
 **Última atualização:** 2026-11-01
 
 ## Objetivo
@@ -72,8 +72,7 @@ Regras:
 | Tabela | Operação | Regra |
 |--------|----------|-------|
 | `profiles` | `select` | Usuário lê o próprio perfil; administrador lê todos |
-| `profiles` | `update` | Somente administrador, e nunca o próprio `role` |
-| `profiles` | `insert` / `delete` | Bloqueado para o app (feito pelo gatilho/painel) |
+| `profiles` | `insert` / `update` / `delete` | Bloqueado para o app — feito no painel do Supabase |
 
 Função auxiliar `public.is_admin()` em `security definer` para evitar recursão de policy.
 

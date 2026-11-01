@@ -6,15 +6,15 @@ alterar código.
 ## Estado atual
 
 - Etapa concluída: **1 — Fundação**
-- Etapa em andamento: **nenhuma**
-- Próxima etapa: **2 — Supabase e autenticação**
+- Etapa em andamento: **2 — Autenticação** (código pronto, migration pendente)
+- Próxima etapa: **3 — Identidade visual e estrutura**
 
 ## Áreas
 
 | Área | Pasta | Spec | Status |
 |------|-------|------|--------|
 | Fundação, stack, scripts e estilos base | `src/styles`, `src/lib/utils`, raiz | [`spec/000-fundacao.md`](./spec/000-fundacao.md) | Implementado |
-| Autenticação, perfis e RLS | `src/app/(auth)`, `src/lib/auth`, `src/services/supabase` | [`spec/010-autenticacao.md`](./spec/010-autenticacao.md) | Spec criada |
+| Autenticação, perfis e RLS | `src/app/(auth)`, `src/lib/auth`, `src/services/supabase` | [`spec/010-autenticacao.md`](./spec/010-autenticacao.md) | Implementado — migration pendente |
 | Configurações da empresa e tributos | `src/features/settings`, `src/app/(dashboard)/configuracoes` | `spec/020-configuracoes.md` | Não iniciado |
 | Canais e taxas de pagamento | `src/features/pricing`, `src/app/(dashboard)/precificacao` | `spec/030-canais.md` | Não iniciado |
 | Insumos e fornecedores | `src/features/supplies`, `src/app/(dashboard)/insumos` | `spec/040-insumos.md` | Não iniciado |

@@ -148,4 +148,43 @@ autentica, mantém sessão e lê o perfil em `profiles` respeitando RLS.
 **Lição:** tirar a gestão de identidade da aplicação elimina a credencial mais perigosa do
 sistema — não há como vazar o que não existe no código.
 
+---
+
+## [Armadilha] - Conexão direta do Supabase é IPv6 e falha na rede local (2026-11-01)
+
+**Problema Identificado:** aplicar a migration via `pg` retornou
+`connect ENETUNREACH 2600:1f11:...:5432`.
+
+**Causa Raiz:** `db.<ref>.supabase.co` publica apenas endereço IPv6; a rede local não tem
+rota IPv6. O host do pooler (`aws-0-<região>.pooler.supabase.com`) resolve em IPv4, mas
+exige a região correta e o usuário `postgres.<ref>`.
+
+**Correção:** enquanto a string do pooler não é informada, a migration é aplicada pelo
+SQL Editor do painel. `supabase/README.md` documenta as duas opções.
+
+**Validação:** `npm run build`, `lint` e 33 testes verdes; falta apenas executar o SQL.
+
+**Lição:** para automação em redes IPv4, usar sempre o **Session Pooler**, nunca a conexão
+direta.
+
+---
+
+## [Decisão] - `profiles` é somente leitura para a aplicação (2026-11-01)
+
+**Problema Identificado:** com a gestão de usuários no painel, políticas de escrita em
+`profiles` dariam ao app um poder que ele não precisa.
+
+**Causa Raiz:** a spec inicial previa que o administrador alterasse perfis dentro do
+sistema.
+
+**Correção:** RLS apenas com `select` (próprio perfil e, para administrador, todos). Sem
+`insert`, `update` ou `delete`. O painel do Supabase usa credencial administrativa e não é
+afetado por RLS.
+
+**Validação:** migration `20261101170000_create_profiles.sql` e spec 010.
+
+**Lição:** privilégio mínimo também vale para RLS: se a interface não escreve, o banco não
+deve permitir escrita.
+
+
 
