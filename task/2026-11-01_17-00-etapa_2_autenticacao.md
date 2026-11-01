@@ -70,19 +70,8 @@ npm run build       # / estática; /home, /login e /auth/signout dinâmicas; pro
 
 ## Pendência bloqueante
 
-A migration não pôde ser aplicada por linha de comando. Diagnóstico:
-
-- `db.<ref>.supabase.co` resolve apenas em IPv6 — rede local sem rota IPv6.
-- O tenant foi localizado no pooler **`aws-1-ca-central-1`**; a conexão chega ao banco
-  mas retorna `password authentication failed`, ou seja, a senha do `DATABASE_URL` está
-  incorreta.
-
-Resolver de uma das duas formas:
-
-1. **SQL Editor** do painel (não exige senha).
-2. Resetar/reconferir a senha do banco e atualizar `DATABASE_URL`.
-
-Depois disso:
-
-1. Promover o primeiro usuário a `administrador`.
-2. Testar login, logout e rota protegida no navegador.
+- ~~Migration~~ — **aplicada em 2026-11-01** via Session Pooler (`aws-1-ca-central-1`).
+- ~~Promover administrador~~ — `eversond14s@gmail.com` está como `administrador`.
+- **Provedor de e-mail desabilitado**: `POST /auth/v1/token` retorna
+  `email_provider_disabled`. Reativar em Authentication → Sign In / Providers → Email,
+  mantendo "Allow new users to sign up" desligado.

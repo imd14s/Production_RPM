@@ -168,9 +168,47 @@ SQL Editor do painel. `supabase/README.md` documenta as duas opções.
 direta.
 
 **Complemento (2026-11-01):** o tenant foi localizado em
-`aws-1-ca-central-1.pooler.supabase.com` (usuário `postgres.fohqznrdiyudnquynkdt`). A
-conexão passou a falhar em `password authentication failed`, indicando senha do banco
-incorreta. O host correto já está no `DATABASE_URL`; falta apenas a senha válida.
+`aws-1-ca-central-1.pooler.supabase.com` (usuário `postgres.fohqznrdiyudnquynkdt`). Com a
+senha correta, a migration foi aplicada e o pooler passou a ser o `DATABASE_URL` do
+projeto.
+
+---
+
+## [Armadilha] - `new URL()` corrompe senha de banco com `@` ou `%` (2026-11-01)
+
+**Problema Identificado:** após reescrever o `DATABASE_URL` com `new URL(value)` e
+`url.toString()`, a autenticação passou a falhar com `password authentication failed`. A
+senha mudou de 15 para 21 caracteres.
+
+**Causa Raiz:** a senha contém `@`; o parser tratou o trecho depois do `@` como host e
+reconstruiu a URL com a credencial quebrada. Não havia backup do arquivo.
+
+**Correção:** reescrever a string manualmente com `encodeURIComponent(senha)`, nunca
+passando a senha por `new URL`.
+
+**Validação:** conexão restabelecida e migration aplicada.
+
+**Lição:** credenciais não passam por parser de URL. Ao manipular `DATABASE_URL`,
+codifique a senha explicitamente e preserve o valor original fora do git.
+
+---
+
+## [Armadilha] - Desabilitar o provedor Email bloqueia todo login (2026-11-01)
+
+**Problema Identificado:** `POST /auth/v1/token` retornou
+`422 email_provider_disabled` mesmo com usuário válido.
+
+**Causa Raiz:** ao tentar impedir cadastro público, o provedor **Email** foi desligado por
+completo. Isso remove o login por e-mail/senha, não apenas o cadastro.
+
+**Correção:** manter o provedor **Email** habilitado e desligar apenas
+**"Allow new users to sign up"**.
+
+**Validação:** `GET /auth/v1/settings` deve mostrar `external.email: true` e
+`disable_signup: true`.
+
+**Lição:** em Supabase, "desabilitar cadastro" e "desabilitar provedor" são chaves
+diferentes; a primeira é `disable_signup`, a segunda derruba o login.
 
 ---
 
