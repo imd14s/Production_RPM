@@ -101,3 +101,23 @@ restritos a tokens, tipografia e reset em `src/styles/`.
 `/` como estática.
 
 **Lição:** a fundação só está pronta quando o pipeline local roda de ponta a ponta.
+
+---
+
+## [Decisão] - Identidade visual "Aruanda Gestão — Natural & Moderno" (2026-11-01)
+
+**Problema Identificado:** a fundação nasceu com paleta provisória (roxo), sem relação com
+o uso real do sistema — sessões longas de cadastro, tabelas e leitura de números.
+
+**Causa Raiz:** etapa 1 tinha como objetivo apenas validar a stack.
+
+**Correção:** adotada a paleta definida em `visual.md`: verde petróleo `#174D43` como cor
+de ação, verde natural `#39866B`, âmbar `#D5A044` para destaques pontuais, fundo suave
+`#F4F6F2` e texto grafite esverdeado `#25352F`. Tokens atualizados em
+`src/styles/variables.css`; modo escuro adiado.
+
+**Validação:** `npm run build`, `npm run lint` e `npm run test` continuam verdes.
+
+**Lição:** a identidade define os tokens antes das telas; telas devem consumir variáveis,
+nunca cores literais.
+

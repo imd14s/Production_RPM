@@ -36,3 +36,10 @@ cobertos por testes unitários.
 ## Fonte de verdade
 
 `task.md` → `docs/spec/` → testes → código.
+
+## Referências
+
+| Documento | Conteúdo |
+|-----------|----------|
+| [`visual.md`](../visual.md) | Identidade visual: paleta, tipografia, formas e organização. Base dos tokens de `src/styles/variables.css` e da Etapa 3. |
+| [`MEMORIA.md`](./MEMORIA.md) | Decisões, bugs e lições aprendidas. |
