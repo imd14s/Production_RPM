@@ -271,6 +271,44 @@ ambiente de execução — em hospedagem ele costuma ser UTC.
 
 ---
 
+## [Decisão] - Taxa de canal é tabela filha, não coluna (2026-11-01)
+
+**Problema Identificado:** um canal de venda tem várias taxas (comissão, frete,
+adicional de anúncio), cada uma com condição de pagamento própria.
+
+**Alternativas avaliadas:** colunas `fee_percentual`/`fee_fixo` no canal — não comporta
+mais de uma taxa nem condição por faixa de parcelas.
+
+**Correção:** `channel_fees` como filha de `sales_channels`, com `installments` opcional
+(nulo = vale para qualquer condição). Mesma estrutura será replicada para
+`payment_fees` na 4.3.
+
+**Validação:** migration `20261101200000` e testes de validação de taxa.
+
+**Lição:** quando o requisito diz "taxas configuráveis", o plural pede tabela filha.
+
+---
+
+## [Armadilha] - Importar constante do módulo errado passa no build e falha em runtime (2026-11-01)
+
+**Problema Identificado:** `CHANNEL_KINDS` foi importado de `features/settings/types`,
+onde não existe. `undefined.includes` estourou no primeiro teste de validação.
+
+**Causa Raiz:** dois módulos de tipos com nomes parecidos (`settings` e `channels`) e
+import automático apontando para o arquivo errado. TypeScript só acusaria em
+`strict` se o tipo não existisse — a constante existia em outro módulo com o mesmo
+nome do esperado pela leitura apressada.
+
+**Correção:** importar de `@/features/channels/types`. O teste de validação pegou o
+erro antes da tela existir.
+
+**Validação:** `src/lib/validations/channels.test.ts` (10 testes).
+
+**Lição:** módulos de tipos de domínios irmãos são terreno de importação confusa;
+o teste unitário da validação é quem segura esse tipo de escorregão.
+
+---
+
 ## [Decisão] - Componentes de tabela, modal e notificação adiados (2026-11-01)
 
 **Problema Identificado:** a Etapa 3 do `task.md` menciona tabelas, formulários, modais e
