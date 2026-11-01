@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { signInAction, type SignInState } from "@/app/actions/auth";
+import { Button } from "@/components/ui/Button/Button";
 import styles from "./LoginForm.module.css";
 
 const INITIAL_STATE: SignInState = { error: "" };
@@ -46,9 +47,9 @@ export function LoginForm() {
         </p>
       ) : null}
 
-      <button className={styles.submit} type="submit" disabled={isPending}>
+      <Button type="submit" className={styles.submit} disabled={isPending}>
         {isPending ? "Entrando..." : "Entrar"}
-      </button>
+      </Button>
     </form>
   );
 }
