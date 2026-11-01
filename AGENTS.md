@@ -8,8 +8,10 @@
 
 ## 1. Escopo e stack (não negociável)
 
-Aplicação web **privada** (sem cadastro público), com login obrigatório e usuários
-administrados pelo administrador. Perfis: **administrador** e **operador**.
+Aplicação web **privada** (sem cadastro público), com login obrigatório. Os usuários são
+criados, ativados e perfilados **no painel do Supabase**, pelo responsável do projeto —
+a aplicação **não** cria, convida ou gerencia usuários. Perfis: **administrador** e
+**operador**.
 
 | Camada | Tecnologia |
 |--------|------------|
@@ -117,11 +119,15 @@ Regras:
 
 ### Acesso a dados
 - Operações comuns: **Supabase JS direto**, protegido por RLS.
-- Operações privilegiadas (administração de usuários, alterações sensíveis):
-  **Server Actions / Route Handlers** no servidor.
-- **Nunca** exponha `service_role` no navegador. **Nunca** desative RLS para facilitar
+- Operações privilegiadas (alterações sensíveis): **Server Actions / Route Handlers** no
+  servidor.
+- A aplicação **não** possui `service_role`: usa apenas a chave publicável. Gestão de
+  identidade (criar, desativar, redefinir senha, definir perfil) é feita no painel do
+  Supabase.
+- **Nunca** exponha chaves secretas no navegador. **Nunca** desative RLS para facilitar
   o desenvolvimento. A interface não é mecanismo de segurança — a autorização é
   verificada no servidor **e** no banco.
+- Não crie telas de cadastro, convite, troca de senha ou gestão de usuários.
 
 ---
 
@@ -235,6 +241,7 @@ schema + migrations + RLS (banco)
 | 10 | Nenhuma tela fictícia, botão sem função ou dado simulado apresentado como real |
 | 11 | Concluir, testar e documentar uma etapa antes de iniciar a seguinte |
 | 12 | Testes são **somente unitários de lógica** (Jest); sem E2E, integração ou teste de componente sem autorização |
+| 13 | Gestão de usuários é feita no painel do Supabase; a aplicação não cria, convida nem altera credenciais |
 
 ---
 

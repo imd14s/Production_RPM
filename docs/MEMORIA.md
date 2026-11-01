@@ -121,3 +121,31 @@ de ação, verde natural `#39866B`, âmbar `#D5A044` para destaques pontuais, fu
 **Lição:** a identidade define os tokens antes das telas; telas devem consumir variáveis,
 nunca cores literais.
 
+---
+
+## [Decisão] - Gestão de usuários fora da aplicação (2026-11-01)
+
+**Problema Identificado:** a especificação original previa que o administrador criasse e
+convidesse usuários dentro do sistema, o que exigiria `service_role` no servidor e uma
+tela de gestão de identidade.
+
+**Causa Raiz:** conveniência de centralizar tudo em uma única interface.
+
+**Correção:** a criação, redefinição de senha, desativação e definição de perfil passam a
+ser feitas **no painel do Supabase**, pelo responsável do projeto. A aplicação apenas
+autentica, mantém sessão e lê o perfil em `profiles` respeitando RLS.
+
+**Consequências:**
+
+- `SUPABASE_SERVICE_ROLE_KEY` deixa de existir no `.env.local` — a aplicação usa somente
+  a chave publicável.
+- Não há telas de cadastro, convite, troca de senha ou gestão de usuários.
+- O cadastro público continua desabilitado no Supabase.
+- `DATABASE_URL` fica apenas para migrations; o runtime não a utiliza.
+
+**Validação:** spec `docs/spec/010-autenticacao.md` e regras do agente atualizadas.
+
+**Lição:** tirar a gestão de identidade da aplicação elimina a credencial mais perigosa do
+sistema — não há como vazar o que não existe no código.
+
+
