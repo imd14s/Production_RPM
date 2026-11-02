@@ -2,8 +2,9 @@
 
 import { useActionState, useEffect, useState, type ChangeEvent } from "react";
 import { saveChannelFeeAction } from "@/app/actions/channels";
-import { Alert } from "@/components/ui/Alert/Alert";
+import { FormAlert } from "@/components/feedback/FormAlert/FormAlert";
 import { Button } from "@/components/ui/Button/Button";
+import { LoadingOverlay } from "@/components/ui/LoadingOverlay/LoadingOverlay";
 import { SelectField } from "@/components/ui/SelectField/SelectField";
 import { TextAreaField } from "@/components/ui/TextAreaField/TextAreaField";
 import { TextField } from "@/components/ui/TextField/TextField";
@@ -77,9 +78,7 @@ export function FeeForm({ channelId, fee, onCancel, onSaved }: FeeFormProps) {
     <form className={styles.form} action={formAction} noValidate>
       <h3 className={styles.title}>{isEditing ? "Editar taxa" : "Nova taxa"}</h3>
 
-      {state.status !== "idle" ? (
-        <Alert tone={state.status === "success" ? "success" : "error"}>{state.message}</Alert>
-      ) : null}
+      {state.status !== "idle" ? <FormAlert state={state} /> : null}
 
       <input type="hidden" name="channelId" value={channelId} />
 
@@ -158,6 +157,8 @@ export function FeeForm({ channelId, fee, onCancel, onSaved }: FeeFormProps) {
           {isPending ? "Salvando..." : isEditing ? "Salvar taxa" : "Cadastrar taxa"}
         </Button>
       </div>
+
+      {isPending ? <LoadingOverlay message="Salvando taxa..." /> : null}
     </form>
   );
 }

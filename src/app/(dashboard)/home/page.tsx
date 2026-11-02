@@ -11,6 +11,9 @@ export const metadata: Metadata = {
   title: "Início — Ateliê Filhos de Aruanda",
 };
 
+// A página lê a sessão por requisição: rota bloqueante, sem navegação instantânea.
+export const instant = false;
+
 /**
  * Página inicial da área restrita.
  * Mostra apenas dados reais da sessão e o que já está disponível no sistema.

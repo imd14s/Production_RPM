@@ -2,8 +2,9 @@
 
 import { useActionState } from "react";
 import { saveCompanyAction } from "@/app/actions/settings";
-import { Alert } from "@/components/ui/Alert/Alert";
+import { FormAlert } from "@/components/feedback/FormAlert/FormAlert";
 import { Button } from "@/components/ui/Button/Button";
+import { LoadingOverlay } from "@/components/ui/LoadingOverlay/LoadingOverlay";
 import { SelectField } from "@/components/ui/SelectField/SelectField";
 import { TextField } from "@/components/ui/TextField/TextField";
 import { EMPTY_SETTINGS_STATE } from "@/features/settings/formState";
@@ -42,9 +43,7 @@ export function CompanyForm({ company }: CompanyFormProps) {
 
   return (
     <form className={styles.form} action={formAction} noValidate>
-      {state.status !== "idle" ? (
-        <Alert tone={state.status === "success" ? "success" : "error"}>{state.message}</Alert>
-      ) : null}
+      {state.status !== "idle" ? <FormAlert state={state} /> : null}
 
       <fieldset className={styles.group}>
         <legend className={styles.legend}>Identificação</legend>
@@ -236,6 +235,8 @@ export function CompanyForm({ company }: CompanyFormProps) {
           {isPending ? "Salvando..." : "Salvar dados"}
         </Button>
       </div>
+
+      {isPending ? <LoadingOverlay message="Salvando dados da empresa..." /> : null}
     </form>
   );
 }

@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import { toggleChannelFeeAction } from "@/app/actions/channels";
 import { Badge } from "@/components/ui/Badge/Badge";
 import { Button } from "@/components/ui/Button/Button";
+import { PendingButton } from "@/components/ui/PendingButton/PendingButton";
 import { FeeForm } from "@/features/channels/FeeForm";
 import { TAX_KIND_LABELS, type Channel, type ChannelFee } from "@/features/channels/types";
 import { formatCents } from "@/lib/money";
@@ -95,9 +96,13 @@ export function ChannelFeesPanel({ channel, fees }: ChannelFeesPanelProps) {
                             name="isActive"
                             value={String(!fee.isActive)}
                           />
-                          <Button type="submit" variant="ghost" size="sm">
+                          <PendingButton
+                            pendingMessage={
+                              fee.isActive ? "Desativando taxa..." : "Ativando taxa..."
+                            }
+                          >
                             {fee.isActive ? "Desativar" : "Ativar"}
-                          </Button>
+                          </PendingButton>
                         </form>
                       </div>
                     </td>

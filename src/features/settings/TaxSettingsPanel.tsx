@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import { toggleTaxAction } from "@/app/actions/settings";
 import { Badge } from "@/components/ui/Badge/Badge";
 import { Button } from "@/components/ui/Button/Button";
+import { PendingButton } from "@/components/ui/PendingButton/PendingButton";
 import { TaxForm } from "@/features/settings/TaxForm";
 import { TAX_KIND_LABELS, type TaxSetting } from "@/features/settings/types";
 import { formatCents } from "@/lib/money";
@@ -83,9 +84,13 @@ export function TaxSettingsPanel({ items }: TaxSettingsPanelProps) {
                         <form action={toggleTaxAction}>
                           <input type="hidden" name="id" value={tax.id} />
                           <input type="hidden" name="isActive" value={String(!tax.isActive)} />
-                          <Button type="submit" variant="ghost" size="sm">
+                          <PendingButton
+                            pendingMessage={
+                              tax.isActive ? "Desativando imposto..." : "Ativando imposto..."
+                            }
+                          >
                             {tax.isActive ? "Desativar" : "Ativar"}
-                          </Button>
+                          </PendingButton>
                         </form>
                       </div>
                     </td>

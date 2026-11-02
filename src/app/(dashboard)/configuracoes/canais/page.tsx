@@ -6,6 +6,9 @@ export const metadata: Metadata = {
   title: "Configurações — Canais — Ateliê Filhos de Aruanda",
 };
 
+// A página lê dados por requisição: rota bloqueante, sem navegação instantânea.
+export const instant = false;
+
 /**
  * Tela de canais de venda.
  *

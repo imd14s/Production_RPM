@@ -123,6 +123,9 @@ src/
 | `src/features/settings/parse.test.ts` | linha do banco → domínio |
 | `src/features/channels/parse.test.ts` | linha do banco → domínio |
 | `src/features/settings/format.test.ts` | máscaras de CNPJ, CEP e telefone |
+| `src/components/ui/LoadingOverlay/` | cortina de espera que trava a tela durante Server Actions |
+| `src/components/ui/PendingButton/` | botão de ações rápidas (ativar/desativar) com bloqueio durante envio |
+| `src/components/feedback/FormAlert/` | mensagem da ação: sobe a tela ao topo e desaparece após 6 segundos |
 | `src/features/settings/payload.test.ts` | contrato do payload enviado ao banco, campo a campo |
 | `src/features/channels/payload.test.ts` | contrato do payload do canal e da taxa |
 | `src/lib/navigation.test.ts` | Configurações visível só ao administrador |
@@ -138,3 +141,14 @@ src/
 - 4.3: meios de pagamento (Pix, débito, crédito à vista e parcelado) e taxas.
 - 4.4: despesas fixas e mão de obra.
 - Teste de escrita com sessão real de administrador e de operador no navegador.
+
+## Interação
+
+- **Ação de gravação (formulários):** enquanto a Server Action roda, um
+  `LoadingOverlay` cobre a tela com indicador de progresso, impedindo cliques
+  repetidos. Ao terminar, a mensagem aparece no topo da tela — a rolagem sobe
+  automaticamente — e desaparece sozinha após 6 segundos.
+- **Ação rápida (ativar/desativar):** o botão envolto em `PendingButton` fica
+  desabilitado e a mesma cortina bloqueia a tela até a ação terminar.
+- **Rotas de dados:** cada página que lê sessão ou banco declara
+  `export const instant = false` (rota bloqueante, sem navegação instantânea).

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { toggleChannelAction } from "@/app/actions/channels";
 import { Badge } from "@/components/ui/Badge/Badge";
 import { Button } from "@/components/ui/Button/Button";
+import { PendingButton } from "@/components/ui/PendingButton/PendingButton";
 import { ChannelForm } from "@/features/channels/ChannelForm";
 import { CHANNEL_KIND_LABELS, type ChannelWithFees } from "@/features/channels/types";
 import styles from "./ChannelsPanel.module.css";
@@ -94,9 +95,15 @@ export function ChannelsPanel({ items }: ChannelsPanelProps) {
                               name="isActive"
                               value={String(!channel.isActive)}
                             />
-                            <Button type="submit" variant="ghost" size="sm">
+                            <PendingButton
+                              pendingMessage={
+                                channel.isActive
+                                  ? "Desativando canal..."
+                                  : "Ativando canal..."
+                              }
+                            >
                               {channel.isActive ? "Desativar" : "Ativar"}
-                            </Button>
+                            </PendingButton>
                           </form>
                         </div>
                       </td>

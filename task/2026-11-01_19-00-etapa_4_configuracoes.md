@@ -27,6 +27,13 @@
    errada foi pega pelo teste de validação — regra de negócio testada antes da tela
    funcionando como rede de proteção.
 4. **Nenhum DELETE na interface.** Canal, taxa e imposto só ativam/desativam.
+5. **Feedback de ação com bloqueio.** Toda Server Action exibe `LoadingOverlay`
+   (cortina central com spinner) enquanto aguarda o servidor — evita clique
+   repetido. Mensagem de retorno sobe ao topo e some após 6 segundos
+   (`FormAlert`). Ações de ativar/desativar usam `PendingButton`.
+6. **`instant = false` por página.** Cada página que lê sessão ou banco declara
+   a configuração no próprio segmento; `instant` no layout não alcança a página
+   (levar isso à memória da equipe).
 
 ## Objetivo
 

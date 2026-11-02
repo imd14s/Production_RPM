@@ -336,6 +336,31 @@ porque os segmentos são pré-renderizados isoladamente.
 
 ---
 
+## [Armadilha] - `connection()` fora de `<Suspense>` exige rota bloqueante na página (2026-11-01)
+
+**Problema Identificado:** após centralizar `await connection()` nos leitores de
+dados, o Next passou a acusar `Next.js encountered uncached data during
+prerendering or a navigation` em `/configuracoes` — a chamada estava fora de
+`<Suspense>` e a página não declarava `instant = false`.
+
+**Causa:** `instant = false` declarado no *layout* não alcança o segmento da
+*página*: cada segmento é pré-renderizado isoladamente e precisa declarar
+sozinho que é bloqueante.
+
+**Correção:** `export const instant = false` em cada página que lê dados
+(`/home`, `/configuracoes`, `/impostos`, `/canais`; `[id]` e `login` já tinham).
+A mensagem de erro do Next lista as três saídas (Suspense, cache, bloqueio) —
+neste sistema a escolha é bloqueio: dados de sessão e de banco mudam a tela
+inteira, placeholder não agrega.
+
+**Validação:** `grep "uncached data\|Date.now\|unstable value"` no log após
+acessar todas as rotas: zero ocorrências.
+
+**Lição:** a configuração de segmento vale **por segmento**. Página nova que lê
+banco ou sessão nasce com `instant = false`.
+
+---
+
 ## [Armadilha] - Falha silenciosa na gravação escondia o erro real (2026-11-01)
 
 **Problema Identificado:** ao salvar a empresa, a tela voltou vazia com "Nenhum dado

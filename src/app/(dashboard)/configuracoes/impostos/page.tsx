@@ -6,6 +6,9 @@ export const metadata: Metadata = {
   title: "Configurações — Impostos — Ateliê Filhos de Aruanda",
 };
 
+// A página lê dados por requisição: rota bloqueante, sem navegação instantânea.
+export const instant = false;
+
 /**
  * Tela de impostos configuráveis.
  *

@@ -2,8 +2,9 @@
 
 import { useActionState, useEffect, useState, type ChangeEvent } from "react";
 import { saveTaxAction } from "@/app/actions/settings";
-import { Alert } from "@/components/ui/Alert/Alert";
+import { FormAlert } from "@/components/feedback/FormAlert/FormAlert";
 import { Button } from "@/components/ui/Button/Button";
+import { LoadingOverlay } from "@/components/ui/LoadingOverlay/LoadingOverlay";
 import { SelectField } from "@/components/ui/SelectField/SelectField";
 import { TextAreaField } from "@/components/ui/TextAreaField/TextAreaField";
 import { TextField } from "@/components/ui/TextField/TextField";
@@ -56,9 +57,7 @@ export function TaxForm({ initial, onCancel, onSaved }: TaxFormProps) {
     <form className={styles.form} action={formAction} noValidate>
       <h3 className={styles.title}>{isEditing ? "Editar imposto" : "Novo imposto"}</h3>
 
-      {state.status !== "idle" ? (
-        <Alert tone={state.status === "success" ? "success" : "error"}>{state.message}</Alert>
-      ) : null}
+      {state.status !== "idle" ? <FormAlert state={state} /> : null}
 
       {isEditing ? <input type="hidden" name="id" value={initial.id} /> : null}
 
@@ -126,6 +125,8 @@ export function TaxForm({ initial, onCancel, onSaved }: TaxFormProps) {
           {isPending ? "Salvando..." : isEditing ? "Salvar imposto" : "Cadastrar imposto"}
         </Button>
       </div>
+
+      {isPending ? <LoadingOverlay message="Salvando imposto..." /> : null}
     </form>
   );
 }

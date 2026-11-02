@@ -8,6 +8,9 @@ export const metadata: Metadata = {
   title: "Configurações — Empresa — Ateliê Filhos de Aruanda",
 };
 
+// A página lê dados por requisição: rota bloqueante, sem navegação instantânea.
+export const instant = false;
+
 /**
  * Tela de dados cadastrais e fiscais da empresa.
  *

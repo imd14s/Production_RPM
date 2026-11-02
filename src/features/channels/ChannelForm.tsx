@@ -2,8 +2,9 @@
 
 import { useActionState, useEffect } from "react";
 import { saveChannelAction } from "@/app/actions/channels";
-import { Alert } from "@/components/ui/Alert/Alert";
+import { FormAlert } from "@/components/feedback/FormAlert/FormAlert";
 import { Button } from "@/components/ui/Button/Button";
+import { LoadingOverlay } from "@/components/ui/LoadingOverlay/LoadingOverlay";
 import { SelectField } from "@/components/ui/SelectField/SelectField";
 import { TextAreaField } from "@/components/ui/TextAreaField/TextAreaField";
 import { TextField } from "@/components/ui/TextField/TextField";
@@ -48,9 +49,7 @@ export function ChannelForm({ channel, onCancel, onSaved }: ChannelFormProps) {
     <form className={styles.form} action={formAction} noValidate>
       <h3 className={styles.title}>{isEditing ? "Editar canal" : "Novo canal"}</h3>
 
-      {state.status !== "idle" ? (
-        <Alert tone={state.status === "success" ? "success" : "error"}>{state.message}</Alert>
-      ) : null}
+      {state.status !== "idle" ? <FormAlert state={state} /> : null}
 
       {isEditing ? <input type="hidden" name="id" value={channel.id} /> : null}
 
@@ -92,6 +91,8 @@ export function ChannelForm({ channel, onCancel, onSaved }: ChannelFormProps) {
           {isPending ? "Salvando..." : isEditing ? "Salvar canal" : "Cadastrar canal"}
         </Button>
       </div>
+
+      {isPending ? <LoadingOverlay message="Salvando canal..." /> : null}
     </form>
   );
 }
