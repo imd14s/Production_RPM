@@ -51,7 +51,44 @@ Custo de fabricação, revenda, kits, impressão 3D, rateios, impostos, taxas
 fixas, taxas percentuais, varejo, atacado, descontos, margem negativa e
 denominador inválido.
 
+## Modelo de dados (a criar)
+
+```mermaid
+erDiagram
+    products ||--o{ cost_snapshots : "custo congelado"
+    cost_snapshots ||--o{ pricing_simulations : "base do cálculo"
+    sales_channels ||--o{ pricing_simulations : "canal"
+    payment_methods ||--o{ pricing_simulations : "meio de pagamento"
+    profiles ||--o{ pricing_simulations : "criado por"
+```
+
+### `cost_snapshots`
+
+- UUID, `product_id` FK products, `cost_cents` (custo completo), `material_cents`,
+  `labor_cents`, `overhead_cents`, `components` jsonb (quantidades e custos por
+  linha), `created_at`.
+- Inserção apenas (imutável): sem update/delete pela aplicação.
+- RLS: select autenticado, insert administrador.
+
+### `pricing_simulations`
+
+- UUID, `product_id` FK, `cost_snapshot_id` FK cost_snapshots, `channel_id` FK
+  sales_channels, `payment_method_id` FK payment_methods (opcional),
+  `margin_percent` numeric(9,6), `variable_percent` numeric(9,6),
+  `fixed_fees_cents` bigint, `price_cents` bigint, `modality` text
+  (varejo/atacado), `created_at`, `created_by` FK profiles.
+- Imutável: insert only.
+- RLS: select autenticado, insert administrador.
+
+## Decisões
+
+- Atacado difere do varejo pela margem (margem menor ou desconto explícito
+  informado na simulação), nunca por alteração do custo.
+- Simulações são persistidas (histórico de decisões de preço).
+- Snapshots congelam custo no momento da simulação; alterar insumo não
+  retroage.
+
 ## Pendências
 
-- Detalhar modelo de `pricing_simulations` e `cost_snapshots` antes de codar.
-- Definir como o atacado difere do varejo (desconto ou margem distinta).
+- Criar migrations `cost_snapshots` e `pricing_simulations`.
+- Implementar serviço de simulação e UI.
