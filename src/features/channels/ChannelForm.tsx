@@ -51,6 +51,11 @@ export function ChannelForm({ channel, onCancel, onSaved }: ChannelFormProps) {
 
       {state.status !== "idle" ? <FormAlert state={state} /> : null}
 
+      <p className={styles.tip}>
+        A comissão e o frete do canal são definidos depois, em «Gerenciar taxas»,
+        na lista acima.
+      </p>
+
       {isEditing ? <input type="hidden" name="id" value={channel.id} /> : null}
 
       <TextField

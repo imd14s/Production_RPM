@@ -71,7 +71,7 @@ export function MethodsPanel({ items }: MethodsPanelProps) {
                           href={`/configuracoes/pagamentos/${method.id}`}
                           className={styles.feesLink}
                         >
-                          {activeFees} taxa{activeFees === 1 ? "" : "s"} · gerenciar
+                          Gerenciar taxas ({activeFees})
                         </Link>
                       </td>
                       <td data-label="Situação">

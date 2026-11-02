@@ -56,6 +56,11 @@ export function MethodForm({ method, onCancel, onSaved }: MethodFormProps) {
 
       {state.status !== "idle" ? <FormAlert state={state} /> : null}
 
+      <p className={styles.tip}>
+        A taxa da maquininha, do cartão ou do Pix (quando houver — no Pix, o comum
+        é 0%) é definida depois, em «Gerenciar taxas», na lista acima.
+      </p>
+
       {isEditing ? <input type="hidden" name="id" value={method.id} /> : null}
 
       <TextField

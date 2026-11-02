@@ -67,7 +67,7 @@ export function ChannelsPanel({ items }: ChannelsPanelProps) {
                           href={`/configuracoes/canais/${channel.id}`}
                           className={styles.feesLink}
                         >
-                          {activeFees} taxa{activeFees === 1 ? "" : "s"} · gerenciar
+                          Gerenciar taxas ({activeFees})
                         </Link>
                       </td>
                       <td data-label="Situação">
