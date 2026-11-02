@@ -594,17 +594,18 @@ volume em massa sem conhecer a densidade.
 **Causa Raiz:** a lista da interface mostrava todas as unidades suportadas, embora o
 cálculo de custo só aceite a unidade base ou sua equivalente métrica no mesmo tipo.
 
-**Correção:** o seletor agora limita as opções à unidade base e à equivalência métrica
-compatível. A validação no servidor permanece como proteção contra solicitações
-incompatíveis, com mensagem clara. Parsing aceita quantidades numéricas vindas do
-PostgreSQL e o histórico formata a quantidade e unidade em pt-BR.
+**Correção:** o seletor agora oferece kg, gm, L, unidade e outro sem filtrar pela unidade
+base. A compra salva quantidade e unidade escolhidas mesmo quando não há conversão
+possível. Compras incompatíveis são exibidas no histórico, mas não fornecem custo para
+precificação por unidade base. Parsing aceita números vindos do PostgreSQL e o histórico
+formata quantidade e unidade em pt-BR.
 
 **Validação:** testes unitários sem mocks cobrem opções compatíveis, payload que preserva
 quantidade/unidade originais, leitura de colunas numéricas como string e exibição
 formatada. A validação final está registrada na task da correção.
 
-**Lição:** validar a compatibilidade das opções no formulário antes do envio, mantendo
-uma segunda validação no servidor para proteger o cálculo financeiro.
+**Lição:** salvar a aquisição e usar seu custo na precificação são etapas distintas; não
+bloquear a compra nem atribuir custo incorreto à unidade base.
 
 **Lição:** testar somente o formato canônico não cobre a fronteira real do banco;
 testes do parser devem refletir o tipo JSON efetivamente recebido e validar a saída de

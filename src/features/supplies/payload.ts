@@ -3,7 +3,7 @@ import type {
   SupplyPriceInput,
   SupplyUnit,
 } from "@/features/supplies/types";
-import { SUPPLY_UNIT_LABELS, SUPPLY_UNITS } from "@/features/supplies/types";
+import { SUPPLY_UNITS } from "@/features/supplies/types";
 import { convertStandardQuantity } from "@/services/calculations/units";
 
 /**
@@ -40,7 +40,7 @@ export function convertQuantityToBaseUnit(
   quantity: number,
   purchaseUnit: SupplyUnit,
   baseUnit: SupplyUnit,
-): number {
+): number | null {
   if (!Number.isFinite(quantity) || quantity <= 0) {
     throw new Error("Quantidade de aquisição deve ser maior que zero.");
   }
@@ -56,9 +56,7 @@ export function convertQuantityToBaseUnit(
   );
 
   if (convertedQuantity === null) {
-    throw new Error(
-      `${SUPPLY_UNIT_LABELS[purchaseUnit]} não é compatível com a unidade base ${SUPPLY_UNIT_LABELS[baseUnit].toLowerCase()}. Escolha uma unidade de compra disponível para este insumo.`,
-    );
+    return null;
   }
 
   if (!Number.isFinite(convertedQuantity) || convertedQuantity <= 0) {
@@ -84,8 +82,7 @@ export function buildSupplyPayload(input: SupplyInput): Record<string, unknown> 
 }
 
 /**
- * Monta o payload de gravação de uma aquisição no formato do banco,
- * incluindo o snapshot do custo por unidade.
+ * Monta o payload da aquisição e salva o custo por unidade comprada.
  *
  * @param supplyId insumo dono da aquisição
  * @param input aquisição já validada
@@ -94,14 +91,7 @@ export function buildSupplyPayload(input: SupplyInput): Record<string, unknown> 
 export function buildSupplyPricePayload(
   supplyId: string,
   input: SupplyPriceInput,
-  baseUnit: SupplyUnit,
 ): Record<string, unknown> {
-  const quantityInBaseUnit = convertQuantityToBaseUnit(
-    input.quantity,
-    input.purchaseUnit,
-    baseUnit,
-  );
-
   return {
     supply_id: supplyId,
     supplier_id: input.supplierId || null,
@@ -113,10 +103,32 @@ export function buildSupplyPricePayload(
     unit_cost_cents: calculateUnitCostCents(
       input.amountCents,
       input.freightCents,
-      quantityInBaseUnit,
+      input.quantity,
     ),
     notes: input.notes || null,
   };
+}
+
+/**
+ * Calcula custo por unidade base quando a unidade comprada é compatível.
+ *
+ * @param input compra persistida
+ * @param baseUnit unidade cadastrada no insumo
+ * @returns custo unitário na unidade base, ou null para unidades incompatíveis
+ */
+export function calculateUnitCostInBaseUnit(
+  input: Pick<SupplyPriceInput, "quantity" | "purchaseUnit" | "amountCents" | "freightCents">,
+  baseUnit: SupplyUnit,
+): number | null {
+  const quantityInBaseUnit = convertQuantityToBaseUnit(
+    input.quantity,
+    input.purchaseUnit,
+    baseUnit,
+  );
+
+  return quantityInBaseUnit === null
+    ? null
+    : calculateUnitCostCents(input.amountCents, input.freightCents, quantityInBaseUnit);
 }
 
 /**

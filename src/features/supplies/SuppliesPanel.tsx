@@ -76,6 +76,10 @@ export function SuppliesPanel({ items }: SuppliesPanelProps) {
                     <td data-label="Custo por unidade">
                       {currentUnitCostCents !== null ? (
                         formatCents(currentUnitCostCents)
+                      ) : acquisitionCount > 0 ? (
+                        <span className={styles.missing}>
+                          Unidade incompatível com o cadastro
+                        </span>
                       ) : (
                         <span className={styles.missing}>Registre a 1ª compra</span>
                       )}

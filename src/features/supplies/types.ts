@@ -109,3 +109,24 @@ export const SUPPLY_UNITS: SupplyUnit[] = [
   "caixa",
   "outro",
 ];
+
+export const SUPPLY_PURCHASE_UNITS: SupplyUnit[] = [
+  "quilograma",
+  "grama",
+  "litro",
+  "unidade",
+  "outro",
+];
+
+export const SUPPLY_PURCHASE_UNIT_LABELS: Record<SupplyUnit, string> = {
+  ...SUPPLY_UNIT_LABELS,
+  quilograma: "kg",
+  grama: "gm",
+  litro: "L",
+  unidade: "unidade",
+  outro: "outro",
+  metro: "Metro",
+  mililitro: "Mililitro",
+  pacote: "Pacote",
+  caixa: "Caixa",
+};

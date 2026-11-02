@@ -6,10 +6,15 @@ import {
   buildSupplyPayload,
   buildSupplyPricePayload,
   calculateUnitCostCents,
+  calculateUnitCostInBaseUnit,
   convertQuantityToBaseUnit,
   parseSupplyUnit,
 } from "./payload";
 import { formatAcquisitionQuantity } from "./format";
+import {
+  SUPPLY_PURCHASE_UNITS,
+  SUPPLY_PURCHASE_UNIT_LABELS,
+} from "./types";
 
 const SUPPLY_ROW = {
   id: "b3b2c3d4-0000-4000-8000-000000000001",
@@ -136,12 +141,9 @@ describe("convertQuantityToBaseUnit", () => {
   });
 
   it("rejects incompatible unit families instead of assuming a conversion", () => {
-    expect(() => convertQuantityToBaseUnit(2, "quilograma", "metro")).toThrow(
-      "Escolha uma unidade de compra disponível",
-    );
-    expect(() => convertQuantityToBaseUnit(2, "pacote", "unidade")).toThrow(
-      "Escolha uma unidade de compra disponível",
-    );
+    expect(convertQuantityToBaseUnit(2, "quilograma", "metro")).toBeNull();
+    expect(convertQuantityToBaseUnit(2, "litro", "grama")).toBeNull();
+    expect(convertQuantityToBaseUnit(2, "pacote", "unidade")).toBeNull();
   });
 });
 
@@ -157,6 +159,21 @@ describe("parseSupplyUnit", () => {
     expect(parseSupplyUnit("metro")).toBe("metro");
     expect(parseSupplyUnit("jarda")).toBeNull();
     expect(parseSupplyUnit(3)).toBeNull();
+  });
+});
+
+describe("supply purchase unit options", () => {
+  it("uses the five requested units", () => {
+    expect(SUPPLY_PURCHASE_UNITS).toEqual([
+      "quilograma",
+      "grama",
+      "litro",
+      "unidade",
+      "outro",
+    ]);
+    expect(
+      SUPPLY_PURCHASE_UNITS.map((unit) => SUPPLY_PURCHASE_UNIT_LABELS[unit]),
+    ).toEqual(["kg", "gm", "L", "unidade", "outro"]);
   });
 });
 
@@ -188,7 +205,7 @@ describe("buildSupplyPricePayload", () => {
       amountCents: 24900,
       freightCents: 1500,
       notes: "",
-    }, "metro");
+    });
 
     expect(payload).toEqual({
       supply_id: "supply-1",
@@ -212,13 +229,13 @@ describe("buildSupplyPricePayload", () => {
       amountCents: 500,
       freightCents: 0,
       notes: "",
-    }, "metro");
+    });
 
     expect(payload.supplier_id).toBeNull();
     expect(payload.unit_cost_cents).toBe(500);
   });
 
-  it("calculates cost per base unit using the automatic metric conversion", () => {
+  it("saves the original quantity and unit without rejecting incompatible units", () => {
     const payload = buildSupplyPricePayload(
       SUPPLY_ROW.id,
       {
@@ -230,11 +247,37 @@ describe("buildSupplyPricePayload", () => {
         freightCents: 0,
         notes: "",
       },
-      "grama",
     );
 
     expect(payload.quantity).toBe(2);
     expect(payload.purchase_unit).toBe("quilograma");
-    expect(payload.unit_cost_cents).toBe(1);
+    expect(payload.unit_cost_cents).toBe(1000);
+  });
+
+  it("saves a liter purchase for a gram-based supply", () => {
+    const payload = buildSupplyPricePayload(SUPPLY_ROW.id, {
+      supplierId: null,
+      acquiredOn: "2026-10-28",
+      quantity: 2,
+      purchaseUnit: "litro",
+      amountCents: 5000,
+      freightCents: 0,
+      notes: "",
+    });
+
+    expect(payload.quantity).toBe(2);
+    expect(payload.purchase_unit).toBe("litro");
+    expect(payload.unit_cost_cents).toBe(2500);
+    expect(
+      calculateUnitCostInBaseUnit(
+        {
+          quantity: 2,
+          purchaseUnit: "litro",
+          amountCents: 5000,
+          freightCents: 0,
+        },
+        "grama",
+      ),
+    ).toBeNull();
   });
 });

@@ -62,13 +62,3 @@ export function convertStandardQuantity(
 
   return factor === undefined ? null : convertQuantity(quantity, factor);
 }
-
-/**
- * Lista unidades que podem ser convertidas automaticamente para a unidade base.
- *
- * @param baseUnit unidade base cadastrada para o insumo
- * @returns unidade base e, quando aplicável, sua equivalente métrica
- */
-export function getCompatibleStandardUnits(baseUnit: string): string[] {
-  return [baseUnit, ...Object.keys(STANDARD_UNIT_CONVERSIONS[baseUnit] ?? {})];
-}

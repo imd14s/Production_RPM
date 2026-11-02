@@ -10,14 +10,13 @@ import { TextAreaField } from "@/components/ui/TextAreaField/TextAreaField";
 import { TextField } from "@/components/ui/TextField/TextField";
 import type { Supplier } from "@/features/suppliers/types";
 import {
-  SUPPLY_UNITS,
-  SUPPLY_UNIT_LABELS,
+  SUPPLY_PURCHASE_UNITS,
+  SUPPLY_PURCHASE_UNIT_LABELS,
   type SupplyPrice,
   type SupplyUnit,
 } from "@/features/supplies/types";
 import { EMPTY_SETTINGS_STATE } from "@/features/settings/formState";
 import { formatCentsInput } from "@/lib/money";
-import { getCompatibleStandardUnits } from "@/services/calculations/units";
 import styles from "./AcquisitionForm.module.css";
 
 type AcquisitionFormProps = {
@@ -58,13 +57,11 @@ export function AcquisitionForm({
     EMPTY_SETTINGS_STATE,
   );
   const isEditing = price !== null;
-  const compatibleUnits = getCompatibleStandardUnits(baseUnit);
-  const unitOptions = SUPPLY_UNITS.filter((unit) => compatibleUnits.includes(unit)).map(
-    (unit) => ({
-      value: unit,
-      label: SUPPLY_UNIT_LABELS[unit],
-    }),
-  );
+  const unitOptions = [...SUPPLY_PURCHASE_UNITS];
+
+  if (price && !unitOptions.includes(price.purchaseUnit)) {
+    unitOptions.push(price.purchaseUnit);
+  }
 
   useEffect(() => {
     if (state.status === "success") {
@@ -116,10 +113,15 @@ export function AcquisitionForm({
       <SelectField
         label="Unidade da compra"
         name="purchaseUnit"
-        options={unitOptions}
-        defaultValue={price?.purchaseUnit ?? baseUnit}
+        options={unitOptions.map((unit) => ({
+          value: unit,
+          label: SUPPLY_PURCHASE_UNIT_LABELS[unit],
+        }))}
+        defaultValue={
+          price?.purchaseUnit ??
+          (SUPPLY_PURCHASE_UNITS.includes(baseUnit) ? baseUnit : "outro")
+        }
         error={state.errors.purchaseUnit}
-        hint={`Unidades compatíveis com ${SUPPLY_UNIT_LABELS[baseUnit].toLowerCase()}.`}
         required
       />
 

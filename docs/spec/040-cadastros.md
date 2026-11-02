@@ -34,13 +34,15 @@
   (`purchase_unit`), valor pago e frete. A migration
   `20261102200000_add_purchase_unit_to_supply_prices.sql` preenche compras
   existentes com a unidade base do insumo antes de exigir o novo campo.
-- O **custo por unidade base é snapshot**. A quantidade é convertida
-  automaticamente para `supplies.unit` quando a compra usa quilograma/grama ou
-  litro/mililitro; unidades iguais não precisam de conversão. Para unidades sem
-  equivalência universal (unidade, metro, pacote, caixa e outro), uma unidade
-  diferente da base não aparece no seletor. O servidor também rejeita combinações
-  incompatíveis para evitar custo incorreto; volume e massa não são convertidos
-  entre si sem densidade.
+- Cada aquisição salva quantidade e unidade escolhidas (`purchase_unit`), sem
+  exigir compatibilidade com a unidade cadastrada no insumo. O seletor oferece
+  kg, g, L, unidade e outro; unidades históricas já registradas continuam
+  disponíveis ao editar a compra correspondente.
+- O snapshot `unit_cost_cents` é calculado por quantidade comprada e sua unidade.
+  Quando é possível determinar o custo na unidade base (mesma unidade ou
+  conversão métrica do mesmo tipo), a lista de insumos usa esse custo. Quando as
+  unidades não são comparáveis, a compra é salva e exibida no histórico, mas não
+  fornece custo para a precificação do produto.
 - Mudar preço depois da compra não altera o custo salvo nessa aquisição nem custos
   históricos de peças já vendidas.
 - Quantidade com vírgula: `lib/quantity.ts` (`parseQuantityInput`, 3 casas).
@@ -68,19 +70,15 @@
 - Sem cálculo de custo ou preço de venda nesta etapa. Detalhes em
   [`060-produtos.md`](./060-produtos.md).
 
-## Conversão automática de unidades métricas (5.4)
+## Unidades da compra (5.4)
 
-- O sistema converte quilograma/grama e litro/mililitro automaticamente nos dois
-  sentidos antes de calcular o custo por unidade base.
-- O seletor de compra mostra apenas a unidade base do insumo e sua equivalente
-  métrica, quando houver. Por exemplo, para base em grama, oferece grama e
-  quilograma, mas não litro.
-- Unidades de contagem, comprimento e embalagem (unidade, metro, pacote, caixa e
-  outro) só podem ser compradas na mesma unidade base; não há fator presumido.
-- Não existe tela para cadastrar fatores manuais. A migration
-  `20261102140000_create_supply_unit_conversions.sql` é legado do desenho anterior
-  e não é consultada nem escrita pela aplicação. Ela permanece inalterada para
-  preservar o histórico de migrations.
+- O seletor oferece kg, g, L, unidade e outro sem filtrar opções pela unidade
+  base do insumo.
+- A compra persiste exatamente quantidade, unidade, valor e frete informados.
+- Conversões métricas podem ser usadas apenas para apresentar custo na unidade
+  base quando forem compatíveis; a compra não é bloqueada por falta de conversão.
+- Não existe tela para cadastrar fatores manuais. A tabela de conversões
+  anterior permanece legada e não é consultada nem escrita pela aplicação.
 
 ## Regras da etapa
 

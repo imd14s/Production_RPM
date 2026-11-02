@@ -40,7 +40,9 @@ export function AcquisitionsPanel({ supply, prices, suppliers }: AcquisitionsPan
 
   const editing = prices.find((price) => price.id === editingId) ?? null;
   const latest = prices[0] ?? null;
-  const unitLabel = SUPPLY_UNIT_LABELS[supply.unit].toLowerCase();
+  const latestUnitLabel = latest
+    ? SUPPLY_UNIT_LABELS[latest.purchaseUnit].toLowerCase()
+    : SUPPLY_UNIT_LABELS[supply.unit].toLowerCase();
 
   return (
     <div className={styles.panel}>
@@ -54,7 +56,7 @@ export function AcquisitionsPanel({ supply, prices, suppliers }: AcquisitionsPan
           <div className={styles.tableWrapper}>
             <table className={styles.table}>
               <caption className={styles.caption}>
-                Compras de {supply.name} · custo atual por {unitLabel}{" "}
+                Compras de {supply.name} · custo da última compra por {latestUnitLabel}{" "}
                 {formatCents(latest?.unitCostCents ?? 0)}
               </caption>
               <thead>
@@ -64,7 +66,7 @@ export function AcquisitionsPanel({ supply, prices, suppliers }: AcquisitionsPan
                   <th scope="col">Quantidade comprada</th>
                   <th scope="col">Valor da compra</th>
                   <th scope="col">Frete</th>
-                  <th scope="col">Custo por {unitLabel}</th>
+                  <th scope="col">Custo por unidade comprada</th>
                   <th scope="col">Ações</th>
                 </tr>
               </thead>
@@ -87,7 +89,10 @@ export function AcquisitionsPanel({ supply, prices, suppliers }: AcquisitionsPan
                     <td data-label="Frete">
                       {price.freightCents > 0 ? formatCents(price.freightCents) : "—"}
                     </td>
-                    <td data-label="Custo por unidade">{formatCents(price.unitCostCents)}</td>
+                    <td data-label="Custo por unidade comprada">
+                      {formatCents(price.unitCostCents)} /{" "}
+                      {SUPPLY_UNIT_LABELS[price.purchaseUnit].toLowerCase()}
+                    </td>
                     <td data-label="Ações">
                       <Button
                         type="button"

@@ -4,9 +4,9 @@ import {
   parseSupplyRow,
 } from "@/features/supplies/parse";
 import {
+  calculateUnitCostInBaseUnit,
   buildSupplyPayload,
   buildSupplyPricePayload,
-  parseSupplyUnit,
 } from "@/features/supplies/payload";
 import type {
   Supply,
@@ -91,10 +91,21 @@ export async function listSuppliesWithCost(): Promise<SupplyWithCost[]> {
   return supplies.map((supply) => {
     const supplyPrices = prices.filter((price) => price.supplyId === supply.id);
     const latest = supplyPrices[0] ?? null;
+    const currentUnitCostCents = latest
+      ? calculateUnitCostInBaseUnit(
+          {
+            quantity: latest.quantity,
+            purchaseUnit: latest.purchaseUnit,
+            amountCents: latest.amountCents,
+            freightCents: latest.freightCents,
+          },
+          supply.unit,
+        )
+      : null;
 
     return {
       supply,
-      currentUnitCostCents: latest?.unitCostCents ?? null,
+      currentUnitCostCents,
       lastAcquiredOn: latest?.acquiredOn ?? null,
       acquisitionCount: supplyPrices.length,
     };
@@ -203,25 +214,7 @@ export async function saveSupplyPrice(
   input: SupplyPriceInput,
 ): Promise<void> {
   const supabase = await createClient();
-  const supplyResult = await supabase
-    .from("supplies")
-    .select("unit")
-    .eq("id", supplyId)
-    .maybeSingle();
-
-  if (supplyResult.error) {
-    throw new Error(
-      `Não foi possível carregar a unidade base do insumo. (código ${supplyResult.error.code ?? "desconhecido"})`,
-    );
-  }
-
-  const baseUnit = parseSupplyUnit(supplyResult.data?.unit);
-
-  if (!baseUnit) {
-    throw new Error("Não foi possível identificar a unidade base do insumo.");
-  }
-
-  const payload = buildSupplyPricePayload(supplyId, input, baseUnit);
+  const payload = buildSupplyPricePayload(supplyId, input);
 
   const { error } = id
     ? await supabase.from("supply_prices").update(payload).eq("id", id)
