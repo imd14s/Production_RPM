@@ -108,7 +108,7 @@ src/
 
 | Componente | Uso |
 |---|---|
-| `TextField`, `SelectField`, `TextAreaField` | formulários com erro e dica |
+| `TextField`, `SelectField`, `TextAreaField` | formulários com erro e dica; `TextField` aceita `format` para máscara ao digitar (CNPJ, CEP, telefone) |
 | `Alert` | retorno de sucesso/erro das ações |
 | `Badge` | situação (ativo/inativo) |
 
@@ -123,6 +123,8 @@ src/
 | `src/features/settings/parse.test.ts` | linha do banco → domínio |
 | `src/features/channels/parse.test.ts` | linha do banco → domínio |
 | `src/features/settings/format.test.ts` | máscaras de CNPJ, CEP e telefone |
+| `src/features/settings/payload.test.ts` | contrato do payload enviado ao banco, campo a campo |
+| `src/features/channels/payload.test.ts` | contrato do payload do canal e da taxa |
 | `src/lib/navigation.test.ts` | Configurações visível só ao administrador |
 
 ## Verificação no banco (executada)

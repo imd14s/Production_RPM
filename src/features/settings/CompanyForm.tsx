@@ -73,9 +73,10 @@ export function CompanyForm({ company }: CompanyFormProps) {
             name="document"
             defaultValue={company ? formatCnpj(company.document) : ""}
             error={state.errors.document}
-            hint="Somente números e dígitos verificadores válidos."
+            hint="Pode digitar ou colar com ou sem pontuação. Os dígitos verificadores são conferidos."
             inputMode="numeric"
             maxLength={18}
+            format={formatCnpj}
             required
           />
 
@@ -153,7 +154,9 @@ export function CompanyForm({ company }: CompanyFormProps) {
             autoComplete="tel"
             defaultValue={company ? formatPhone(company.phone) : ""}
             error={state.errors.phone}
+            hint="Com DDD; 8 ou 9 dígitos."
             maxLength={16}
+            format={formatPhone}
           />
         </div>
       </fieldset>
@@ -170,6 +173,7 @@ export function CompanyForm({ company }: CompanyFormProps) {
             defaultValue={company ? formatZipCode(company.zipCode) : ""}
             error={state.errors.zipCode}
             maxLength={9}
+            format={formatZipCode}
           />
 
           <TextField

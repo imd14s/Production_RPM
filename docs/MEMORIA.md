@@ -320,16 +320,79 @@ rota. O cliente Supabase (`@supabase/ssr`) compara `expires_at` com `Date.now()`
 validar a sessão — e relógio não pode rodar dentro de pré-render, nem com
 `instant = false` (que só desliga a validação de navegação, não o pré-render).
 
-**Correção:** `await connection()` (de `next/server`) como primeira instrução do layout
-`(dashboard)`. Isso interrompe o pré-render antes de qualquer leitura de sessão; tudo
-abaixo vira execução de requisição. As telas de configurações, filhas do layout, ficam
-cobertas pelo mesmo ponto.
+**Correção:** `await connection()` (de `next/server`) como primeira instrução de **toda
+função que lê o Supabase durante renderização**, não apenas no layout: `getSessionContext`
+e as funções de leitura em `services/supabase/`. O Next pré-renderiza cada segmento
+individualmente (partial prefetching), então corrigir só o layout da raiz fez o erro
+migrar para `SettingsLayout`. Em Server Actions a chamada resolve na hora, sem efeito.
 
-**Validação:** `grep "Date.now\|unstable value"` no log do servidor após acessar as rotas:
-zero ocorrências; build e 118 testes seguem verdes.
+**Validação:** `grep "Date.now\|unstable value"` no log do servidor após acessar
+`/home`, `/configuracoes`, `/configuracoes/impostos` e `/configuracoes/canais`:
+zero ocorrências; build e testes segue verdes.
 
-**Lição:** bibliotecas de terceiros podem esconder chamadas de relógio. Em projeto com
-Cache Components, rota que lê sessão começa com `await connection()`.
+**Lição:** bibliotecas de terceiros podem esconder chamadas de relógio. Com Cache
+Components, a proteção pertence à função que acessa os dados — não à rota —
+porque os segmentos são pré-renderizados isoladamente.
+
+---
+
+## [Armadilha] - Falha silenciosa na gravação escondia o erro real (2026-11-01)
+
+**Problema Identificado:** ao salvar a empresa, a tela voltou vazia com "Nenhum dado
+cadastrado ainda" e nada foi gravado — sem explicar o motivo. O banco, testado
+diretamente com a role `authenticated` e os claims do usuário, aceitou o mesmo insert.
+
+**Causa Raiz:** dois fatores somados. (1) O serviço devolvia mensagem genérica sem o
+código do erro do Supabase, impossibilitando o diagnóstico. (2) A quebra de pré-render
+(`Date.now`) durante a revalidação fazia a atualização da tela falhar e o navegador
+caía de volta numa recarga completa, apagando o formulário não controlado.
+
+**Correção:** mensagens de erro dos serviços passam a incluir o código
+(`(código 42501)`, por exemplo) e o pré-render foi interrompido em todas as leituras
+(entrada anterior). Com o fluxo estável, qualquer falha real aparece no alerta vermelho
+com o código para diagnóstico imediato.
+
+**Validação:** inserção simulada como o usuário real no banco: `is_admin()` verdadeiro,
+insert aceito, linha visível.
+
+**Lição:** quando algo falha sem explicação, checar primeiro (a) se o erro está sendo
+engolido por uma mensagem genérica e (b) se um erro de renderização anterior não está
+derrubando a atualização da tela.
+
+---
+
+## [Decisão] - Máscara na digitação, dígitos no banco (2026-11-01)
+
+**Problema Identificado:** CNPJ, telefone e CEP eram salvos como dígitos, mas o campo não
+formatava enquanto o usuário digitava e não ficava claro o formato aceito.
+
+**Correção:** `TextField` ganhou a prop opcional `format` (função pura, testada em
+`features/settings/format.ts`). O campo vira controlado somente quando tem máscara.
+A validação continua aceitando entrada com ou sem pontuação — tudo é reduzido a dígitos
+antes de ir ao banco.
+
+**Validação:** testes de `formatCnpj`, `formatPhone`, `formatZipCode` incluem valores
+colados completos e digitação parcial.
+
+**Lição:** máscara é preocupação do campo, não da validação: o banco sempre recebe a
+forma canônica (só dígitos), e a formatação pode evoluir sem tocar em regra de negócio.
+
+---
+
+## [Decisão] - Teste de payload como contrato de gravação (2026-11-01)
+
+**Problema Identificado:** a pergunta "os inputs estão sendo salvos?" não tinha resposta
+automatizada — nada provava que o formulário chega ao banco com todos os campos.
+
+**Correção:** construtores de payload puros (`buildCompanyPayload`, `buildTaxPayload`,
+`buildChannelPayload`, `buildChannelFeePayload`) com teste que compara o objeto inteiro
+campo a campo, incluindo a conversão de string vazia para `null` nas colunas opcionais.
+Os serviços só montam o payload e enviam.
+
+**Validação:** `features/settings/payload.test.ts` e `features/channels/payload.test.ts`.
+
+**Lição:** teste full-stack exigiria sessão real — fora do escopo de testes unitários.
+O contrato testável é a fronteira pura: formulário validado → payload do banco.
 
 ---
 

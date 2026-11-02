@@ -1,7 +1,9 @@
+import { connection } from "next/server";
+import { parseCompanyRow, parseTaxRow } from "@/features/settings/parse";
 import {
-  parseCompanyRow,
-  parseTaxRow,
-} from "@/features/settings/parse";
+  buildCompanyPayload,
+  buildTaxPayload,
+} from "@/features/settings/payload";
 import type {
   CompanySettings,
   TaxSetting,
@@ -11,10 +13,12 @@ import { createClient } from "@/services/supabase/server";
 
 /**
  * Lê a configuração da empresa (linha única).
+ * `connection()` interrompe o pré-render: o cliente Supabase usa relógio interno.
  *
  * @returns empresa cadastrada ou null quando ainda não existe
  */
 export async function getCompanySettings(): Promise<CompanySettings | null> {
+  await connection();
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("company_settings")
@@ -23,7 +27,9 @@ export async function getCompanySettings(): Promise<CompanySettings | null> {
     .maybeSingle();
 
   if (error) {
-    throw new Error("Não foi possível carregar os dados da empresa.");
+    throw new Error(
+      `Não foi possível carregar os dados da empresa. (código ${error.code ?? "desconhecido"})`,
+    );
   }
 
   return parseCompanyRow(data);
@@ -40,33 +46,14 @@ export async function saveCompanySettings(
   userId: string,
 ): Promise<void> {
   const supabase = await createClient();
-  const { error } = await supabase.from("company_settings").upsert(
-    {
-      id: 1,
-      legal_name: input.legalName,
-      trade_name: input.tradeName,
-      document: input.document,
-      company_type: input.companyType,
-      tax_regime: input.taxRegime,
-      cnae: input.cnae || null,
-      state_registration: input.stateRegistration || null,
-      municipal_registration: input.municipalRegistration || null,
-      email: input.email || null,
-      phone: input.phone || null,
-      street: input.street || null,
-      number: input.number || null,
-      complement: input.complement || null,
-      district: input.district || null,
-      city: input.city || null,
-      state: input.state || null,
-      zip_code: input.zipCode || null,
-      updated_by: userId,
-    },
-    { onConflict: "id" },
-  );
+  const { error } = await supabase
+    .from("company_settings")
+    .upsert(buildCompanyPayload(input, userId), { onConflict: "id" });
 
   if (error) {
-    throw new Error("Não foi possível salvar os dados da empresa.");
+    throw new Error(
+      `Não foi possível salvar os dados da empresa. (código ${error.code ?? "desconhecido"})`,
+    );
   }
 }
 
@@ -76,6 +63,7 @@ export async function saveCompanySettings(
  * @returns impostos ordenados por nome
  */
 export async function listTaxSettings(): Promise<TaxSetting[]> {
+  await connection();
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("tax_settings")
@@ -84,7 +72,9 @@ export async function listTaxSettings(): Promise<TaxSetting[]> {
     .order("name", { ascending: true });
 
   if (error) {
-    throw new Error("Não foi possível carregar os impostos.");
+    throw new Error(
+      `Não foi possível carregar os impostos. (código ${error.code ?? "desconhecido"})`,
+    );
   }
 
   return (data ?? [])
@@ -103,23 +93,16 @@ export async function saveTaxSetting(
   input: TaxSettingInput,
 ): Promise<void> {
   const supabase = await createClient();
-  const payload = {
-    name: input.name,
-    kind: input.kind,
-    rate: input.rate,
-    amount_cents: input.amountCents,
-    notes: input.notes || null,
-  };
 
   const { error } = id
-    ? await supabase.from("tax_settings").update(payload).eq("id", id)
-    : await supabase.from("tax_settings").insert(payload);
+    ? await supabase.from("tax_settings").update(buildTaxPayload(input)).eq("id", id)
+    : await supabase.from("tax_settings").insert(buildTaxPayload(input));
 
   if (error) {
     throw new Error(
       error.code === "23505"
         ? "Já existe um imposto com esse nome."
-        : "Não foi possível salvar o imposto.",
+        : `Não foi possível salvar o imposto. (código ${error.code ?? "desconhecido"})`,
     );
   }
 }
@@ -138,6 +121,8 @@ export async function setTaxSettingActive(id: string, isActive: boolean): Promis
     .eq("id", id);
 
   if (error) {
-    throw new Error("Não foi possível alterar a situação do imposto.");
+    throw new Error(
+      `Não foi possível alterar a situação do imposto. (código ${error.code ?? "desconhecido"})`,
+    );
   }
 }

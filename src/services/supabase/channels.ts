@@ -1,7 +1,12 @@
+import { connection } from "next/server";
 import {
   parseChannelFeeRow,
   parseChannelRow,
 } from "@/features/channels/parse";
+import {
+  buildChannelFeePayload,
+  buildChannelPayload,
+} from "@/features/channels/payload";
 import type {
   Channel,
   ChannelFee,
@@ -15,10 +20,12 @@ export type { ChannelWithFees };
 
 /**
  * Carrega os canais com suas taxas agrupadas.
+ * `connection()` interrompe o pré-render: o cliente Supabase usa relógio interno.
  *
  * @returns canais ativos primeiro, com as taxas de cada um
  */
 export async function listChannelsWithFees(): Promise<ChannelWithFees[]> {
+  await connection();
   const supabase = await createClient();
 
   const [channelsResult, feesResult] = await Promise.all([
@@ -35,7 +42,7 @@ export async function listChannelsWithFees(): Promise<ChannelWithFees[]> {
   ]);
 
   if (channelsResult.error) {
-    throw new Error("Não foi possível carregar os canais de venda.");
+    throw new Error(`Não foi possível carregar os canais de venda. (código ${channelsResult.error.code ?? "desconhecido"})`);
   }
 
   if (feesResult.error) {
@@ -63,6 +70,7 @@ export async function listChannelsWithFees(): Promise<ChannelWithFees[]> {
  * @returns canal com taxas, ou null quando não existe
  */
 export async function getChannelWithFees(id: string): Promise<ChannelWithFees | null> {
+  await connection();
   const supabase = await createClient();
 
   const { data: channelData, error: channelError } = await supabase
@@ -72,7 +80,7 @@ export async function getChannelWithFees(id: string): Promise<ChannelWithFees | 
     .maybeSingle();
 
   if (channelError) {
-    throw new Error("Não foi possível carregar o canal de venda.");
+    throw new Error(`Não foi possível carregar o canal de venda. (código ${channelError.code ?? "desconhecido"})`);
   }
 
   const channel = parseChannelRow(channelData);
@@ -89,7 +97,7 @@ export async function getChannelWithFees(id: string): Promise<ChannelWithFees | 
     .order("label", { ascending: true });
 
   if (feesError) {
-    throw new Error("Não foi possível carregar as taxas do canal.");
+    throw new Error(`Não foi possível carregar as taxas do canal. (código ${feesError.code ?? "desconhecido"})`);
   }
 
   const fees = (feesData ?? [])
@@ -107,11 +115,7 @@ export async function getChannelWithFees(id: string): Promise<ChannelWithFees | 
  */
 export async function saveChannel(id: string | null, input: ChannelInput): Promise<void> {
   const supabase = await createClient();
-  const payload = {
-    name: input.name,
-    kind: input.kind,
-    notes: input.notes || null,
-  };
+  const payload = buildChannelPayload(input);
 
   const { error } = id
     ? await supabase.from("sales_channels").update(payload).eq("id", id)
@@ -140,7 +144,7 @@ export async function setChannelActive(id: string, isActive: boolean): Promise<v
     .eq("id", id);
 
   if (error) {
-    throw new Error("Não foi possível alterar a situação do canal.");
+    throw new Error(`Não foi possível alterar a situação do canal. (código ${error.code ?? "desconhecido"})`);
   }
 }
 
@@ -157,22 +161,14 @@ export async function saveChannelFee(
   input: ChannelFeeInput,
 ): Promise<void> {
   const supabase = await createClient();
-  const payload = {
-    channel_id: channelId,
-    label: input.label,
-    kind: input.kind,
-    rate: input.rate,
-    amount_cents: input.amountCents,
-    installments: input.installments,
-    notes: input.notes || null,
-  };
+  const payload = buildChannelFeePayload(channelId, input);
 
   const { error } = id
     ? await supabase.from("channel_fees").update(payload).eq("id", id)
     : await supabase.from("channel_fees").insert(payload);
 
   if (error) {
-    throw new Error("Não foi possível salvar a taxa do canal.");
+    throw new Error(`Não foi possível salvar a taxa do canal. (código ${error.code ?? "desconhecido"})`);
   }
 }
 
@@ -190,6 +186,6 @@ export async function setChannelFeeActive(id: string, isActive: boolean): Promis
     .eq("id", id);
 
   if (error) {
-    throw new Error("Não foi possível alterar a situação da taxa.");
+    throw new Error(`Não foi possível alterar a situação da taxa. (código ${error.code ?? "desconhecido"})`);
   }
 }
