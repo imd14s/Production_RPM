@@ -38,7 +38,9 @@
   automaticamente para `supplies.unit` quando a compra usa quilograma/grama ou
   litro/mililitro; unidades iguais não precisam de conversão. Para unidades sem
   equivalência universal (unidade, metro, pacote, caixa e outro), uma unidade
-  diferente da base é rejeitada com mensagem explícita, evitando custo incorreto.
+  diferente da base não aparece no seletor. O servidor também rejeita combinações
+  incompatíveis para evitar custo incorreto; volume e massa não são convertidos
+  entre si sem densidade.
 - Mudar preço depois da compra não altera o custo salvo nessa aquisição nem custos
   históricos de peças já vendidas.
 - Quantidade com vírgula: `lib/quantity.ts` (`parseQuantityInput`, 3 casas).
@@ -70,6 +72,9 @@
 
 - O sistema converte quilograma/grama e litro/mililitro automaticamente nos dois
   sentidos antes de calcular o custo por unidade base.
+- O seletor de compra mostra apenas a unidade base do insumo e sua equivalente
+  métrica, quando houver. Por exemplo, para base em grama, oferece grama e
+  quilograma, mas não litro.
 - Unidades de contagem, comprimento e embalagem (unidade, metro, pacote, caixa e
   outro) só podem ser compradas na mesma unidade base; não há fator presumido.
 - Não existe tela para cadastrar fatores manuais. A migration

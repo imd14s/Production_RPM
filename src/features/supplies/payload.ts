@@ -57,7 +57,7 @@ export function convertQuantityToBaseUnit(
 
   if (convertedQuantity === null) {
     throw new Error(
-      `Não é possível converter ${SUPPLY_UNIT_LABELS[purchaseUnit].toLowerCase()} para ${SUPPLY_UNIT_LABELS[baseUnit].toLowerCase()} automaticamente. Use a unidade base do insumo.`,
+      `${SUPPLY_UNIT_LABELS[purchaseUnit]} não é compatível com a unidade base ${SUPPLY_UNIT_LABELS[baseUnit].toLowerCase()}. Escolha uma unidade de compra disponível para este insumo.`,
     );
   }
 

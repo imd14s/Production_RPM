@@ -76,6 +76,25 @@ describe("parseSupplyPriceRow", () => {
     });
   });
 
+  it("reads PostgreSQL numeric columns returned as strings", () => {
+    const price = parseSupplyPriceRow({
+      ...PRICE_ROW,
+      quantity: "12.5",
+      amount_cents: "24900",
+      freight_cents: "1500",
+      unit_cost_cents: "2112",
+    });
+
+    expect(price?.quantity).toBe(12.5);
+    expect(price?.amountCents).toBe(24900);
+    expect(price?.freightCents).toBe(1500);
+    expect(price?.unitCostCents).toBe(2112);
+    expect(price?.purchaseUnit).toBe("metro");
+    expect(
+      price ? formatAcquisitionQuantity(price.quantity, price.purchaseUnit) : null,
+    ).toBe("12,5 metro");
+  });
+
   it("rejects broken acquisitions", () => {
     expect(parseSupplyPriceRow({ ...PRICE_ROW, quantity: 0 })).toBeNull();
     expect(parseSupplyPriceRow({ ...PRICE_ROW, purchase_unit: "jarda" })).toBeNull();
@@ -118,10 +137,10 @@ describe("convertQuantityToBaseUnit", () => {
 
   it("rejects incompatible unit families instead of assuming a conversion", () => {
     expect(() => convertQuantityToBaseUnit(2, "quilograma", "metro")).toThrow(
-      "Use a unidade base do insumo",
+      "Escolha uma unidade de compra disponível",
     );
     expect(() => convertQuantityToBaseUnit(2, "pacote", "unidade")).toThrow(
-      "Use a unidade base do insumo",
+      "Escolha uma unidade de compra disponível",
     );
   });
 });

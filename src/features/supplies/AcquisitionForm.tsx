@@ -17,6 +17,7 @@ import {
 } from "@/features/supplies/types";
 import { EMPTY_SETTINGS_STATE } from "@/features/settings/formState";
 import { formatCentsInput } from "@/lib/money";
+import { getCompatibleStandardUnits } from "@/services/calculations/units";
 import styles from "./AcquisitionForm.module.css";
 
 type AcquisitionFormProps = {
@@ -32,11 +33,6 @@ const SUPPLIER_OPTIONS = (suppliers: Supplier[], selectedId: string | null) =>
   suppliers
     .filter((supplier) => supplier.isActive || supplier.id === selectedId)
     .map((supplier) => ({ value: supplier.id, label: supplier.name }));
-
-const UNIT_OPTIONS = SUPPLY_UNITS.map((unit) => ({
-  value: unit,
-  label: SUPPLY_UNIT_LABELS[unit],
-}));
 
 /**
  * Formulário de criação e edição de uma aquisição de insumo.
@@ -62,6 +58,13 @@ export function AcquisitionForm({
     EMPTY_SETTINGS_STATE,
   );
   const isEditing = price !== null;
+  const compatibleUnits = getCompatibleStandardUnits(baseUnit);
+  const unitOptions = SUPPLY_UNITS.filter((unit) => compatibleUnits.includes(unit)).map(
+    (unit) => ({
+      value: unit,
+      label: SUPPLY_UNIT_LABELS[unit],
+    }),
+  );
 
   useEffect(() => {
     if (state.status === "success") {
@@ -113,9 +116,10 @@ export function AcquisitionForm({
       <SelectField
         label="Unidade da compra"
         name="purchaseUnit"
-        options={UNIT_OPTIONS}
+        options={unitOptions}
         defaultValue={price?.purchaseUnit ?? baseUnit}
         error={state.errors.purchaseUnit}
+        hint={`Unidades compatíveis com ${SUPPLY_UNIT_LABELS[baseUnit].toLowerCase()}.`}
         required
       />
 

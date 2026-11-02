@@ -585,6 +585,27 @@ lint, 38 suítes e 271 testes.
 **Lição:** automatizar equivalências físicas universais; não presumir fatores para
 embalagens cujo conteúdo depende do produto ou fornecedor.
 
+## [Bug] - Seletor de compra oferecia unidades incompatíveis (2026-11-02)
+
+**Problema Identificado:** o seletor permitia escolher litro para insumo cuja unidade
+base era grama; o servidor então rejeitava a gravação ao não ser possível converter
+volume em massa sem conhecer a densidade.
+
+**Causa Raiz:** a lista da interface mostrava todas as unidades suportadas, embora o
+cálculo de custo só aceite a unidade base ou sua equivalente métrica no mesmo tipo.
+
+**Correção:** o seletor agora limita as opções à unidade base e à equivalência métrica
+compatível. A validação no servidor permanece como proteção contra solicitações
+incompatíveis, com mensagem clara. Parsing aceita quantidades numéricas vindas do
+PostgreSQL e o histórico formata a quantidade e unidade em pt-BR.
+
+**Validação:** testes unitários sem mocks cobrem opções compatíveis, payload que preserva
+quantidade/unidade originais, leitura de colunas numéricas como string e exibição
+formatada. A validação final está registrada na task da correção.
+
+**Lição:** validar a compatibilidade das opções no formulário antes do envio, mantendo
+uma segunda validação no servidor para proteger o cálculo financeiro.
+
 **Lição:** testar somente o formato canônico não cobre a fronteira real do banco;
 testes do parser devem refletir o tipo JSON efetivamente recebido e validar a saída de
 apresentação consumida pela tela.

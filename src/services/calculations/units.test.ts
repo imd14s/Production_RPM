@@ -1,4 +1,8 @@
-import { convertQuantity, convertStandardQuantity } from "./units";
+import {
+  convertQuantity,
+  convertStandardQuantity,
+  getCompatibleStandardUnits,
+} from "./units";
 
 describe("convertQuantity", () => {
   it("converts using the factor", () => {
@@ -30,5 +34,14 @@ describe("convertStandardQuantity", () => {
     expect(convertStandardQuantity(2, "pacote", "unidade")).toBeNull();
     expect(convertStandardQuantity(2, "quilograma", "litro")).toBeNull();
     expect(convertStandardQuantity(0, "quilograma", "grama")).toBeNull();
+  });
+});
+
+describe("getCompatibleStandardUnits", () => {
+  it("offers only the base unit and its metric equivalent", () => {
+    expect(getCompatibleStandardUnits("grama")).toEqual(["grama", "quilograma"]);
+    expect(getCompatibleStandardUnits("mililitro")).toEqual(["mililitro", "litro"]);
+    expect(getCompatibleStandardUnits("metro")).toEqual(["metro"]);
+    expect(getCompatibleStandardUnits("pacote")).toEqual(["pacote"]);
   });
 });

@@ -1,3 +1,10 @@
+const STANDARD_UNIT_CONVERSIONS: Record<string, Record<string, number>> = {
+  grama: { quilograma: 0.001 },
+  quilograma: { grama: 1000 },
+  litro: { mililitro: 1000 },
+  mililitro: { litro: 0.001 },
+};
+
 /**
  * Conversão de quantidades entre unidades de medida.
  *
@@ -51,13 +58,17 @@ export function convertStandardQuantity(
     return Number.isFinite(quantity) && quantity > 0 ? quantity : null;
   }
 
-  const conversionFactors: Record<string, Record<string, number>> = {
-    grama: { quilograma: 0.001 },
-    quilograma: { grama: 1000 },
-    litro: { mililitro: 1000 },
-    mililitro: { litro: 0.001 },
-  };
-  const factor = conversionFactors[fromUnit]?.[toUnit];
+  const factor = STANDARD_UNIT_CONVERSIONS[fromUnit]?.[toUnit];
 
   return factor === undefined ? null : convertQuantity(quantity, factor);
+}
+
+/**
+ * Lista unidades que podem ser convertidas automaticamente para a unidade base.
+ *
+ * @param baseUnit unidade base cadastrada para o insumo
+ * @returns unidade base e, quando aplicável, sua equivalente métrica
+ */
+export function getCompatibleStandardUnits(baseUnit: string): string[] {
+  return [baseUnit, ...Object.keys(STANDARD_UNIT_CONVERSIONS[baseUnit] ?? {})];
 }
