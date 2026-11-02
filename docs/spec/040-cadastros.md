@@ -7,10 +7,10 @@
 
 | Sub-etapa | Área | Tabelas |
 |---|---|---|
-| 5.1 | Fornecedores | `suppliers` |
+| 5.1 | Fornecedores | `suppliers` | ✅ Implementada |
 | 5.2 | Insumos e aquisições (histórico de preços) | `supplies`, `supply_prices` | ✅ Implementada |
 | 5.3 | Produtos, receitas e composições | `products`, `product_components` | ✅ Implementada |
-| 5.4 | Conversões de unidades | `supply_unit_conversions` (a definir com ETAPA de composições) |
+| 5.4 | Conversões de unidades | `supply_unit_conversions` | ✅ Implementada no código; migration pendente |
 
 ## Fornecedores (5.1)
 
@@ -59,6 +59,17 @@
 - Sem cálculo de custo ou preço de venda nesta etapa. Detalhes em
   [`060-produtos.md`](./060-produtos.md).
 
+## Conversões de unidades (5.4)
+
+- Migration `20261102140000_create_supply_unit_conversions.sql`: tabela filha de
+  `supplies`, com `from_unit`, `to_unit`, `factor` (numeric 12,6, > 0),
+  exclusão lógica, RLS e auditoria padrão.
+- Constraint `from_unit <> to_unit` e índice único por `(supply_id, from_unit, to_unit)`.
+- Tela na página de detalhe do insumo (`/insumos/[id]`), abaixo das compras.
+- Conversões podem ser criadas, editadas e ativadas/desativadas; apenas administrador escreve.
+- Esta etapa apenas cadastra; a integração ao motor de custo ocorre na Etapa 6.
+- Sem cálculo de custo ou preço.
+
 ## Regras da etapa
 
 - O preço do insumo vindo de cada compra não altera custos de peças já vendidas
@@ -67,4 +78,4 @@
 
 ## Pendências
 
-- Conversões de unidades (5.4).
+- Aplicação das migrations da Etapa 5 no Supabase (ação manual).

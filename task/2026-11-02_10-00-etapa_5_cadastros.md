@@ -2,7 +2,7 @@
 
 **Data de Criação:** 2026-11-02 10:00
 **Agente:** OpenCode — GLM-5.3-Flash Free
-**Status:** Em andamento — 5.1, 5.2 e 5.3 concluídas; conversões pendentes
+**Status:** ✅ Etapa 5 concluída no código (5.1 a 5.4); migrations pendentes de aplicação no Supabase
 **Etapa:** 5 de 9 (ver `task.md`)
 
 ## Objetivo
@@ -18,7 +18,7 @@ calcula preço — a Etapa 6 consome estes cadastros.
 | 5.1 Fornecedores | ✅ Concluída | ver commit |
 | 5.2 Insumos e aquisições | ✅ Concluída | ver commit |
 | 5.3 Produtos e composições | ✅ Concluída | ver tarefa 5.3 |
-| 5.4 Conversões de unidades | Pendente | — |
+| 5.4 Conversões de unidades | ✅ Concluída (código) | ver tarefa 5.4 |
 
 ## Decisões tomadas na execução (além do plano)
 
@@ -66,4 +66,4 @@ gravação. O "preço atual" do insumo é a compra mais recente.
 
 ## Pendências
 
-- 5.4 conversões de unidades.
+- Aplicação das migrations da Etapa 5 no Supabase (ação manual).

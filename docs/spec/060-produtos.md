@@ -55,7 +55,8 @@ erDiagram
 - Alterações são registradas em `configuration_history`.
 - Sem hard delete de produtos; composições são substituídas na transação de
   gravação e não representam histórico financeiro.
-- Conversões de unidade permanecem na subetapa 5.4.
+- Conversões de unidade foram implementadas na subetapa 5.4 (ver spec 040);
+  a integração ao cálculo de custo ocorre na Etapa 6.
 
 ## Interface
 

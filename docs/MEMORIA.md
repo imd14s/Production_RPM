@@ -478,3 +478,23 @@ Supabase nesta tarefa.
 garantida no banco e a gravação da ficha precisa ser atômica.
 
 
+---
+
+## [Decisão] - Conversões de unidade por insumo (2026-11-02)
+
+**Problema Identificado:** insumos podem ser comprados/usados em unidades
+diferentes da unidade base (ex.: compra em quilograma, uso em grama), e sem
+fator de conversão cadastrado a precificação exigiria cálculo manual.
+
+**Causa Raiz:** a Etapa 5.2 fixou uma única unidade por insumo; a subetapa 5.4
+precisava registrar fatores sem alterar o motor de custo.
+
+**Correção:** criada a tabela `supply_unit_conversions` (filha de `supplies`)
+com `from_unit`, `to_unit`, `factor` (numeric 12,6), exclusão lógica, RLS e
+auditoria. UI na página de detalhe do insumo. A integração ao cálculo de custo
+fica para a Etapa 6.
+
+**Validação:** typecheck, lint, testes e pre-push verdes (234 testes).
+
+**Lição:** cadastrar o fator como dado (par ordenado de unidades) evita
+ambiguidade e mantém a precificação fora do cadastro.
