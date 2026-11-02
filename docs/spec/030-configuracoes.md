@@ -16,7 +16,7 @@ etapa **não calcula preço** — apenas guarda e audita parâmetros.
 |---|---|---|
 | 4.1 | Empresa, impostos e histórico de alterações | ✅ Implementada |
 | 4.2 | Canais de venda e taxas por canal | ✅ Implementada |
-| 4.3 | Meios de pagamento e taxas | Pendente |
+| 4.3 | Meios de pagamento e taxas | ✅ Concluída |
 | 4.4 | Despesas fixas e mão de obra | Pendente |
 
 ## Decisões de modelo
@@ -138,7 +138,7 @@ src/
 
 ## Pendências
 
-- 4.3: meios de pagamento (Pix, débito, crédito à vista e parcelado) e taxas.
+
 - 4.4: despesas fixas e mão de obra.
 - Teste de escrita com sessão real de administrador e de operador no navegador.
 
@@ -152,3 +152,20 @@ src/
   desabilitado e a mesma cortina bloqueia a tela até a ação terminar.
 - **Rotas de dados:** cada página que lê sessão ou banco declara
   `export const instant = false` (rota bloqueante, sem navegação instantânea).
+
+---
+
+## Meios de pagamento (4.3)
+
+- Tabelas: `payment_methods` (linha por meio — Pix, débito, crédito, carteira
+  digital, outro) e `payment_fees` (taxas de processamento, filhas do meio).
+  Migration `20261101210000_create_payment_methods.sql`.
+- A taxa da maquininha/gateway fica no **meio de pagamento** (global); a comissão
+  por canal fica em `channel_fees`. Nada duplica a mesma taxa nos dois lugares.
+- Mesmas regras das taxas de canal: percentual **ou** fixo (nunca os dois),
+  parcelas opcionais 1–24, exclusão lógica, RLS e gatilhos de auditoria idênticos.
+- Telas: `/configuracoes/pagamentos` (lista + formulário) e
+  `/configuracoes/pagamentos/[id]` (taxas do meio). Aba "Pagamentos" no topo.
+- Serviços em `services/supabase/payments.ts`; ações em `app/actions/payments.ts`;
+  validações em `lib/validations/payments.ts` (testadas); parser e payload de
+  `features/payments` (testados campo a campo).

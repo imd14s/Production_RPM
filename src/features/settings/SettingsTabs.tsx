@@ -9,6 +9,7 @@ const SETTINGS_TABS = [
   { label: "Empresa", href: "/configuracoes" },
   { label: "Impostos", href: "/configuracoes/impostos" },
   { label: "Canais", href: "/configuracoes/canais" },
+  { label: "Pagamentos", href: "/configuracoes/pagamentos" },
 ];
 
 /**
