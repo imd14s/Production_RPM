@@ -50,7 +50,7 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
     available: true,
     minimumRole: "administrador",
   },
-  { label: "Despesas", href: "/despesas", available: false },
+
   {
     label: "Relatórios",
     href: "/relatorios",

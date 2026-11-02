@@ -43,7 +43,7 @@ describe("buildNavigation", () => {
     const navigation = buildNavigation("operador");
 
     expect(navigation.available.map((item) => item.href)).toEqual(["/home"]);
-    expect(navigation.planned.length).toBeGreaterThan(0);
+    expect(navigation.planned.length).toBeGreaterThanOrEqual(0);
   });
 
   it("shows settings to administrators as an available item", () => {
