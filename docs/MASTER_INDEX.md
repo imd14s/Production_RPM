@@ -11,6 +11,7 @@ alterar código.
 - Etapa 6 — Motor de precificação: implementada no código (motor, simulações, UI); migrations aplicadas
 - Etapa 7 — Produção e estoque: implementada no código; migrations aplicadas
 - Etapa 8 — Relatórios: implementada no código
+- Etapa 9 — Publicação: planejada, aguardando aprovação
 
 ## Áreas
 
@@ -27,7 +28,8 @@ alterar código.
 | Motor de precificação | `src/services/calculations` | [`spec/070-precificacao.md`](./spec/070-precificacao.md) | Planejada — aguardando aprovação |
 | Produção e estoque | `src/features/production`, `src/features/inventory` | [`spec/080-producao-estoque.md`](./spec/080-producao-estoque.md) | Planejada — aguardando aprovação |
 | Despesas e rateios | `src/features/expenses`, `src/app/(dashboard)/despesas` | `spec/090-despesas.md` | Não iniciado |
-| Relatórios e indicadores | `src/app/(dashboard)/relatorios` | [`spec/100-relatorios.md`](./spec/100-relatorios.md) | Planejada — aguardando aprovação |
+| Relatórios e indicadores | `src/app/(dashboard)/relatorios` | [`spec/100-relatorios.md`](./spec/100-relatorios.md) | Implementada no código |
+| Publicação | `vercel`, `supabase` | [`spec/110-publicacao.md`](./spec/110-publicacao.md) | Planejada — aguardando aprovação |
 
 > Specs marcadas como "não iniciado" ainda não existem e devem ser criadas na etapa
 > correspondente, antes do código.
