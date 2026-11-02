@@ -19,7 +19,6 @@ quantidade e a unidade escolhidas sem bloquear por incompatibilidade com a unida
    métrica conhecida for compatível. Não atribuir custo incorreto entre massa e volume.
 4. Exibir no histórico o custo por unidade efetivamente comprada.
 5. Testar opções, payload, parsing e formatação sem mocks; atualizar documentação.
-6. Documentar no banco o significado de `unit_cost_cents` sem alterar migrations antigas.
 
 ## Critérios de aceitação
 
