@@ -1,6 +1,6 @@
 # Spec 100 — Relatórios e indicadores (Etapa 8)
 
-**Status:** Planejada (aguardando aprovação)
+**Status:** Implementada no código
 **Fonte de verdade:** `task.md`, seção "Relatórios"
 
 ## Objetivo

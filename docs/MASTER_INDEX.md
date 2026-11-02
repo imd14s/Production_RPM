@@ -10,7 +10,7 @@ alterar código.
 - Etapa 5 — Cadastros: concluída (código + migrations aplicadas)
 - Etapa 6 — Motor de precificação: implementada no código (motor, simulações, UI); migrations aplicadas
 - Etapa 7 — Produção e estoque: implementada no código; migrations aplicadas
-- Etapa 8 — Relatórios: planejada, aguardando aprovação
+- Etapa 8 — Relatórios: implementada no código
 
 ## Áreas
 
