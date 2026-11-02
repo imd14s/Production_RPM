@@ -99,28 +99,25 @@ export function AcquisitionForm({
         error={state.errors.supplierId}
       />
 
-      <div className={styles.quantityFields}>
-        <TextField
-          label="Quantidade comprada"
-          name="quantity"
-          inputMode="decimal"
-          defaultValue={price ? String(price.quantity).replace(".", ",") : ""}
-          error={state.errors.quantity}
-          placeholder="12,5"
-          hint="Vírgula aceita."
-          required
-        />
+      <TextField
+        label="Quantidade comprada"
+        name="quantity"
+        inputMode="decimal"
+        defaultValue={price ? String(price.quantity).replace(".", ",") : ""}
+        error={state.errors.quantity}
+        placeholder="12,5"
+        hint="Vírgula aceita."
+        required
+      />
 
-        <SelectField
-          label="Unidade da compra"
-          name="purchaseUnit"
-          options={UNIT_OPTIONS}
-          defaultValue={price?.purchaseUnit ?? baseUnit}
-          error={state.errors.purchaseUnit}
-          hint={`Unidade base do insumo: ${SUPPLY_UNIT_LABELS[baseUnit].toLowerCase()}.`}
-          required
-        />
-      </div>
+      <SelectField
+        label="Unidade da compra"
+        name="purchaseUnit"
+        options={UNIT_OPTIONS}
+        defaultValue={price?.purchaseUnit ?? baseUnit}
+        error={state.errors.purchaseUnit}
+        required
+      />
 
       <TextField
         label="Valor pago (R$)"
