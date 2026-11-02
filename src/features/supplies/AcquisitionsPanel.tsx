@@ -7,6 +7,7 @@ import { AcquisitionForm } from "@/features/supplies/AcquisitionForm";
 import type { Supplier } from "@/features/suppliers/types";
 import type { Supply, SupplyPrice } from "@/features/supplies/types";
 import { SUPPLY_UNIT_LABELS } from "@/features/supplies/types";
+import { formatAcquisitionQuantity } from "@/features/supplies/format";
 import { formatCents } from "@/lib/money";
 import styles from "./AcquisitionsPanel.module.css";
 
@@ -60,7 +61,7 @@ export function AcquisitionsPanel({ supply, prices, suppliers }: AcquisitionsPan
                 <tr>
                   <th scope="col">Data</th>
                   <th scope="col">Fornecedor</th>
-                  <th scope="col">Quantidade</th>
+                  <th scope="col">Quantidade comprada</th>
                   <th scope="col">Valor da compra</th>
                   <th scope="col">Frete</th>
                   <th scope="col">Custo por {unitLabel}</th>
@@ -79,8 +80,8 @@ export function AcquisitionsPanel({ supply, prices, suppliers }: AcquisitionsPan
                           "Fornecedor removido")
                         : "Compra avulsa"}
                     </td>
-                    <td data-label="Quantidade">
-                      {String(price.quantity).replace(".", ",")} {unitLabel}
+                    <td data-label="Quantidade comprada">
+                      {formatAcquisitionQuantity(price.quantity, price.purchaseUnit)}
                     </td>
                     <td data-label="Valor da compra">{formatCents(price.amountCents)}</td>
                     <td data-label="Frete">
@@ -109,6 +110,7 @@ export function AcquisitionsPanel({ supply, prices, suppliers }: AcquisitionsPan
         <AcquisitionForm
           key={editing ? editing.id : `nova-${formVersion}`}
           supplyId={supply.id}
+          baseUnit={supply.unit}
           price={editing}
           suppliers={suppliers}
           onCancel={resetForm}

@@ -94,12 +94,17 @@ export function parseSupplyPriceRow(row: unknown): SupplyPrice | null {
   const id = candidate.id;
   const supplyId = candidate.supply_id;
   const quantity = readNumber(candidate.quantity);
+  const purchaseUnit = candidate.purchase_unit;
   const amountCents = readNumber(candidate.amount_cents);
   const freightCents = readNumber(candidate.freight_cents);
   const unitCostCents = readNumber(candidate.unit_cost_cents);
   const notes = readString(candidate.notes);
 
   if (typeof id !== "string" || typeof supplyId !== "string") {
+    return null;
+  }
+
+  if (typeof purchaseUnit !== "string" || !SUPPLY_UNITS.includes(purchaseUnit as SupplyUnit)) {
     return null;
   }
 
@@ -129,6 +134,7 @@ export function parseSupplyPriceRow(row: unknown): SupplyPrice | null {
     supplierId: typeof candidate.supplier_id === "string" ? candidate.supplier_id : null,
     acquiredOn: readString(candidate.acquired_on),
     quantity,
+    purchaseUnit: purchaseUnit as SupplyUnit,
     amountCents,
     freightCents,
     unitCostCents,

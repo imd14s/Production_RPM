@@ -543,6 +543,28 @@ cada célula exibe.
 **Validação:** testes focados cobriram os 3 parsers com percentuais numéricos e os rótulos
 formatados usados nas células, sem mocks; typecheck, lint e `./pre-push.sh` passaram.
 
+## [Bug] - Aquisição não registrava a unidade de compra (2026-11-02)
+
+**Problema Identificado:** o formulário salvava a quantidade digitada sem registrar
+em qual unidade o insumo havia sido comprado, e o histórico não mostrava essa medida.
+
+**Causa Raiz:** `supply_prices` não tinha coluna para a unidade original; o cálculo do
+custo assumia que toda quantidade já estava na unidade base do insumo.
+
+**Correção:** adicionada migration com backfill para `purchase_unit`, seleção da unidade
+no formulário, exibição no histórico e conversão no servidor antes de calcular o
+snapshot por unidade base. Conversões ausentes ou conflitantes bloqueiam o salvamento;
+conversões recíprocas consistentes são aceitas.
+
+**Validação:** testes unitários sem mocks cobrem parsing, validação, apresentação da
+quantidade, conversão direta/inversa, ausência, inatividade e conflito. `npm run
+typecheck`, `npm run lint` e `./pre-push.sh` passaram; a execução completa contém 38
+suítes e 282 testes aprovados. A migration ainda depende de aplicação manual no Supabase.
+
+**Lição:** unidade de medida precisa acompanhar a quantidade no dado histórico e ser
+normalizada antes do snapshot de custo; não deve ser inferida apenas da unidade atual do
+cadastro.
+
 **Lição:** testar somente o formato canônico não cobre a fronteira real do banco;
 testes do parser devem refletir o tipo JSON efetivamente recebido e validar a saída de
 apresentação consumida pela tela.

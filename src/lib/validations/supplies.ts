@@ -104,6 +104,7 @@ export function validateSupplyPrice(
 
   const supplierId = readText(raw, "supplierId");
   const notes = readText(raw, "notes");
+  const purchaseUnit = readText(raw, "purchaseUnit") as SupplyUnit;
   const acquiredOn = resolveAcquiredOn(readText(raw, "acquiredOn"));
   const quantity = parseQuantityInput(readText(raw, "quantity"));
   const amountCents = parseAmountToCents(readText(raw, "amount"));
@@ -115,6 +116,10 @@ export function validateSupplyPrice(
 
   if (quantity === null) {
     errors.quantity = "Informe a quantidade comprada (positiva, com vírgula se precisar).";
+  }
+
+  if (!SUPPLY_UNITS.includes(purchaseUnit)) {
+    errors.purchaseUnit = "Escolha a unidade de medida da compra.";
   }
 
   if (amountCents === null || amountCents <= 0) {
@@ -151,6 +156,7 @@ export function validateSupplyPrice(
       supplierId: supplierId || null,
       acquiredOn: acquiredOn as string,
       quantity: quantity as number,
+      purchaseUnit,
       amountCents: amountCents as number,
       freightCents,
       notes,

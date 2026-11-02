@@ -9,13 +9,19 @@ import { SelectField } from "@/components/ui/SelectField/SelectField";
 import { TextAreaField } from "@/components/ui/TextAreaField/TextAreaField";
 import { TextField } from "@/components/ui/TextField/TextField";
 import type { Supplier } from "@/features/suppliers/types";
-import type { SupplyPrice } from "@/features/supplies/types";
+import {
+  SUPPLY_UNITS,
+  SUPPLY_UNIT_LABELS,
+  type SupplyPrice,
+  type SupplyUnit,
+} from "@/features/supplies/types";
 import { EMPTY_SETTINGS_STATE } from "@/features/settings/formState";
 import { formatCentsInput } from "@/lib/money";
 import styles from "./AcquisitionForm.module.css";
 
 type AcquisitionFormProps = {
   supplyId: string;
+  baseUnit: SupplyUnit;
   price: SupplyPrice | null;
   suppliers: Supplier[];
   onCancel: () => void;
@@ -27,10 +33,16 @@ const SUPPLIER_OPTIONS = (suppliers: Supplier[], selectedId: string | null) =>
     .filter((supplier) => supplier.isActive || supplier.id === selectedId)
     .map((supplier) => ({ value: supplier.id, label: supplier.name }));
 
+const UNIT_OPTIONS = SUPPLY_UNITS.map((unit) => ({
+  value: unit,
+  label: SUPPLY_UNIT_LABELS[unit],
+}));
+
 /**
  * Formulário de criação e edição de uma aquisição de insumo.
  *
  * @param supplyId insumo dono da aquisição
+ * @param baseUnit unidade de uso cadastrada no insumo
  * @param price aquisição em edição, ou null para registrar uma nova compra
  * @param suppliers fornecedores para a lista de escolha
  * @param onCancel ação de cancelar a edição
@@ -39,6 +51,7 @@ const SUPPLIER_OPTIONS = (suppliers: Supplier[], selectedId: string | null) =>
  */
 export function AcquisitionForm({
   supplyId,
+  baseUnit,
   price,
   suppliers,
   onCancel,
@@ -86,16 +99,28 @@ export function AcquisitionForm({
         error={state.errors.supplierId}
       />
 
-      <TextField
-        label="Quantidade comprada"
-        name="quantity"
-        inputMode="decimal"
-        defaultValue={price ? String(price.quantity).replace(".", ",") : ""}
-        error={state.errors.quantity}
-        placeholder="12,5"
-        hint="Na unidade do insumo. Vírgula aceita."
-        required
-      />
+      <div className={styles.quantityFields}>
+        <TextField
+          label="Quantidade comprada"
+          name="quantity"
+          inputMode="decimal"
+          defaultValue={price ? String(price.quantity).replace(".", ",") : ""}
+          error={state.errors.quantity}
+          placeholder="12,5"
+          hint="Vírgula aceita."
+          required
+        />
+
+        <SelectField
+          label="Unidade da compra"
+          name="purchaseUnit"
+          options={UNIT_OPTIONS}
+          defaultValue={price?.purchaseUnit ?? baseUnit}
+          error={state.errors.purchaseUnit}
+          hint={`Unidade base do insumo: ${SUPPLY_UNIT_LABELS[baseUnit].toLowerCase()}.`}
+          required
+        />
+      </div>
 
       <TextField
         label="Valor pago (R$)"

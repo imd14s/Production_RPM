@@ -49,6 +49,7 @@ describe("validateSupplyPrice", () => {
       supplierId: "",
       acquiredOn: "",
       quantity: "12,5",
+      purchaseUnit: "quilograma",
       amount: "249,00",
       freight: "15,00",
       notes: "",
@@ -58,6 +59,7 @@ describe("validateSupplyPrice", () => {
 
     if (result.ok) {
       expect(result.data.quantity).toBe(12.5);
+      expect(result.data.purchaseUnit).toBe("quilograma");
       expect(result.data.amountCents).toBe(24900);
       expect(result.data.freightCents).toBe(1500);
       expect(result.data.acquiredOn).toMatch(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/);
@@ -70,6 +72,7 @@ describe("validateSupplyPrice", () => {
       supplierId: "",
       acquiredOn: "2026-10-28",
       quantity: "0",
+      purchaseUnit: "metro",
       amount: "100",
       freight: "",
       notes: "",
@@ -85,6 +88,7 @@ describe("validateSupplyPrice", () => {
       supplierId: "",
       acquiredOn: "2026-10-28",
       quantity: "2",
+      purchaseUnit: "metro",
       amount: "",
       freight: "",
       notes: "",
@@ -100,6 +104,7 @@ describe("validateSupplyPrice", () => {
       supplierId: "",
       acquiredOn: "2026-02-30",
       quantity: "2",
+      purchaseUnit: "metro",
       amount: "100",
       freight: "",
       notes: "",
@@ -117,6 +122,7 @@ describe("validateSupplyPrice", () => {
       supplierId: "",
       acquiredOn: "2026-10-28",
       quantity: "2",
+      purchaseUnit: "metro",
       amount: "100",
       freight: "",
       notes: "",
@@ -132,6 +138,7 @@ describe("validateSupplyPrice", () => {
       supplierId: "",
       acquiredOn: "2026-10-28",
       quantity: "2",
+      purchaseUnit: "metro",
       amount: "100",
       freight: "-5",
       notes: "",
@@ -141,6 +148,24 @@ describe("validateSupplyPrice", () => {
 
     if (!badFreight.ok) {
       expect(badFreight.errors.freight).toBeDefined();
+    }
+  });
+
+  it("requires a known purchase unit", () => {
+    const result = validateSupplyPrice({
+      supplierId: "",
+      acquiredOn: "2026-10-28",
+      quantity: "2",
+      purchaseUnit: "jarda",
+      amount: "100",
+      freight: "",
+      notes: "",
+    });
+
+    expect(result.ok).toBe(false);
+
+    if (!result.ok) {
+      expect(result.errors.purchaseUnit).toBeDefined();
     }
   });
 });

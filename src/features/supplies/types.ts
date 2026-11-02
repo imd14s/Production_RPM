@@ -38,6 +38,7 @@ export type SupplyPrice = {
   supplierId: string | null;
   acquiredOn: string;
   quantity: number;
+  purchaseUnit: SupplyUnit;
   amountCents: number;
   freightCents: number;
   unitCostCents: number;
@@ -48,6 +49,7 @@ export type SupplyPriceInput = {
   supplierId: string | null;
   acquiredOn: string;
   quantity: number;
+  purchaseUnit: SupplyUnit;
   amountCents: number;
   freightCents: number;
   notes: string;

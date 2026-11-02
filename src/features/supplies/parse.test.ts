@@ -8,8 +8,10 @@ import {
   buildSupplyPricePayload,
   buildSupplyUnitConversionPayload,
   calculateUnitCostCents,
+  convertQuantityToBaseUnit,
   parseSupplyUnit,
 } from "./payload";
+import { formatAcquisitionQuantity } from "./format";
 
 const SUPPLY_ROW = {
   id: "b3b2c3d4-0000-4000-8000-000000000001",
@@ -26,6 +28,7 @@ const PRICE_ROW = {
   supplier_id: null,
   acquired_on: "2026-10-28",
   quantity: 12.5,
+  purchase_unit: "metro",
   amount_cents: 24900,
   freight_cents: 1500,
   unit_cost_cents: 2112,
@@ -67,6 +70,7 @@ describe("parseSupplyPriceRow", () => {
       supplierId: "d3b2c3d4-0000-4000-8000-000000000009",
       acquiredOn: "2026-10-28",
       quantity: 12.5,
+      purchaseUnit: "metro",
       amountCents: 24900,
       freightCents: 1500,
       unitCostCents: 2112,
@@ -76,6 +80,8 @@ describe("parseSupplyPriceRow", () => {
 
   it("rejects broken acquisitions", () => {
     expect(parseSupplyPriceRow({ ...PRICE_ROW, quantity: 0 })).toBeNull();
+    expect(parseSupplyPriceRow({ ...PRICE_ROW, purchase_unit: "jarda" })).toBeNull();
+    expect(parseSupplyPriceRow({ ...PRICE_ROW, purchase_unit: undefined })).toBeNull();
     expect(parseSupplyPriceRow({ ...PRICE_ROW, amount_cents: 0 })).toBeNull();
     expect(parseSupplyPriceRow({ ...PRICE_ROW, unit_cost_cents: 0 })).toBeNull();
     expect(parseSupplyPriceRow({ ...PRICE_ROW, acquired_on: "28/10/2026" })).toBeNull();
@@ -93,6 +99,82 @@ describe("calculateUnitCostCents", () => {
 
   it("refuses zero quantity as a programming error", () => {
     expect(() => calculateUnitCostCents(1000, 0, 0)).toThrow();
+  });
+});
+
+describe("convertQuantityToBaseUnit", () => {
+  const kilogramToGram = {
+    id: "conv-kg-g",
+    supplyId: SUPPLY_ROW.id,
+    fromUnit: "quilograma" as const,
+    toUnit: "grama" as const,
+    factor: 1000,
+    isActive: true,
+    notes: "",
+  };
+
+  it("uses a direct active conversion to normalize the purchase quantity", () => {
+    expect(
+      convertQuantityToBaseUnit(2, "quilograma", "grama", [kilogramToGram]),
+    ).toBe(2000);
+  });
+
+  it("uses the inverse of an active conversion when needed", () => {
+    expect(
+      convertQuantityToBaseUnit(500, "grama", "quilograma", [kilogramToGram]),
+    ).toBe(0.5);
+  });
+
+  it("does not use inactive conversions", () => {
+    expect(() =>
+      convertQuantityToBaseUnit(2, "quilograma", "grama", [
+        { ...kilogramToGram, isActive: false },
+      ]),
+    ).toThrow("Cadastre uma conversão ativa");
+  });
+
+  it("rejects missing and conflicting conversion factors", () => {
+    expect(() => convertQuantityToBaseUnit(2, "quilograma", "grama", [])).toThrow(
+      "Cadastre uma conversão ativa",
+    );
+    expect(() =>
+      convertQuantityToBaseUnit(2, "quilograma", "grama", [
+        kilogramToGram,
+        {
+          ...kilogramToGram,
+          id: "conv-g-kg",
+          fromUnit: "grama",
+          toUnit: "quilograma",
+          factor: 0.002,
+        },
+      ]),
+    ).toThrow("conversões ativas conflitantes");
+  });
+
+  it("accepts consistent conversions registered in both directions", () => {
+    expect(
+      convertQuantityToBaseUnit(2, "quilograma", "grama", [
+        kilogramToGram,
+        {
+          ...kilogramToGram,
+          id: "conv-g-kg",
+          fromUnit: "grama",
+          toUnit: "quilograma",
+          factor: 0.001,
+        },
+      ]),
+    ).toBe(2000);
+  });
+
+  it("keeps the input quantity when the purchase already uses the base unit", () => {
+    expect(convertQuantityToBaseUnit(2.5, "grama", "grama", [])).toBe(2.5);
+  });
+});
+
+describe("formatAcquisitionQuantity", () => {
+  it("displays the entered purchase quantity with its original unit", () => {
+    expect(formatAcquisitionQuantity(2, "quilograma")).toBe("2 quilograma");
+    expect(formatAcquisitionQuantity(12.5, "metro")).toBe("12,5 metro");
   });
 });
 
@@ -128,16 +210,18 @@ describe("buildSupplyPricePayload", () => {
       supplierId: "supplier-1",
       acquiredOn: "2026-10-28",
       quantity: 12.5,
+      purchaseUnit: "metro",
       amountCents: 24900,
       freightCents: 1500,
       notes: "",
-    });
+    }, "metro");
 
     expect(payload).toEqual({
       supply_id: "supply-1",
       supplier_id: "supplier-1",
       acquired_on: "2026-10-28",
       quantity: 12.5,
+      purchase_unit: "metro",
       amount_cents: 24900,
       freight_cents: 1500,
       unit_cost_cents: 2112,
@@ -150,13 +234,44 @@ describe("buildSupplyPricePayload", () => {
       supplierId: null,
       acquiredOn: "2026-10-28",
       quantity: 1,
+      purchaseUnit: "metro",
       amountCents: 500,
       freightCents: 0,
       notes: "",
-    });
+    }, "metro");
 
     expect(payload.supplier_id).toBeNull();
     expect(payload.unit_cost_cents).toBe(500);
+  });
+
+  it("calculates cost per base unit and stores the original purchase unit", () => {
+    const conversion = {
+      id: "conv-kg-g",
+      supplyId: SUPPLY_ROW.id,
+      fromUnit: "quilograma" as const,
+      toUnit: "grama" as const,
+      factor: 1000,
+      isActive: true,
+      notes: "",
+    };
+    const payload = buildSupplyPricePayload(
+      SUPPLY_ROW.id,
+      {
+        supplierId: null,
+        acquiredOn: "2026-10-28",
+        quantity: 2,
+        purchaseUnit: "quilograma",
+        amountCents: 2000,
+        freightCents: 0,
+        notes: "",
+      },
+      "grama",
+      [conversion],
+    );
+
+    expect(payload.quantity).toBe(2);
+    expect(payload.purchase_unit).toBe("quilograma");
+    expect(payload.unit_cost_cents).toBe(1);
   });
 });
 

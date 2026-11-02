@@ -8,6 +8,7 @@ import {
   buildSupplyPayload,
   buildSupplyPricePayload,
   buildSupplyUnitConversionPayload,
+  parseSupplyUnit,
 } from "@/features/supplies/payload";
 import type {
   Supply,
@@ -206,7 +207,37 @@ export async function saveSupplyPrice(
   input: SupplyPriceInput,
 ): Promise<void> {
   const supabase = await createClient();
-  const payload = buildSupplyPricePayload(supplyId, input);
+  const [supplyResult, conversionsResult] = await Promise.all([
+    supabase.from("supplies").select("unit").eq("id", supplyId).maybeSingle(),
+    supabase
+      .from("supply_unit_conversions")
+      .select("*")
+      .eq("supply_id", supplyId)
+      .eq("is_active", true),
+  ]);
+
+  if (supplyResult.error) {
+    throw new Error(
+      `Não foi possível carregar a unidade base do insumo. (código ${supplyResult.error.code ?? "desconhecido"})`,
+    );
+  }
+
+  if (conversionsResult.error) {
+    throw new Error(
+      `Não foi possível carregar as conversões do insumo. (código ${conversionsResult.error.code ?? "desconhecido"})`,
+    );
+  }
+
+  const baseUnit = parseSupplyUnit(supplyResult.data?.unit);
+
+  if (!baseUnit) {
+    throw new Error("Não foi possível identificar a unidade base do insumo.");
+  }
+
+  const conversions = (conversionsResult.data ?? [])
+    .map(parseSupplyUnitConversionRow)
+    .filter((conversion): conversion is SupplyUnitConversion => conversion !== null);
+  const payload = buildSupplyPricePayload(supplyId, input, baseUnit, conversions);
 
   const { error } = id
     ? await supabase.from("supply_prices").update(payload).eq("id", id)

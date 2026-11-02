@@ -30,10 +30,17 @@
   (matéria-prima, revenda, impressão 3D, embalagem, outro) e `supply_unit`
   (unidade, metro, grama, quilograma, mililitro, litro, pacote, caixa, outro).
 - `supply_prices`: uma linha por compra — data (`acquired_on`), fornecedor
-  opcional, quantidade (numeric 3 casas, > 0), valor pago, frete; o
-  **custo por unidade é snapshot** calculado pela aplicação
-  (`calculateUnitCostCents` = arredondamento de `(valor + frete) / quantidade`),
-  testado. Mudar preço não retroage custos de peças já vendidas.
+  opcional, quantidade comprada (numeric 3 casas, > 0), unidade original
+  (`purchase_unit`), valor pago e frete. A migration
+  `20261102200000_add_purchase_unit_to_supply_prices.sql` preenche compras
+  existentes com a unidade base do insumo antes de exigir o novo campo.
+- O **custo por unidade base é snapshot**. A quantidade é convertida para
+  `supplies.unit` pela conversão ativa do insumo (direta ou inversa) antes de
+  calcular e armazenar o custo unitário, incluindo frete. Sem conversão ou com
+  fatores conflitantes, o salvamento falha com mensagem explícita. Fatores
+  cadastrados nas duas direções são aceitos quando consistentes.
+- Mudar preço ou conversão depois da compra não altera o custo salvo nessa
+  aquisição nem custos históricos de peças já vendidas.
 - Quantidade com vírgula: `lib/quantity.ts` (`parseQuantityInput`, 3 casas).
 - Telas: `/insumos` (lista com custo atual, data da última compra e link de
   compras) e `/insumos/[id]` (histórico completo de compras + registro; a
@@ -67,15 +74,19 @@
 - Constraint `from_unit <> to_unit` e índice único por `(supply_id, from_unit, to_unit)`.
 - Tela na página de detalhe do insumo (`/insumos/[id]`), abaixo das compras.
 - Conversões podem ser criadas, editadas e ativadas/desativadas; apenas administrador escreve.
-- Esta etapa apenas cadastra; a integração ao motor de custo ocorre na Etapa 6.
-- Sem cálculo de custo ou preço.
+- No registro de compra, as conversões ativas normalizam a quantidade para a
+  unidade base antes de gerar o snapshot de custo. A conversão também fica
+  disponível para integrações posteriores de consumo e precificação.
 
 ## Regras da etapa
 
 - O preço do insumo vindo de cada compra não altera custos de peças já vendidas
   (snapshot do custo por unidade na própria compra).
 - Fornecedor é opcional na compra (aquisições avulsas existem).
+- A quantidade histórica permanece na unidade original da compra; o custo
+  unitário do snapshot é expresso na unidade base do insumo.
 
 ## Pendências
 
-- Aplicação das migrations da Etapa 5 no Supabase (ação manual).
+- Aplicação das migrations da Etapa 5 no Supabase, incluindo a migration de
+  `purchase_unit` (ação manual).
