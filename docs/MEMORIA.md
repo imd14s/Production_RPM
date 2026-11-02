@@ -435,5 +435,46 @@ modal, formulário genérico e notificações entram junto com a primeira tela r
 **Lição:** componente sem consumidor é código morto. A ordem correta é tela real →
 componente necessário, não o contrário.
 
+---
+
+## [Armadilha] - Expectativas iniciais de testes de produto estavam incorretas (2026-11-02)
+
+**Problema Identificado:** os testes não passavam para a soma do custo material e para
+uma composição que cria ciclo indireto.
+
+**Causa Raiz:** o esperado do custo ignorava uma linha de 200 centavos; o caso de ciclo
+testava `subproduto → kit` quando já existia `kit → subproduto`.
+
+**Correção:** com autorização, corrigidos somente os dois resultados esperados e a
+descrição do teste de ciclo. A lógica de custo material também passou a rejeitar entradas
+fora da precisão/intervalo e totais acima de `Number.MAX_SAFE_INTEGER`.
+
+**Validação:** o typecheck, o lint e 223 testes unitários passaram; `npm run build` também
+gerou a rota `/produtos`.
+
+**Lição:** revisar os valores e as arestas de um teste antes de ajustar a implementação;
+testes de domínio precisam representar a matemática e o grafo que declaram.
+
+---
+
+## [Decisão] - Cadastro de produtos com ficha técnica transacional (2026-11-02)
+
+**Problema Identificado:** a subetapa 5.3 tinha apenas a migration inicial e funções
+isoladas; ainda não havia cadastro, validação completa ou garantia atômica da composição.
+
+**Causa Raiz:** o trabalho anterior parou antes de conectar banco, Server Actions,
+validações, navegação e interface.
+
+**Correção:** criados tipos, validações, tela `/produtos`, ações administrativas e uma RPC
+invoker para gravar produto e componentes na mesma transação. A migration complementar
+protege a árvore contra ciclos concorrentes e exige componentes do tipo produto em kits.
+RLS e auditoria existentes foram mantidas; preço de venda permaneceu fora do escopo.
+
+**Validação:** `npm run typecheck`, `npm run lint`, `npm run test -- --ci`,
+`npm run build` e `./pre-push.sh`; as migrations foram revisadas, mas não aplicadas ao
+Supabase nesta tarefa.
+
+**Lição:** validar ciclos na interface melhora a mensagem, mas a integridade deve ser
+garantida no banco e a gravação da ficha precisa ser atômica.
 
 

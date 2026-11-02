@@ -2,7 +2,7 @@
 
 **Data de Criação:** 2026-11-02 10:00
 **Agente:** OpenCode — GLM-5.3-Flash Free
-**Status:** Em andamento — 5.1 e 5.2 concluídas; produtos/composições pendentes
+**Status:** Em andamento — 5.1, 5.2 e 5.3 concluídas; conversões pendentes
 **Etapa:** 5 de 9 (ver `task.md`)
 
 ## Objetivo
@@ -17,8 +17,8 @@ calcula preço — a Etapa 6 consome estes cadastros.
 |---|---|---|
 | 5.1 Fornecedores | ✅ Concluída | ver commit |
 | 5.2 Insumos e aquisições | ✅ Concluída | ver commit |
-| 5.3 Produtos e composições | Pendente | — |
-| 5.4 Conversões de unidades | Pendente (estuda-se incluir na 5.2) | — |
+| 5.3 Produtos e composições | ✅ Concluída | ver tarefa 5.3 |
+| 5.4 Conversões de unidades | Pendente | — |
 
 ## Decisões tomadas na execução (além do plano)
 
@@ -49,7 +49,7 @@ erDiagram
 - Telefone: 10 ou 11 dígitos. Exclusão lógica (`is_active`); RLS habilitada;
   auditoria em `configuration_history`.
 
-## Escopo por sub-etapa (5.2, planejado)
+## Escopo por sub-etapa (5.2)
 
 `supplies`: nome (único), categoria (`materia_prima`, `revenda`, `impressao_3d`,
 `embalagem`, `outro`), unidade de medida (enum), observação, situação.
@@ -66,4 +66,4 @@ gravação. O "preço atual" do insumo é a compra mais recente.
 
 ## Pendências
 
-- 5.2 insumos; 5.3 produtos/composições; conversão de unidades definida junto.
+- 5.4 conversões de unidades.

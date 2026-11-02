@@ -1,6 +1,6 @@
 # Spec 040 — Cadastros (Etapa 5)
 
-**Status:** Em andamento — 5.1 (fornecedores) e 5.2 (insumos) implementados
+**Status:** Em andamento — 5.1, 5.2 e 5.3 implementados no código; 5.4 pendente
 **Fonte de verdade:** `task.md`, seção "Insumos" e "Cadastro de insumos e produtos"
 
 ## Sub-etapas
@@ -9,7 +9,7 @@
 |---|---|---|
 | 5.1 | Fornecedores | `suppliers` |
 | 5.2 | Insumos e aquisições (histórico de preços) | `supplies`, `supply_prices` | ✅ Implementada |
-| 5.3 | Produtos, receitas e composições | `products`, `product_components` |
+| 5.3 | Produtos, receitas e composições | `products`, `product_components` | ✅ Implementada |
 | 5.4 | Conversões de unidades | `supply_unit_conversions` (a definir com ETAPA de composições) |
 
 ## Fornecedores (5.1)
@@ -42,6 +42,23 @@
   continua listado se for o dono da compra em edição.
 - Serviços em `services/supabase/supplies.ts`; ações em `app/actions/supplies.ts`.
 
+## Produtos e composições (5.3)
+
+- Migrations `20261102120000_create_products.sql` e
+  `20261102130000_product_composition_integrity.sql`.
+- `products` guarda nome, modalidade, minutos de mão de obra, observações e
+  situação lógica; `product_components` referencia um insumo ou outro produto
+  com quantidade positiva de até três casas.
+- Fabricados, revenda e impressão 3D podem usar insumos ou subprodutos; kits
+  exigem ao menos um produto componente.
+- RLS permite leitura autenticada e restringe escrita a administradores.
+  Produto e composição são gravados atomicamente por RPC, com validação
+  administrativa no servidor e no banco, auditoria e bloqueio de ciclos.
+- Tela `/produtos` permite cadastrar, editar e ativar/desativar produtos; link
+  disponível somente para administradores.
+- Sem cálculo de custo ou preço de venda nesta etapa. Detalhes em
+  [`060-produtos.md`](./060-produtos.md).
+
 ## Regras da etapa
 
 - O preço do insumo vindo de cada compra não altera custos de peças já vendidas
@@ -50,4 +67,4 @@
 
 ## Pendências
 
-- Cadastro de insumos e de aquisições (5.2).
+- Conversões de unidades (5.4).
