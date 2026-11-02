@@ -58,3 +58,63 @@ describe("calculateMaterialCost", () => {
     expect(result.missing).toEqual(["Peça B"]);
   });
 });
+
+import {
+  calculateLaborCostCents,
+  calculateCostPerMinuteCents,
+  allocateMonthlyCostPerUnitCents,
+  sumComponentCostsCents,
+  calculateFullProductCostCents,
+} from "./productCost";
+
+describe("calculateLaborCostCents", () => {
+  it("calculates labor cost", () => {
+    expect(calculateLaborCostCents(30, 100)).toBe(3000);
+  });
+
+  it("rejects invalid inputs", () => {
+    expect(calculateLaborCostCents(-1, 100)).toBeNull();
+    expect(calculateLaborCostCents(30, -1)).toBeNull();
+    expect(calculateLaborCostCents(2881, 100)).toBeNull();
+  });
+});
+
+describe("calculateCostPerMinuteCents", () => {
+  it("derives cost per minute", () => {
+    expect(calculateCostPerMinuteCents(600000, 160)).toBe(63);
+  });
+
+  it("rejects zero hours", () => {
+    expect(calculateCostPerMinuteCents(600000, 0)).toBeNull();
+  });
+});
+
+describe("allocateMonthlyCostPerUnitCents", () => {
+  it("allocates per unit", () => {
+    expect(allocateMonthlyCostPerUnitCents(100000, 500)).toBe(200);
+  });
+
+  it("rejects zero output", () => {
+    expect(allocateMonthlyCostPerUnitCents(100000, 0)).toBeNull();
+  });
+});
+
+describe("sumComponentCostsCents", () => {
+  it("sums component costs", () => {
+    expect(sumComponentCostsCents([1000, 2500])).toBe(3500);
+  });
+
+  it("rejects invalid", () => {
+    expect(sumComponentCostsCents([1000, -1])).toBeNull();
+  });
+});
+
+describe("calculateFullProductCostCents", () => {
+  it("aggregates", () => {
+    expect(calculateFullProductCostCents(1000, 500, 200)).toBe(1700);
+  });
+
+  it("returns null if any missing", () => {
+    expect(calculateFullProductCostCents(1000, null, 200)).toBeNull();
+  });
+});
