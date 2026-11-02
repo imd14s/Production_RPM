@@ -2,7 +2,7 @@
 
 **Data de criação:** 2026-11-02 15:35
 **Agente:** Copilot SDK in VS Code
-**Status:** Concluída no código; migration aguarda aplicação manual
+**Status:** Implementada e commitada; migration aguarda aplicação manual
 
 ## Objetivo
 
@@ -60,4 +60,4 @@ original no histórico.
 - Validação final: `npm run typecheck`, `npm run lint` e `./pre-push.sh` aprovados;
   38 suítes e 282 testes passaram.
 - A migration ainda precisa ser aplicada no Supabase pelo responsável do projeto.
-- Commit atômico pendente.
+- Commit de implementação: `dd22080` (`track purchase units for supply acquisitions`).
