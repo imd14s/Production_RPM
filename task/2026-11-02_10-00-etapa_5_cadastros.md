@@ -2,7 +2,7 @@
 
 **Data de Criação:** 2026-11-02 10:00
 **Agente:** OpenCode — GLM-5.3-Flash Free
-**Status:** Em andamento — 5.1 concluída (fornecedores)
+**Status:** Em andamento — 5.1 e 5.2 concluídas; produtos/composições pendentes
 **Etapa:** 5 de 9 (ver `task.md`)
 
 ## Objetivo
@@ -16,7 +16,7 @@ calcula preço — a Etapa 6 consome estes cadastros.
 | Sub-etapa | Situação | Commit |
 |---|---|---|
 | 5.1 Fornecedores | ✅ Concluída | ver commit |
-| 5.2 Insumos e aquisições | Pendente | — |
+| 5.2 Insumos e aquisições | ✅ Concluída | ver commit |
 | 5.3 Produtos e composições | Pendente | — |
 | 5.4 Conversões de unidades | Pendente (estuda-se incluir na 5.2) | — |
 

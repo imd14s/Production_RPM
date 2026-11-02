@@ -14,7 +14,12 @@ export type NavigationItem = {
 
 export const NAVIGATION_ITEMS: NavigationItem[] = [
   { label: "Início", href: "/home", available: true },
-  { label: "Insumos", href: "/insumos", available: false },
+  {
+    label: "Insumos",
+    href: "/insumos",
+    available: true,
+    minimumRole: "administrador",
+  },
   {
     label: "Fornecedores",
     href: "/fornecedores",
