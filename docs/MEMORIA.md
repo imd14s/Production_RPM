@@ -309,6 +309,30 @@ o teste unitário da validação é quem segura esse tipo de escorregão.
 
 ---
 
+## [Armadilha] - Cliente Supabase usa `Date.now()` e quebra o pré-render (2026-11-01)
+
+**Problema Identificado:** ao navegar para `/home` e `/configuracoes`, o console do
+navegador exibia `Next.js encountered the unstable value Date.now() while prerendering`
+com origem em `DashboardLayout`. A tela funcionava, mas o overlay de erro insistia.
+
+**Causa Raiz:** com Cache Components ativo, o Next tenta pré-renderizar o shell de cada
+rota. O cliente Supabase (`@supabase/ssr`) compara `expires_at` com `Date.now()` ao
+validar a sessão — e relógio não pode rodar dentro de pré-render, nem com
+`instant = false` (que só desliga a validação de navegação, não o pré-render).
+
+**Correção:** `await connection()` (de `next/server`) como primeira instrução do layout
+`(dashboard)`. Isso interrompe o pré-render antes de qualquer leitura de sessão; tudo
+abaixo vira execução de requisição. As telas de configurações, filhas do layout, ficam
+cobertas pelo mesmo ponto.
+
+**Validação:** `grep "Date.now\|unstable value"` no log do servidor após acessar as rotas:
+zero ocorrências; build e 118 testes seguem verdes.
+
+**Lição:** bibliotecas de terceiros podem esconder chamadas de relógio. Em projeto com
+Cache Components, rota que lê sessão começa com `await connection()`.
+
+---
+
 ## [Decisão] - Componentes de tabela, modal e notificação adiados (2026-11-01)
 
 **Problema Identificado:** a Etapa 3 do `task.md` menciona tabelas, formulários, modais e
