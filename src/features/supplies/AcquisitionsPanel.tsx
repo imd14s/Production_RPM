@@ -1,9 +1,7 @@
 "use client";
 
-import { useCallback, useState } from "react";
 import { Badge } from "@/components/ui/Badge/Badge";
-import { Button } from "@/components/ui/Button/Button";
-import { AcquisitionForm } from "@/features/supplies/AcquisitionForm";
+import { SimpleAcquisitionForm } from "@/features/supplies/SimpleAcquisitionForm";
 import type { Supplier } from "@/features/suppliers/types";
 import type { Supply, SupplyPrice } from "@/features/supplies/types";
 import { SUPPLY_UNIT_LABELS } from "@/features/supplies/types";
@@ -27,18 +25,6 @@ type AcquisitionsPanelProps = {
  * @returns tabela de aquisições e formulário
  */
 export function AcquisitionsPanel({ supply, prices, suppliers }: AcquisitionsPanelProps) {
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [formVersion, setFormVersion] = useState(0);
-
-  /**
-   * Volta o formulário para o modo de criação.
-   */
-  const resetForm = useCallback(() => {
-    setEditingId(null);
-    setFormVersion((version) => version + 1);
-  }, []);
-
-  const editing = prices.find((price) => price.id === editingId) ?? null;
   const latest = prices[0] ?? null;
   const latestUnitLabel = latest
     ? SUPPLY_UNIT_LABELS[latest.purchaseUnit].toLowerCase()
@@ -94,14 +80,7 @@ export function AcquisitionsPanel({ supply, prices, suppliers }: AcquisitionsPan
                       {SUPPLY_UNIT_LABELS[price.purchaseUnit].toLowerCase()}
                     </td>
                     <td data-label="Ações">
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => setEditingId(price.id)}
-                      >
-                        Editar
-                      </Button>
+                      <span className={styles.actionPlaceholder}>—</span>
                     </td>
                   </tr>
                 ))}
@@ -112,15 +91,7 @@ export function AcquisitionsPanel({ supply, prices, suppliers }: AcquisitionsPan
       </section>
 
       <section className={styles.editor} aria-label="Formulário de compra">
-        <AcquisitionForm
-          key={editing ? editing.id : `nova-${formVersion}`}
-          supplyId={supply.id}
-          baseUnit={supply.unit}
-          price={editing}
-          suppliers={suppliers}
-          onCancel={resetForm}
-          onSaved={resetForm}
-        />
+        <SimpleAcquisitionForm supply={supply} onSaved={() => {}} />
       </section>
     </div>
   );

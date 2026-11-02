@@ -91,6 +91,37 @@ export function validateSupply(raw: Record<string, unknown>): ValidationResult<S
 }
 
 /**
+ * Valida os dados do insumo e da compra inicial do formulário unificado.
+ *
+ * @param raw campos enviados pelo formulário
+ * @returns os dois registros normalizados ou erros associados aos campos
+ */
+export function validateNewSupplyWithPrice(
+  raw: Record<string, unknown>,
+): ValidationResult<{ supply: SupplyInput; price: SupplyPriceInput }> {
+  const supplyValidation = validateSupply(raw);
+  const priceValidation = validateSupplyPrice(raw);
+
+  if (!supplyValidation.ok || !priceValidation.ok) {
+    return {
+      ok: false,
+      errors: {
+        ...(!supplyValidation.ok ? supplyValidation.errors : {}),
+        ...(!priceValidation.ok ? priceValidation.errors : {}),
+      },
+    };
+  }
+
+  return {
+    ok: true,
+    data: {
+      supply: supplyValidation.data,
+      price: priceValidation.data,
+    },
+  };
+}
+
+/**
  * Valida os dados de uma aquisição.
  *
  * @param raw campos do formulário

@@ -3,11 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { getAdminSession } from "@/app/actions/settings";
 import {
+  validateNewSupplyWithPrice,
   validateSupply,
   validateSupplyPrice,
 } from "@/lib/validations/supplies";
 import type { SettingsFormState } from "@/features/settings/formState";
 import {
+  createSupplyWithInitialPrice,
   saveSupply,
   saveSupplyPrice,
   setSupplyActive,
@@ -39,35 +41,62 @@ export async function saveSupplyAction(
   }
 
   const rawId = String(formData.get("id") ?? "").trim();
-  const validation = validateSupply(Object.fromEntries(formData));
+  const rawFields = Object.fromEntries(formData);
+  let savedSupplyId = rawId;
 
-  if (!validation.ok) {
-    return {
-      status: "error",
-      message: "Confira os campos destacados.",
-      errors: validation.errors,
-    };
-  }
+  if (rawId) {
+    const validation = validateSupply(rawFields);
 
-  try {
-    await saveSupply(rawId || null, validation.data);
-  } catch (error) {
-    return {
-      status: "error",
-      message: error instanceof Error ? error.message : UNEXPECTED_MESSAGE,
-      errors: {},
-    };
+    if (!validation.ok) {
+      return {
+        status: "error",
+        message: "Confira os campos destacados.",
+        errors: validation.errors,
+      };
+    }
+
+    try {
+      await saveSupply(rawId, validation.data);
+    } catch (error) {
+      return {
+        status: "error",
+        message: error instanceof Error ? error.message : UNEXPECTED_MESSAGE,
+        errors: {},
+      };
+    }
+  } else {
+    const validation = validateNewSupplyWithPrice(rawFields);
+
+    if (!validation.ok) {
+      return {
+        status: "error",
+        message: "Confira os campos destacados.",
+        errors: validation.errors,
+      };
+    }
+
+    try {
+      savedSupplyId = await createSupplyWithInitialPrice(
+        validation.data.supply,
+        validation.data.price,
+      );
+    } catch (error) {
+      return {
+        status: "error",
+        message: error instanceof Error ? error.message : UNEXPECTED_MESSAGE,
+        errors: {},
+      };
+    }
   }
 
   revalidatePath("/insumos");
-
-  if (rawId) {
-    revalidatePath(`/insumos/${rawId}`);
+  if (savedSupplyId) {
+    revalidatePath(`/insumos/${savedSupplyId}`);
   }
 
   return {
     status: "success",
-    message: rawId ? "Insumo atualizado." : "Insumo cadastrado.",
+    message: rawId ? "Insumo atualizado." : "Insumo e primeira compra cadastrados.",
     errors: {},
   };
 }

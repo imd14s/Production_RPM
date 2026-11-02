@@ -1,5 +1,6 @@
 import type {
   SupplyInput,
+  SupplyKind,
   SupplyPriceInput,
   SupplyUnit,
 } from "@/features/supplies/types";
@@ -106,6 +107,46 @@ export function buildSupplyPricePayload(
       input.quantity,
     ),
     notes: input.notes || null,
+  };
+}
+
+/**
+ * Monta os argumentos da operação que cria o insumo e sua primeira compra.
+ *
+ * @param supply dados do novo insumo
+ * @param price dados da primeira compra
+ * @returns argumentos tipados para a função transacional do banco
+ */
+export function buildSupplyWithInitialPricePayload(
+  supply: SupplyInput,
+  price: SupplyPriceInput,
+): {
+  p_name: string;
+  p_kind: SupplyKind;
+  p_unit: SupplyUnit;
+  p_supply_notes: string | null;
+  p_acquired_on: string;
+  p_quantity: number;
+  p_purchase_unit: SupplyUnit;
+  p_amount_cents: number;
+  p_freight_cents: number;
+  p_unit_cost_cents: number;
+} {
+  return {
+    p_name: supply.name,
+    p_kind: supply.kind,
+    p_unit: supply.unit,
+    p_supply_notes: supply.notes || null,
+    p_acquired_on: price.acquiredOn,
+    p_quantity: price.quantity,
+    p_purchase_unit: price.purchaseUnit,
+    p_amount_cents: price.amountCents,
+    p_freight_cents: price.freightCents,
+    p_unit_cost_cents: calculateUnitCostCents(
+      price.amountCents,
+      price.freightCents,
+      price.quantity,
+    ),
   };
 }
 

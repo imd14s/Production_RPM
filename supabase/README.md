@@ -19,6 +19,7 @@ SQL versionado do banco. Aplicar sempre na ordem do nome do arquivo.
 | `20261102190000_create_inventory_movements.sql` | Movimentações de estoque |
 | `20261102200000_add_purchase_unit_to_supply_prices.sql` | Unidade original de cada compra de insumo |
 | `20261102210000_document_purchase_unit_cost_basis.sql` | Documenta a unidade de referência do custo unitário da compra |
+| `20261102220000_create_supply_with_initial_price.sql` | Criação transacional de insumo e primeira compra |
 
 ## Como aplicar
 

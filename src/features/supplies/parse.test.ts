@@ -5,6 +5,7 @@ import {
 import {
   buildSupplyPayload,
   buildSupplyPricePayload,
+  buildSupplyWithInitialPricePayload,
   calculateUnitCostCents,
   calculateUnitCostInBaseUnit,
   convertQuantityToBaseUnit,
@@ -279,5 +280,40 @@ describe("buildSupplyPricePayload", () => {
         "grama",
       ),
     ).toBeNull();
+  });
+});
+
+describe("buildSupplyWithInitialPricePayload", () => {
+  it("creates RPC arguments for one supply and its initial purchase", () => {
+    expect(
+      buildSupplyWithInitialPricePayload(
+        {
+          name: "Cera Coco",
+          kind: "materia_prima",
+          unit: "litro",
+          notes: "",
+        },
+        {
+          supplierId: null,
+          acquiredOn: "2026-11-02",
+          quantity: 5,
+          purchaseUnit: "litro",
+          amountCents: 2500,
+          freightCents: 250,
+          notes: "",
+        },
+      ),
+    ).toEqual({
+      p_name: "Cera Coco",
+      p_kind: "materia_prima",
+      p_unit: "litro",
+      p_supply_notes: null,
+      p_acquired_on: "2026-11-02",
+      p_quantity: 5,
+      p_purchase_unit: "litro",
+      p_amount_cents: 2500,
+      p_freight_cents: 250,
+      p_unit_cost_cents: 550,
+    });
   });
 });

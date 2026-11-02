@@ -1,4 +1,64 @@
-import { validateSupply, validateSupplyPrice } from "./supplies";
+import {
+  validateNewSupplyWithPrice,
+  validateSupply,
+  validateSupplyPrice,
+} from "./supplies";
+
+describe("validateNewSupplyWithPrice", () => {
+  it("normalizes supply and initial purchase fields from one form", () => {
+    const result = validateNewSupplyWithPrice({
+      name: "Cera Coco",
+      kind: "materia_prima",
+      unit: "litro",
+      notes: "",
+      purchaseUnit: "litro",
+      quantity: "5",
+      amount: "25,00",
+      freight: "",
+      acquiredOn: "",
+    });
+
+    expect(result.ok).toBe(true);
+
+    if (result.ok) {
+      expect(result.data.supply).toEqual({
+        name: "Cera Coco",
+        kind: "materia_prima",
+        unit: "litro",
+        notes: "",
+      });
+      expect(result.data.price).toMatchObject({
+        quantity: 5,
+        purchaseUnit: "litro",
+        amountCents: 2500,
+        freightCents: 0,
+        supplierId: null,
+      });
+      expect(result.data.price.acquiredOn).toMatch(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/);
+    }
+  });
+
+  it("reports missing initial purchase values alongside supply validation", () => {
+    const result = validateNewSupplyWithPrice({
+      name: "Cera Coco",
+      kind: "materia_prima",
+      unit: "litro",
+      notes: "",
+      purchaseUnit: "litro",
+      quantity: "",
+      amount: "",
+      freight: "",
+      acquiredOn: "",
+    });
+
+    expect(result.ok).toBe(false);
+
+    if (!result.ok) {
+      expect(result.errors.quantity).toBeDefined();
+      expect(result.errors.amount).toBeDefined();
+    }
+  });
+});
 
 describe("validateSupply", () => {
   it("normalizes a valid supply", () => {

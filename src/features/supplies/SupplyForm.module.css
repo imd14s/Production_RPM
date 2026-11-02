@@ -24,3 +24,20 @@
   border-radius: var(--radius-sm);
   background: rgb(23 77 67 / 6%);
 }
+
+.purchaseFields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.purchaseTitle {
+  padding: 0 var(--space-2);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text);
+}

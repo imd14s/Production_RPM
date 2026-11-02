@@ -611,6 +611,24 @@ bloquear a compra nem atribuir custo incorreto à unidade base.
 testes do parser devem refletir o tipo JSON efetivamente recebido e validar a saída de
 apresentação consumida pela tela.
 
+## [Melhoria] - Cadastro de insumo com primeira compra em um formulário (2026-11-02)
+
+**Problema Identificado:** cadastrar um insumo e registrar sua primeira compra exigia
+dois formulários e etapas separadas.
+
+**Causa Raiz:** os dados do insumo e os dados da aquisição eram enviados por ações
+independentes, sem garantir que ambos fossem persistidos juntos.
+
+**Correção:** o formulário de inclusão reúne os dados do insumo e da compra inicial.
+A função transacional `create_supply_with_initial_price` persiste ambos com RLS e
+autorização administrativa. Edição e compras posteriores mantêm seus fluxos próprios.
+
+**Validação:** `./pre-push.sh` passou: typecheck e lint sem avisos; 38 suítes e 279
+testes. Não foi feita aplicação remota da nova migration nesta sessão.
+
+**Lição:** operações que formam um único cadastro completo devem ser validadas juntas e
+gravadas atomicamente.
+
 ## [Bug] - Coluna da unidade de compra ausente no Supabase (2026-11-02)
 
 **Problema Identificado:** salvar uma compra retornava `PGRST204` para

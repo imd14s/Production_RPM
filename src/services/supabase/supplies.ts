@@ -4,6 +4,7 @@ import {
   parseSupplyRow,
 } from "@/features/supplies/parse";
 import {
+  buildSupplyWithInitialPricePayload,
   calculateUnitCostInBaseUnit,
   buildSupplyPayload,
   buildSupplyPricePayload,
@@ -182,6 +183,39 @@ export async function saveSupply(id: string | null, input: SupplyInput): Promise
         : `Não foi possível salvar o insumo. (código ${error.code ?? "desconhecido"})`,
     );
   }
+}
+
+/**
+ * Cria um insumo e sua primeira compra em uma única transação no banco.
+ *
+ * @param supply dados validados do novo insumo
+ * @param price dados validados da compra inicial
+ * @returns identificador do novo insumo
+ */
+export async function createSupplyWithInitialPrice(
+  supply: SupplyInput,
+  price: SupplyPriceInput,
+): Promise<string> {
+  const supabase = await createClient();
+  const payload = buildSupplyWithInitialPricePayload(supply, price);
+  const { data, error } = await supabase.rpc(
+    "create_supply_with_initial_price",
+    payload,
+  );
+
+  if (error) {
+    throw new Error(
+      error.code === "23505"
+        ? "Já existe um insumo com esse nome."
+        : `Não foi possível salvar o insumo e a primeira compra. (código ${error.code ?? "desconhecido"})`,
+    );
+  }
+
+  if (typeof data !== "string") {
+    throw new Error("O banco não confirmou o insumo e a primeira compra.");
+  }
+
+  return data;
 }
 
 /**

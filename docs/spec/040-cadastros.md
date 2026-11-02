@@ -36,8 +36,13 @@
   existentes com a unidade base do insumo antes de exigir o novo campo.
 - Cada aquisição salva quantidade e unidade escolhidas (`purchase_unit`), sem
   exigir compatibilidade com a unidade cadastrada no insumo. O seletor oferece
-  kg, g, L, unidade e outro; unidades históricas já registradas continuam
+  kg, gm, L, unidade e outro; unidades históricas já registradas continuam
   disponíveis ao editar a compra correspondente.
+- Na inclusão de um novo insumo, um único formulário solicita os dados do
+  cadastro e da primeira compra. A função `create_supply_with_initial_price`
+  grava os dois registros na mesma transação, sob RLS e autorização de
+  administrador. A edição do cadastro não exige compra nova; compras posteriores
+  continuam sendo registradas na página do insumo.
 - O snapshot `unit_cost_cents` é calculado por quantidade comprada e sua unidade.
   Quando é possível determinar o custo na unidade base (mesma unidade ou
   conversão métrica do mesmo tipo), a lista de insumos usa esse custo. Quando as
@@ -72,7 +77,7 @@
 
 ## Unidades da compra (5.4)
 
-- O seletor oferece kg, g, L, unidade e outro sem filtrar opções pela unidade
+- O seletor oferece kg, gm, L, unidade e outro sem filtrar opções pela unidade
   base do insumo.
 - A compra persiste exatamente quantidade, unidade, valor e frete informados.
 - Conversões métricas podem ser usadas apenas para apresentar custo na unidade
@@ -94,4 +99,6 @@
 - A migration `20261102200000_add_purchase_unit_to_supply_prices.sql` foi aplicada ao
   Supabase e verificada em 2026-11-02: a coluna `purchase_unit` existe, é obrigatória,
   está preenchida para as aquisições existentes e é reconhecida pelo PostgREST.
+- A migration `20261102220000_create_supply_with_initial_price.sql` precisa ser aplicada
+  ao Supabase antes de usar o cadastro unificado.
 - A tabela legada de conversões manuais não é utilizada pela aplicação.
