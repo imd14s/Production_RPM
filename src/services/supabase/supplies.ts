@@ -1,11 +1,21 @@
 import { connection } from "next/server";
-import { parseSupplyPriceRow, parseSupplyRow } from "@/features/supplies/parse";
-import { buildSupplyPayload, buildSupplyPricePayload } from "@/features/supplies/payload";
+import {
+  parseSupplyPriceRow,
+  parseSupplyRow,
+  parseSupplyUnitConversionRow,
+} from "@/features/supplies/parse";
+import {
+  buildSupplyPayload,
+  buildSupplyPricePayload,
+  buildSupplyUnitConversionPayload,
+} from "@/features/supplies/payload";
 import type {
   Supply,
   SupplyInput,
   SupplyPrice,
   SupplyPriceInput,
+  SupplyUnitConversion,
+  SupplyUnitConversionInput,
   SupplyWithCost,
   SupplyWithPrices,
 } from "@/features/supplies/types";
@@ -205,6 +215,85 @@ export async function saveSupplyPrice(
   if (error) {
     throw new Error(
       `Não foi possível salvar a compra. (código ${error.code ?? "desconhecido"})`,
+    );
+  }
+}
+
+/**
+ * Carrega as conversões de unidade de um insumo.
+ *
+ * @param supplyId insumo dono das conversões
+ * @returns conversões ordenadas por unidade de origem
+ */
+export async function listUnitConversions(
+  supplyId: string,
+): Promise<SupplyUnitConversion[]> {
+  await connection();
+  const supabase = await createClient();
+
+  const result = await supabase
+    .from("supply_unit_conversions")
+    .select("*")
+    .eq("supply_id", supplyId)
+    .order("from_unit", { ascending: true })
+    .order("to_unit", { ascending: true });
+
+  if (result.error) {
+    throw new Error(
+      `Não foi possível carregar as conversões de unidade. (código ${result.error.code ?? "desconhecido"})`,
+    );
+  }
+
+  return (result.data ?? [])
+    .map(parseSupplyUnitConversionRow)
+    .filter((item): item is SupplyUnitConversion => item !== null);
+}
+
+/**
+ * Cria ou atualiza uma conversão de unidade.
+ *
+ * @param id identificador da conversão, ou null para criar
+ * @param input valores já validados
+ */
+export async function saveUnitConversion(
+  id: string | null,
+  input: SupplyUnitConversionInput,
+): Promise<void> {
+  const supabase = await createClient();
+  const payload = buildSupplyUnitConversionPayload(input);
+
+  const { error } = id
+    ? await supabase.from("supply_unit_conversions").update(payload).eq("id", id)
+    : await supabase.from("supply_unit_conversions").insert(payload);
+
+  if (error) {
+    throw new Error(
+      error.code === "23505"
+        ? "Já existe uma conversão com essas unidades para este insumo."
+        : `Não foi possível salvar a conversão. (código ${error.code ?? "desconhecido"})`,
+    );
+  }
+}
+
+/**
+ * Ativa ou desativa uma conversão de unidade.
+ *
+ * @param id identificador da conversão
+ * @param isActive nova situação
+ */
+export async function setUnitConversionActive(
+  id: string,
+  isActive: boolean,
+): Promise<void> {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("supply_unit_conversions")
+    .update({ is_active: isActive })
+    .eq("id", id);
+
+  if (error) {
+    throw new Error(
+      `Não foi possível alterar a situação da conversão. (código ${error.code ?? "desconhecido"})`,
     );
   }
 }
