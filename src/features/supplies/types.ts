@@ -68,6 +68,24 @@ export type SupplyWithPrices = {
   prices: SupplyPrice[];
 };
 
+export type SupplyUnitConversion = {
+  id: string;
+  supplyId: string;
+  fromUnit: SupplyUnit;
+  toUnit: SupplyUnit;
+  factor: number;
+  isActive: boolean;
+  notes: string;
+};
+
+export type SupplyUnitConversionInput = {
+  supplyId: string;
+  fromUnit: SupplyUnit;
+  toUnit: SupplyUnit;
+  factor: number;
+  notes: string;
+};
+
 export const SUPPLY_KIND_LABELS: Record<SupplyKind, string> = {
   materia_prima: "Matéria-prima",
   revenda: "Revenda",

@@ -1,4 +1,9 @@
-import type { SupplyInput, SupplyPriceInput, SupplyUnit } from "@/features/supplies/types";
+import type {
+  SupplyInput,
+  SupplyPriceInput,
+  SupplyUnit,
+  SupplyUnitConversionInput,
+} from "@/features/supplies/types";
 import { SUPPLY_UNITS } from "@/features/supplies/types";
 
 /**
@@ -76,4 +81,22 @@ export function parseSupplyUnit(value: unknown): SupplyUnit | null {
   return typeof value === "string" && SUPPLY_UNITS.includes(value as SupplyUnit)
     ? (value as SupplyUnit)
     : null;
+}
+
+/**
+ * Monta o payload de gravação de uma conversão de unidade.
+ *
+ * @param input conversão já validada
+ * @returns payload pronto para insert/update
+ */
+export function buildSupplyUnitConversionPayload(
+  input: SupplyUnitConversionInput,
+): Record<string, unknown> {
+  return {
+    supply_id: input.supplyId,
+    from_unit: input.fromUnit,
+    to_unit: input.toUnit,
+    factor: input.factor,
+    notes: input.notes || null,
+  };
 }

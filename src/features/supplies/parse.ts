@@ -3,6 +3,7 @@ import type {
   SupplyKind,
   SupplyPrice,
   SupplyUnit,
+  SupplyUnitConversion,
 } from "@/features/supplies/types";
 import { SUPPLY_KINDS, SUPPLY_UNITS } from "@/features/supplies/types";
 
@@ -149,4 +150,61 @@ function isValidAcquisitionDate(value: string): boolean {
   const parsed = new Date(`${value}T12:00:00Z`);
 
   return !Number.isNaN(parsed.getTime());
+}
+
+/**
+ * Converte uma linha de `supply_unit_conversions` no tipo de domínio.
+ *
+ * @param row linha retornada pelo Supabase
+ * @returns conversão tipada ou null quando o registro não segue o contrato
+ */
+export function parseSupplyUnitConversionRow(
+  row: unknown,
+): SupplyUnitConversion | null {
+  if (typeof row !== "object" || row === null) {
+    return null;
+  }
+
+  const candidate = row as Record<string, unknown>;
+  const id = candidate.id;
+  const supplyId = candidate.supply_id;
+  const fromUnit = candidate.from_unit;
+  const toUnit = candidate.to_unit;
+  const factor = readNumber(candidate.factor);
+  const isActive = candidate.isActive ?? candidate.is_active;
+  const notes = readString(candidate.notes);
+
+  if (typeof id !== "string" || typeof supplyId !== "string") {
+    return null;
+  }
+
+  if (typeof fromUnit !== "string" || !SUPPLY_UNITS.includes(fromUnit as SupplyUnit)) {
+    return null;
+  }
+
+  if (typeof toUnit !== "string" || !SUPPLY_UNITS.includes(toUnit as SupplyUnit)) {
+    return null;
+  }
+
+  if (fromUnit === toUnit) {
+    return null;
+  }
+
+  if (factor === null || !Number.isFinite(factor) || factor <= 0) {
+    return null;
+  }
+
+  if (typeof isActive !== "boolean") {
+    return null;
+  }
+
+  return {
+    id,
+    supplyId,
+    fromUnit: fromUnit as SupplyUnit,
+    toUnit: toUnit as SupplyUnit,
+    factor,
+    isActive,
+    notes,
+  };
 }
