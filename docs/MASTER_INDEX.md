@@ -9,7 +9,7 @@ alterar código.
 - Etapa 4 — Configurações empresariais: 4.1 a 4.4 implementados
 - Etapa 5 — Cadastros: concluída (código + migrations aplicadas)
 - Etapa 6 — Motor de precificação: implementada no código (motor, simulações, UI); migrations aplicadas
-- Etapa 7 — Produção e estoque: planejada, aguardando aprovação
+- Etapa 7 — Produção e estoque: implementada no código; migrations aplicadas
 
 ## Áreas
 

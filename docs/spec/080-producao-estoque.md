@@ -1,6 +1,6 @@
 # Spec 080 — Produção e estoque (Etapa 7)
 
-**Status:** Planejada (aguardando aprovação)
+**Status:** Implementada no código; migrations aplicadas
 **Fonte de verdade:** `task.md`, seções "Produção" e "Estoque"
 
 ## Objetivo

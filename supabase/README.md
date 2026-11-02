@@ -14,6 +14,9 @@ SQL versionado do banco. Aplicar sempre na ordem do nome do arquivo.
 | `20261102140000_create_supply_unit_conversions.sql` | Conversões de unidade por insumo, RLS e auditoria |
 | `20261102150000_create_cost_snapshots.sql` | Snapshots imutáveis de custo de produto |
 | `20261102160000_create_pricing_simulations.sql` | Simulações de precificação por canal e modalidade |
+| `20261102170000_create_production_batches.sql` | Lotes de produção |
+| `20261102180000_create_production_consumption.sql` | Consumo de materiais por lote |
+| `20261102190000_create_inventory_movements.sql` | Movimentações de estoque |
 
 ## Como aplicar
 
