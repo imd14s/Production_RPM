@@ -7,7 +7,8 @@ alterar código.
 
 - Etapas concluídas: **1 — Fundação**, **2 — Autenticação**, **3 — Identidade visual e estrutura**
 - Etapa 4 — Configurações empresariais: 4.1 a 4.4 implementados
-- Etapa 5 — Cadastros: 5.1 a 5.4 concluídas no código (migrations pendentes de aplicação)
+- Etapa 5 — Cadastros: concluída (código + migrations aplicadas)
+- Etapa 6 — Motor de precificação: planejada, aguardando aprovação
 
 ## Áreas
 
@@ -21,7 +22,7 @@ alterar código.
 | Fornecedores | `src/features/suppliers`, `src/app/(dashboard)/fornecedores` | [`spec/040-cadastros.md`](./spec/040-cadastros.md) | 5.1 implementado |
 | Insumos, aquisições e conversões | `src/features/supplies`, `src/app/(dashboard)/insumos` | [`spec/040-cadastros.md`](./spec/040-cadastros.md) | 5.2 e 5.4 implementados no código; migrations pendentes |
 | Produtos, receitas e kits | `src/features/products`, `src/app/(dashboard)/produtos` | [`spec/060-produtos.md`](./spec/060-produtos.md) | 5.3 implementado no código; migration pendente |
-| Motor de precificação | `src/services/calculations` | `spec/070-precificacao.md` | Não iniciado |
+| Motor de precificação | `src/services/calculations` | [`spec/070-precificacao.md`](./spec/070-precificacao.md) | Planejada — aguardando aprovação |
 | Produção e estoque | `src/features/production`, `src/features/inventory` | `spec/080-producao-estoque.md` | Não iniciado |
 | Despesas e rateios | `src/features/expenses`, `src/app/(dashboard)/despesas` | `spec/090-despesas.md` | Não iniciado |
 | Relatórios e indicadores | `src/app/(dashboard)/relatorios` | `spec/100-relatorios.md` | Não iniciado |
