@@ -86,10 +86,12 @@
   (snapshot do custo por unidade na própria compra).
 - Fornecedor é opcional na compra (aquisições avulsas existem).
 - A quantidade histórica permanece na unidade original da compra; o custo
-  unitário do snapshot é expresso na unidade base do insumo após conversão métrica.
+  unitário do snapshot também usa a unidade informada na compra. A aplicação só
+  converte o custo para a unidade base quando há equivalência métrica conhecida.
 
 ## Pendências
 
-- Aplicação das migrations necessárias da Etapa 5 no Supabase, incluindo a
-  migration de `purchase_unit` (ação manual). A tabela legada de conversões
-  manuais não é utilizada pela aplicação.
+- A migration `20261102200000_add_purchase_unit_to_supply_prices.sql` foi aplicada ao
+  Supabase e verificada em 2026-11-02: a coluna `purchase_unit` existe, é obrigatória,
+  está preenchida para as aquisições existentes e é reconhecida pelo PostgREST.
+- A tabela legada de conversões manuais não é utilizada pela aplicação.

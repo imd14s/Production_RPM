@@ -610,3 +610,24 @@ bloquear a compra nem atribuir custo incorreto à unidade base.
 **Lição:** testar somente o formato canônico não cobre a fronteira real do banco;
 testes do parser devem refletir o tipo JSON efetivamente recebido e validar a saída de
 apresentação consumida pela tela.
+
+## [Bug] - Coluna da unidade de compra ausente no Supabase (2026-11-02)
+
+**Problema Identificado:** salvar uma compra retornava `PGRST204` para
+`purchase_unit`.
+
+**Causa Raiz:** o código e a migration usavam o nome correto
+`public.supply_prices.purchase_unit`, mas essa migration ainda não havia sido aplicada
+ao banco remoto.
+
+**Correção:** aplicada em transação a migration
+`20261102200000_add_purchase_unit_to_supply_prices.sql`. A coluna foi preenchida com a
+unidade base nas aquisições existentes e definida como obrigatória; o PostgREST foi
+notificado para recarregar o schema.
+
+**Validação:** consulta ao PostgreSQL confirmou a coluna `supply_unit`, `NOT NULL` e
+preenchida na única aquisição existente. Consulta REST com a chave pública retornou
+HTTP 200 ao selecionar `purchase_unit`, confirmando que o PostgREST reconhece a coluna.
+
+**Lição:** ao alterar o payload enviado ao Supabase, confirmar no banco remoto a
+aplicação da migration correspondente e validar a coluna também pela API PostgREST.
