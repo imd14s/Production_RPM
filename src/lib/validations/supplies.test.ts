@@ -1,4 +1,4 @@
-import { validateSupply, validateSupplyPrice } from "./supplies";
+import { validateSupply, validateSupplyPrice, validateUnitConversion } from "./supplies";
 
 describe("validateSupply", () => {
   it("normalizes a valid supply", () => {
@@ -141,6 +141,141 @@ describe("validateSupplyPrice", () => {
 
     if (!badFreight.ok) {
       expect(badFreight.errors.freight).toBeDefined();
+    }
+  });
+});
+
+describe("validateUnitConversion", () => {
+  const supplyId = "11111111-2222-4333-8444-555555555555";
+
+  it("normalizes a valid conversion", () => {
+    const result = validateUnitConversion({
+      supplyId,
+      fromUnit: "quilograma",
+      toUnit: "grama",
+      factor: "1000",
+      notes: "",
+    });
+
+    expect(result.ok).toBe(true);
+
+    if (result.ok) {
+      expect(result.data).toEqual({
+        supplyId,
+        fromUnit: "quilograma",
+        toUnit: "grama",
+        factor: 1000,
+        notes: "",
+      });
+    }
+  });
+
+  it("accepts comma decimal factor", () => {
+    const result = validateUnitConversion({
+      supplyId,
+      fromUnit: "litro",
+      toUnit: "mililitro",
+      factor: "1000,5",
+      notes: "",
+    });
+
+    expect(result.ok).toBe(true);
+
+    if (result.ok) {
+      expect(result.data.factor).toBe(1000.5);
+    }
+  });
+
+  it("rejects equal units", () => {
+    const result = validateUnitConversion({
+      supplyId,
+      fromUnit: "grama",
+      toUnit: "grama",
+      factor: "1",
+      notes: "",
+    });
+
+    expect(result.ok).toBe(false);
+
+    if (!result.ok) {
+      expect(result.errors.toUnit).toBeDefined();
+    }
+  });
+
+  it("rejects invalid units", () => {
+    const result = validateUnitConversion({
+      supplyId,
+      fromUnit: "jarda",
+      toUnit: "grama",
+      factor: "1",
+      notes: "",
+    });
+
+    expect(result.ok).toBe(false);
+
+    if (!result.ok) {
+      expect(result.errors.fromUnit).toBeDefined();
+    }
+  });
+
+  it("rejects non-positive or malformed factor", () => {
+    const zero = validateUnitConversion({
+      supplyId,
+      fromUnit: "quilograma",
+      toUnit: "grama",
+      factor: "0",
+      notes: "",
+    });
+    expect(zero.ok).toBe(false);
+
+    const negative = validateUnitConversion({
+      supplyId,
+      fromUnit: "quilograma",
+      toUnit: "grama",
+      factor: "-2",
+      notes: "",
+    });
+    expect(negative.ok).toBe(false);
+
+    const malformed = validateUnitConversion({
+      supplyId,
+      fromUnit: "quilograma",
+      toUnit: "grama",
+      factor: "abc",
+      notes: "",
+    });
+    expect(malformed.ok).toBe(false);
+  });
+
+  it("rejects invalid supply id", () => {
+    const result = validateUnitConversion({
+      supplyId: "nao-uuid",
+      fromUnit: "quilograma",
+      toUnit: "grama",
+      factor: "1000",
+      notes: "",
+    });
+
+    expect(result.ok).toBe(false);
+
+    if (!result.ok) {
+      expect(result.errors.supplyId).toBeDefined();
+    }
+  });
+
+  it("rejects long notes", () => {
+    const result = validateUnitConversion({
+      supplyId,
+      fromUnit: "quilograma",
+      toUnit: "grama",
+      factor: "1000",
+      notes: "a".repeat(501),
+    });
+
+    expect(result.ok).toBe(false);
+
+    if (!result.ok) {
+      expect(result.errors.notes).toBeDefined();
     }
   });
 });

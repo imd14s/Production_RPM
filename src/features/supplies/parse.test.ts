@@ -1,10 +1,12 @@
 import {
   parseSupplyPriceRow,
   parseSupplyRow,
+  parseSupplyUnitConversionRow,
 } from "./parse";
 import {
   buildSupplyPayload,
   buildSupplyPricePayload,
+  buildSupplyUnitConversionPayload,
   calculateUnitCostCents,
   parseSupplyUnit,
 } from "./payload";
@@ -155,5 +157,89 @@ describe("buildSupplyPricePayload", () => {
 
     expect(payload.supplier_id).toBeNull();
     expect(payload.unit_cost_cents).toBe(500);
+  });
+});
+
+describe("parseSupplyUnitConversionRow", () => {
+  it("maps a conversion row", () => {
+    const conversion = parseSupplyUnitConversionRow({
+      id: "conv-1",
+      supply_id: "supply-1",
+      from_unit: "quilograma",
+      to_unit: "grama",
+      factor: 1000,
+      is_active: true,
+      notes: "fator padrão",
+    });
+
+    expect(conversion).toEqual({
+      id: "conv-1",
+      supplyId: "supply-1",
+      fromUnit: "quilograma",
+      toUnit: "grama",
+      factor: 1000,
+      isActive: true,
+      notes: "fator padrão",
+    });
+  });
+
+  it("rejects equal units and invalid factors", () => {
+    expect(
+      parseSupplyUnitConversionRow({
+        id: "conv-2",
+        supply_id: "supply-1",
+        from_unit: "grama",
+        to_unit: "grama",
+        factor: 1,
+        is_active: true,
+        notes: "",
+      }),
+    ).toBeNull();
+
+    expect(
+      parseSupplyUnitConversionRow({
+        id: "conv-3",
+        supply_id: "supply-1",
+        from_unit: "quilograma",
+        to_unit: "grama",
+        factor: 0,
+        is_active: true,
+        notes: "",
+      }),
+    ).toBeNull();
+
+    expect(parseSupplyUnitConversionRow(null)).toBeNull();
+  });
+});
+
+describe("buildSupplyUnitConversionPayload", () => {
+  it("builds the conversion payload", () => {
+    const payload = buildSupplyUnitConversionPayload({
+      supplyId: "supply-1",
+      fromUnit: "quilograma",
+      toUnit: "grama",
+      factor: 1000,
+      notes: "fator padrão",
+    });
+
+    expect(payload).toEqual({
+      supply_id: "supply-1",
+      from_unit: "quilograma",
+      to_unit: "grama",
+      factor: 1000,
+      notes: "fator padrão",
+    });
+  });
+
+  it("sends null notes when empty", () => {
+    const payload = buildSupplyUnitConversionPayload({
+      supplyId: "supply-1",
+      fromUnit: "litro",
+      toUnit: "mililitro",
+      factor: 1000,
+      notes: "",
+    });
+
+    expect(payload.notes).toBeNull();
   });
 });
