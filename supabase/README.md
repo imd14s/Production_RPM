@@ -12,6 +12,8 @@ SQL versionado do banco. Aplicar sempre na ordem do nome do arquivo.
 | `20261102120000_create_products.sql` | Produtos, modalidades, componentes, auditoria e RLS |
 | `20261102130000_product_composition_integrity.sql` | Integridade de kits, proteção contra ciclos e gravação transacional de fichas |
 | `20261102140000_create_supply_unit_conversions.sql` | Conversões de unidade por insumo, RLS e auditoria |
+| `20261102150000_create_cost_snapshots.sql` | Snapshots imutáveis de custo de produto |
+| `20261102160000_create_pricing_simulations.sql` | Simulações de precificação por canal e modalidade |
 
 ## Como aplicar
 

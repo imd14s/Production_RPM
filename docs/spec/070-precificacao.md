@@ -1,6 +1,6 @@
 # Spec 070 — Motor de precificação (Etapa 6)
 
-**Status:** Planejada (aguardando aprovação)
+**Status:** Em andamento — motor, simulações e UI implementados no código; migrations aplicadas
 **Fonte de verdade:** `task.md`, seções "Regras fundamentais de precificação" e "Motor financeiro"
 
 ## Objetivo

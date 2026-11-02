@@ -8,7 +8,7 @@ alterar código.
 - Etapas concluídas: **1 — Fundação**, **2 — Autenticação**, **3 — Identidade visual e estrutura**
 - Etapa 4 — Configurações empresariais: 4.1 a 4.4 implementados
 - Etapa 5 — Cadastros: concluída (código + migrations aplicadas)
-- Etapa 6 — Motor de precificação: planejada, aguardando aprovação
+- Etapa 6 — Motor de precificação: implementada no código (motor, simulações, UI); migrations aplicadas
 
 ## Áreas
 

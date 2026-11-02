@@ -2,7 +2,7 @@
 
 **Data de Criação:** 2026-11-02 13:00
 **Agente:** OpenCode — Beam Free
-**Status:** Planejada (aguardando aprovação)
+**Status:** ✅ Implementada no código; migrations aplicadas no Supabase
 **Etapa:** 6 de 9 (ver `task.md`)
 
 ## Objetivo
