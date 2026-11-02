@@ -498,3 +498,27 @@ fica para a Etapa 6.
 
 **Lição:** cadastrar o fator como dado (par ordenado de unidades) evita
 ambiguidade e mantém a precificação fora do cadastro.
+
+---
+
+## [Bug] - Listas de configurações não refletiam alterações (2026-11-02)
+
+**Problema Identificado:** após cadastrar ou ativar/desativar alguns registros, a
+lista, os totais e as contagens de taxas podiam continuar mostrando os dados anteriores
+até uma atualização manual da página.
+
+**Causa Raiz:** os painéis clientes recebiam as listas como propriedades renderizadas no
+servidor, mas alguns fluxos só limpavam o formulário; outros definiam um callback para
+atualizar os dados sem conectá-lo ao formulário de ativação. Despesas e mão de obra não
+atualizavam a rota no painel após as ações.
+
+**Correção:** atualizar os dados da rota após gravações bem-sucedidas e após ativar ou
+desativar registros nas listas de impostos, canais, taxas de canais, meios e taxas de
+pagamento, despesas e mão de obra. A gravação da empresa já revalidava sua rota e não
+tem lista associada.
+
+**Validação:** `npm run typecheck`, `npm run lint`, `npm run test` e `./pre-push.sh`
+passaram; 38 suítes e 268 testes unitários.
+
+**Lição:** limpar o estado do formulário não atualiza propriedades de Server Components;
+após uma mutação bem-sucedida, invalidar os dados e atualizar a rota que os exibe.

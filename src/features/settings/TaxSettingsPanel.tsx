@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { useRouter } from "next/navigation";
 import { toggleTaxAction } from "@/app/actions/settings";
 import { Badge } from "@/components/ui/Badge/Badge";
 import { Button } from "@/components/ui/Button/Button";
@@ -22,16 +23,32 @@ type TaxSettingsPanelProps = {
  * @returns painel com tabela e formulário
  */
 export function TaxSettingsPanel({ items }: TaxSettingsPanelProps) {
+  const router = useRouter();
   const [editing, setEditing] = useState<TaxSetting | null>(null);
   const [formVersion, setFormVersion] = useState(0);
 
   /**
-   * Volta o formulário para o modo de criação.
+   * Volta o formulário para o modo de criação e atualiza os dados.
    */
   const resetForm = useCallback(() => {
     setEditing(null);
     setFormVersion((version) => version + 1);
-  }, []);
+    router.refresh();
+  }, [router]);
+
+  /**
+   * Atualiza a lista depois de ativar ou desativar um imposto.
+   *
+   * @param formData identificador e estado desejado do imposto
+   * @returns conclusão da ação e da atualização da tela
+   */
+  const handleToggle = useCallback(
+    async (formData: FormData) => {
+      await toggleTaxAction(formData);
+      router.refresh();
+    },
+    [router],
+  );
 
   return (
     <div className={styles.panel}>
@@ -81,7 +98,7 @@ export function TaxSettingsPanel({ items }: TaxSettingsPanelProps) {
                           Editar
                         </Button>
 
-                        <form action={toggleTaxAction}>
+                        <form action={handleToggle}>
                           <input type="hidden" name="id" value={tax.id} />
                           <input type="hidden" name="isActive" value={String(!tax.isActive)} />
                           <PendingButton

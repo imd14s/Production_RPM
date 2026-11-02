@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { toggleChannelAction } from "@/app/actions/channels";
 import { Badge } from "@/components/ui/Badge/Badge";
 import { Button } from "@/components/ui/Button/Button";
@@ -21,16 +22,32 @@ type ChannelsPanelProps = {
  * @returns painel com tabela e formulário
  */
 export function ChannelsPanel({ items }: ChannelsPanelProps) {
+  const router = useRouter();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formVersion, setFormVersion] = useState(0);
 
   /**
-   * Volta o formulário para o modo de criação.
+   * Volta o formulário para o modo de criação e atualiza os dados.
    */
   const resetForm = useCallback(() => {
     setEditingId(null);
     setFormVersion((version) => version + 1);
-  }, []);
+    router.refresh();
+  }, [router]);
+
+  /**
+   * Atualiza a lista depois de ativar ou desativar um canal.
+   *
+   * @param formData identificador e estado desejado do canal
+   * @returns conclusão da ação e da atualização da tela
+   */
+  const handleToggle = useCallback(
+    async (formData: FormData) => {
+      await toggleChannelAction(formData);
+      router.refresh();
+    },
+    [router],
+  );
 
   const editing = items.find((item) => item.channel.id === editingId) ?? null;
 
@@ -88,7 +105,7 @@ export function ChannelsPanel({ items }: ChannelsPanelProps) {
                             Editar
                           </Button>
 
-                          <form action={toggleChannelAction}>
+                          <form action={handleToggle}>
                             <input type="hidden" name="id" value={channel.id} />
                             <input
                               type="hidden"

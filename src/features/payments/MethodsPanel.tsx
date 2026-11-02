@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { togglePaymentMethodAction } from "@/app/actions/payments";
 import { Badge } from "@/components/ui/Badge/Badge";
 import { Button } from "@/components/ui/Button/Button";
@@ -24,16 +25,32 @@ type MethodsPanelProps = {
  * @returns painel com tabela e formulário
  */
 export function MethodsPanel({ items }: MethodsPanelProps) {
+  const router = useRouter();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formVersion, setFormVersion] = useState(0);
 
   /**
-   * Volta o formulário para o modo de criação.
+   * Volta o formulário para o modo de criação e atualiza os dados.
    */
   const resetForm = useCallback(() => {
     setEditingId(null);
     setFormVersion((version) => version + 1);
-  }, []);
+    router.refresh();
+  }, [router]);
+
+  /**
+   * Atualiza a lista depois de ativar ou desativar um meio de pagamento.
+   *
+   * @param formData identificador e estado desejado do meio
+   * @returns conclusão da ação e da atualização da tela
+   */
+  const handleToggle = useCallback(
+    async (formData: FormData) => {
+      await togglePaymentMethodAction(formData);
+      router.refresh();
+    },
+    [router],
+  );
 
   const editing = items.find((item) => item.method.id === editingId) ?? null;
 
@@ -92,7 +109,7 @@ export function MethodsPanel({ items }: MethodsPanelProps) {
                             Editar
                           </Button>
 
-                          <form action={togglePaymentMethodAction}>
+                          <form action={handleToggle}>
                             <input type="hidden" name="id" value={method.id} />
                             <input
                               type="hidden"

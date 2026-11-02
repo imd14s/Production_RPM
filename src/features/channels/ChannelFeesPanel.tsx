@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { useRouter } from "next/navigation";
 import { toggleChannelFeeAction } from "@/app/actions/channels";
 import { Badge } from "@/components/ui/Badge/Badge";
 import { Button } from "@/components/ui/Button/Button";
@@ -24,18 +25,34 @@ type ChannelFeesPanelProps = {
  * @returns tabela de taxas e formulário
  */
 export function ChannelFeesPanel({ channel, fees }: ChannelFeesPanelProps) {
+  const router = useRouter();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formVersion, setFormVersion] = useState(0);
 
   /**
-   * Volta o formulário para o modo de criação.
+   * Volta o formulário para o modo de criação e atualiza os dados.
    */
   const resetForm = useCallback(() => {
     setEditingId(null);
     setFormVersion((version) => version + 1);
-  }, []);
+    router.refresh();
+  }, [router]);
 
   const editing = fees.find((fee) => fee.id === editingId) ?? null;
+
+  /**
+   * Atualiza as taxas depois de ativar ou desativar uma delas.
+   *
+   * @param formData identificador da taxa, canal e estado desejado
+   * @returns conclusão da ação e da atualização da tela
+   */
+  const handleToggle = useCallback(
+    async (formData: FormData) => {
+      await toggleChannelFeeAction(formData);
+      router.refresh();
+    },
+    [router],
+  );
 
   return (
     <div className={styles.panel}>
@@ -88,7 +105,7 @@ export function ChannelFeesPanel({ channel, fees }: ChannelFeesPanelProps) {
                           Editar
                         </Button>
 
-                        <form action={toggleChannelFeeAction}>
+                        <form action={handleToggle}>
                           <input type="hidden" name="id" value={fee.id} />
                           <input type="hidden" name="channelId" value={channel.id} />
                           <input

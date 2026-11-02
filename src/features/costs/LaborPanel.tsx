@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { useRouter } from "next/navigation";
 import { toggleLaborCostAction } from "@/app/actions/costs";
 import { Badge } from "@/components/ui/Badge/Badge";
 import { Button } from "@/components/ui/Button/Button";
@@ -22,16 +23,32 @@ type LaborPanelProps = {
  * @returns painel com tabela e formulário
  */
 export function LaborPanel({ items }: LaborPanelProps) {
+  const router = useRouter();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formVersion, setFormVersion] = useState(0);
 
   /**
-   * Volta o formulário para o modo de criação.
+   * Volta o formulário para o modo de criação e atualiza os dados.
    */
   const resetForm = useCallback(() => {
     setEditingId(null);
     setFormVersion((version) => version + 1);
-  }, []);
+    router.refresh();
+  }, [router]);
+
+  /**
+   * Atualiza a lista depois de ativar ou desativar um custo de mão de obra.
+   *
+   * @param formData identificador e estado desejado do custo
+   * @returns conclusão da ação e da atualização da tela
+   */
+  const handleToggle = useCallback(
+    async (formData: FormData) => {
+      await toggleLaborCostAction(formData);
+      router.refresh();
+    },
+    [router],
+  );
 
   const editing = items.find((item) => item.id === editingId) ?? null;
 
@@ -80,7 +97,7 @@ export function LaborPanel({ items }: LaborPanelProps) {
                           Editar
                         </Button>
 
-                        <form action={toggleLaborCostAction}>
+                        <form action={handleToggle}>
                           <input type="hidden" name="id" value={item.id} />
                           <input
                             type="hidden"

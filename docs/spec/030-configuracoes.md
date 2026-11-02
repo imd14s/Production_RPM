@@ -156,6 +156,9 @@ src/
   automaticamente — e desaparece sozinha após 6 segundos.
 - **Ação rápida (ativar/desativar):** o botão envolto em `PendingButton` fica
   desabilitado e a mesma cortina bloqueia a tela até a ação terminar.
+- **Atualização das listas:** após gravação bem-sucedida ou ativação/desativação,
+  os painéis atualizam os dados do servidor. Totais e contagens de taxas são
+  recalculados com os dados atualizados, sem recarga manual da página.
 - **Rotas de dados:** cada página que lê sessão ou banco declara
   `export const instant = false` (rota bloqueante, sem navegação instantânea).
 
