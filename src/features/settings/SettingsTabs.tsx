@@ -10,6 +10,8 @@ const SETTINGS_TABS = [
   { label: "Impostos", href: "/configuracoes/impostos" },
   { label: "Canais", href: "/configuracoes/canais" },
   { label: "Pagamentos", href: "/configuracoes/pagamentos" },
+  { label: "Despesas", href: "/configuracoes/despesas" },
+  { label: "Mão de obra", href: "/configuracoes/mao-de-obra" },
 ];
 
 /**

@@ -2,7 +2,7 @@
 
 **Data de Criação:** 2026-11-01 19:00
 **Agente:** OpenCode — DeepSeek V4.1 Flash Free
-**Status:** Em andamento — 4.1 a 4.3 concluídas
+**Status:** Em andamento — 4.1 a 4.4 concluídas; resta 4.5
 **Etapa:** 4 de 9 (ver `task.md`)
 
 ## Progresso
@@ -12,7 +12,7 @@
 | 4.1 Empresa, impostos e histórico | ✅ Concluída | `36e6cbc` |
 | 4.2 Canais de venda e taxas | ✅ Concluída | `556d2de` |
 | 4.3 Meios de pagamento e taxas | ✅ Concluída | ver commit |
-| 4.4 Despesas fixas e mão de obra | Pendente | — |
+| 4.4 Despesas fixas e mão de obra | ✅ Concluída | ver commit |
 
 ## Decisões tomadas na execução (além do plano)
 

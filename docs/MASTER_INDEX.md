@@ -15,7 +15,7 @@ alterar código.
 | Fundação, stack, scripts e estilos base | `src/styles`, `src/lib/utils`, raiz | [`spec/000-fundacao.md`](./spec/000-fundacao.md) | Implementado |
 | Autenticação, perfis e RLS | `src/app/(auth)`, `src/lib/auth`, `src/services/supabase` | [`spec/010-autenticacao.md`](./spec/010-autenticacao.md) | Implementado |
 | Identidade visual, layout e componentes base | `src/components`, `src/lib/navigation.ts`, `src/app/(dashboard)` | [`spec/020-identidade-visual.md`](./spec/020-identidade-visual.md) | Implementado |
-| Configurações da empresa e tributos | `src/features/settings`, `src/features/channels`, `src/features/payments`, `src/app/(dashboard)/configuracoes` | [`spec/030-configuracoes.md`](./spec/030-configuracoes.md) | Em andamento — 4.1 a 4.3 implementados |
+| Configurações da empresa e tributos | `src/features/settings`, `src/features/channels`, `src/features/payments`, `src/features/costs`, `src/app/(dashboard)/configuracoes` | [`spec/030-configuracoes.md`](./spec/030-configuracoes.md) | Em andamento — 4.1 a 4.4 implementados |
 | Canais e taxas de pagamento | `src/features/pricing`, `src/app/(dashboard)/precificacao` | `spec/040-canais.md` | Não iniciado |
 | Insumos e fornecedores | `src/features/supplies`, `src/app/(dashboard)/insumos` | `spec/050-insumos.md` | Não iniciado |
 | Produtos, receitas e kits | `src/features/products`, `src/app/(dashboard)/produtos` | `spec/060-produtos.md` | Não iniciado |

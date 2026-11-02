@@ -17,7 +17,7 @@ etapa **não calcula preço** — apenas guarda e audita parâmetros.
 | 4.1 | Empresa, impostos e histórico de alterações | ✅ Implementada |
 | 4.2 | Canais de venda e taxas por canal | ✅ Implementada |
 | 4.3 | Meios de pagamento e taxas | ✅ Concluída |
-| 4.4 | Despesas fixas e mão de obra | Pendente |
+| 4.4 | Despesas fixas e mão de obra | ✅ Concluída |
 
 ## Decisões de modelo
 
@@ -139,7 +139,6 @@ src/
 ## Pendências
 
 
-- 4.4: despesas fixas e mão de obra.
 - Teste de escrita com sessão real de administrador e de operador no navegador.
 
 ## Interação
@@ -169,3 +168,20 @@ src/
 - Serviços em `services/supabase/payments.ts`; ações em `app/actions/payments.ts`;
   validações em `lib/validations/payments.ts` (testadas); parser e payload de
   `features/payments` (testados campo a campo).
+
+---
+
+## Despesas fixas e mão de obra (4.4)
+
+- Tabelas: `operating_expenses` (nome + valor mensal em centavos) e `labor_costs`
+  (pessoa ou função + salário mensal em centavos + horas mensais de referência,
+  até 438 h). Migration `20261101220000_create_operating_expenses_and_labor_costs.sql`.
+- Sem tabela filha nesta família: registro de linha única e exclusão lógica.
+  A hora trabalhada (salário ÷ horas) é derivada na Etapa 6, não aqui.
+- Telas: `/configuracoes/despesas` (com total mensal ativo no cabeçalho da tabela)
+  e `/configuracoes/mao-de-obra`. Abas "Despesas" e "Mão de obra" no topo.
+- Serviços em `services/supabase/costs.ts`; ações em `app/actions/costs.ts`;
+  validações em `lib/validations/costs.ts`; converter horas em `lib/hours.ts`
+  (vírgula aceita, "176,5"); parser e payload de `features/costs` (testados).
+- Constraints no banco: valor maior que zero e horas entre 0 e 438 — rejeitados
+  na migração testados com insert de 0 e 500.
