@@ -11,6 +11,7 @@ SQL versionado do banco. Aplicar sempre na ordem do nome do arquivo.
 | `20261102110000_create_supplies.sql` | Insumos, histórico de aquisições, snapshots de custo e RLS |
 | `20261102120000_create_products.sql` | Produtos, modalidades, componentes, auditoria e RLS |
 | `20261102130000_product_composition_integrity.sql` | Integridade de kits, proteção contra ciclos e gravação transacional de fichas |
+| `20261102140000_create_supply_unit_conversions.sql` | Conversões de unidade por insumo, RLS e auditoria |
 
 ## Como aplicar
 
