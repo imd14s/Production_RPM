@@ -1,7 +1,7 @@
 # Spec 030 — Configurações empresariais
 
 **Etapa:** 4
-**Status:** Em andamento — 4.1 (empresa e impostos) e 4.2 (canais e taxas) implementados
+**Status:** Etapa implementada — aguarda validação do usuário no navegador
 **Última atualização:** 2026-11-01
 
 ## Objetivo
@@ -18,6 +18,7 @@ etapa **não calcula preço** — apenas guarda e audita parâmetros.
 | 4.2 | Canais de venda e taxas por canal | ✅ Implementada |
 | 4.3 | Meios de pagamento e taxas | ✅ Concluída |
 | 4.4 | Despesas fixas e mão de obra | ✅ Concluída |
+| 4.5 | Painel de abas e navegação | ✅ Concluída (abas em `SettingsTabs`) |
 
 ## Decisões de modelo
 
@@ -132,12 +133,18 @@ src/
 
 ## Verificação no banco (executada)
 
+- Suíte atual (167 testes): parser, payloads, validações e horas de todas as
+  famílias.
+- `tax_settings`, `channel_fees` e `payment_fees` rejeitam percentual + fixo
+  juntos e percentual acima de 100.
+- `operating_expenses`/`labor_costs` rejeitam valor zero e horas fora de faixa
+  (0–438).
+
 - `company_settings` rejeita segunda linha (singleton).
 - `tax_settings` e `channel_fees` rejeitam percentual + fixo juntos e percentual > 100.
 - Políticas RLS criadas para todas as tabelas novas.
 
 ## Pendências
-
 
 - Teste de escrita com sessão real de administrador e de operador no navegador.
 
