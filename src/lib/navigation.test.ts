@@ -51,6 +51,7 @@ describe("buildNavigation", () => {
 
     expect(navigation.available.map((item) => item.href)).toEqual([
       "/home",
+      "/fornecedores",
       "/configuracoes",
     ]);
   });
@@ -58,7 +59,7 @@ describe("buildNavigation", () => {
 
 describe("countAvailableModules", () => {
   it("counts only available modules per role", () => {
-    expect(countAvailableModules("administrador")).toBe(2);
+    expect(countAvailableModules("administrador")).toBe(3);
     expect(countAvailableModules("operador")).toBe(1);
   });
 });
