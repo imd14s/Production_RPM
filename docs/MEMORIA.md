@@ -619,15 +619,31 @@ dois formulários e etapas separadas.
 **Causa Raiz:** os dados do insumo e os dados da aquisição eram enviados por ações
 independentes, sem garantir que ambos fossem persistidos juntos.
 
-**Correção:** o formulário de inclusão reúne os dados do insumo e da compra inicial.
-A função transacional `create_supply_with_initial_price` persiste ambos com RLS e
-autorização administrativa. Edição e compras posteriores mantêm seus fluxos próprios.
+**Correção:** o formulário único de novo insumo reúne os dados do insumo e da compra,
+sem seção visual separada. Observação fica por último. A função transacional
+`create_supply_with_initial_price` persiste ambos com RLS e autorização administrativa.
+Edição e compras posteriores mantêm seus fluxos próprios.
 
-**Validação:** `./pre-push.sh` passou: typecheck e lint sem avisos; 38 suítes e 279
-testes. Não foi feita aplicação remota da nova migration nesta sessão.
+**Validação:** `./pre-push.sh` passou após a unificação: typecheck e lint sem avisos;
+38 suítes e 279 testes. Não foi feita aplicação remota da migration nesta sessão.
 
 **Lição:** operações que formam um único cadastro completo devem ser validadas juntas e
 gravadas atomicamente.
+
+## [Ajuste de interface] - Formulário de insumo sem seção de compra (2026-11-02)
+
+**Problema Identificado:** o cadastro mostrava uma divisão visual e textos de “primeira
+compra”, embora os dados pertençam ao mesmo formulário de novo insumo.
+
+**Causa Raiz:** os campos da aquisição tinham sido agrupados em uma seção distinta.
+
+**Correção:** removida a separação visual e os textos de “primeira compra”; os campos
+continuam no formulário único. Observação passou para o fim dos campos.
+
+**Validação:** `./pre-push.sh` passou: typecheck e lint sem avisos; 38 suítes e 279 testes.
+
+**Lição:** um único fluxo de cadastro deve ser apresentado sem divisões que sugiram etapas
+independentes.
 
 ## [Bug] - Coluna da unidade de compra ausente no Supabase (2026-11-02)
 

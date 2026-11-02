@@ -41,8 +41,7 @@ export function SuppliesPanel({ items }: SuppliesPanelProps) {
       <section className={styles.list} aria-label="Insumos cadastrados">
         {items.length === 0 ? (
           <p className={styles.empty}>
-            Nenhum insumo cadastrado ainda. Use o formulário ao lado para cadastrar o primeiro
-            insumo e sua compra inicial.
+            Nenhum insumo cadastrado ainda. Use o formulário ao lado para adicionar o primeiro.
           </p>
         ) : (
           <div className={styles.tableWrapper}>
@@ -134,7 +133,7 @@ export function SuppliesPanel({ items }: SuppliesPanelProps) {
         aria-label={
           editing
             ? "Formulário de insumo"
-            : "Formulário de insumo e primeira compra"
+            : "Formulário de novo insumo"
         }
       >
         <SupplyForm

@@ -38,11 +38,12 @@
   exigir compatibilidade com a unidade cadastrada no insumo. O seletor oferece
   kg, gm, L, unidade e outro; unidades históricas já registradas continuam
   disponíveis ao editar a compra correspondente.
-- Na inclusão de um novo insumo, um único formulário solicita os dados do
-  cadastro e da primeira compra. A função `create_supply_with_initial_price`
-  grava os dois registros na mesma transação, sob RLS e autorização de
-  administrador. A edição do cadastro não exige compra nova; compras posteriores
-  continuam sendo registradas na página do insumo.
+- Na inclusão de um novo insumo, um único formulário, sem seções separadas,
+  solicita os dados do cadastro e da compra. A função
+  `create_supply_with_initial_price` grava os dois registros na mesma transação,
+  sob RLS e autorização de administrador. Observação é o último campo. A edição
+  do cadastro não exige compra nova; compras posteriores continuam sendo
+  registradas na página do insumo.
 - O snapshot `unit_cost_cents` é calculado por quantidade comprada e sua unidade.
   Quando é possível determinar o custo na unidade base (mesma unidade ou
   conversão métrica do mesmo tipo), a lista de insumos usa esse custo. Quando as

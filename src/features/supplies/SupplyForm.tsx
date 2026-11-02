@@ -62,7 +62,7 @@ export function SupplyForm({ supply, onCancel, onSaved }: SupplyFormProps) {
   return (
     <form className={styles.form} action={formAction} noValidate>
       <h3 className={styles.title}>
-        {isEditing ? "Editar insumo" : "Novo insumo e primeira compra"}
+        {isEditing ? "Editar insumo" : "Novo insumo"}
       </h3>
 
       {state.status !== "idle" ? <FormAlert state={state} /> : null}
@@ -98,18 +98,8 @@ export function SupplyForm({ supply, onCancel, onSaved }: SupplyFormProps) {
         required
       />
 
-      <TextAreaField
-        label="Observação"
-        name="notes"
-        defaultValue={supply?.notes}
-        error={state.errors.notes}
-        maxLength={500}
-      />
-
       {!isEditing ? (
-        <fieldset className={styles.purchaseFields}>
-          <legend className={styles.purchaseTitle}>Primeira compra</legend>
-
+        <>
           <SelectField
             label="Unidade da compra"
             name="purchaseUnit"
@@ -158,7 +148,7 @@ export function SupplyForm({ supply, onCancel, onSaved }: SupplyFormProps) {
             error={state.errors.acquiredOn}
             hint="Vazio usa o dia de hoje."
           />
-        </fieldset>
+        </>
       ) : null}
 
       {isEditing ? (
@@ -166,6 +156,14 @@ export function SupplyForm({ supply, onCancel, onSaved }: SupplyFormProps) {
           O custo por unidade nasce das compras registradas na página do insumo.
         </p>
       ) : null}
+
+      <TextAreaField
+        label="Observação"
+        name="notes"
+        defaultValue={supply?.notes}
+        error={state.errors.notes}
+        maxLength={500}
+      />
 
       <div className={styles.actions}>
         {isEditing ? (
@@ -179,11 +177,11 @@ export function SupplyForm({ supply, onCancel, onSaved }: SupplyFormProps) {
             ? "Salvando..."
             : isEditing
               ? "Salvar insumo"
-              : "Cadastrar insumo e compra"}
+              : "Cadastrar insumo"}
         </Button>
       </div>
 
-      {isPending ? <LoadingOverlay message="Salvando insumo e compra..." /> : null}
+      {isPending ? <LoadingOverlay message="Salvando insumo..." /> : null}
     </form>
   );
 }
