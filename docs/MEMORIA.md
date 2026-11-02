@@ -565,6 +565,26 @@ suítes e 282 testes aprovados. A migration ainda depende de aplicação manual 
 normalizada antes do snapshot de custo; não deve ser inferida apenas da unidade atual do
 cadastro.
 
+## [Decisão] - Conversões métricas automáticas na compra (2026-11-02)
+
+**Problema Identificado:** o cadastro manual de fatores de conversão exigia uma tela
+separada até para equivalências universais como quilograma e grama.
+
+**Causa Raiz:** a implementação anterior generalizou fatores específicos de insumos
+(por exemplo, conteúdo de um pacote) para relações métricas fixas.
+
+**Correção:** removidos a tela, as ações e os serviços de cadastro manual. A aplicação
+converte automaticamente quilograma/grama e litro/mililitro em ambas as direções. Para
+unidades sem equivalência universal, a compra precisa usar a unidade base do insumo.
+A migration histórica da tabela de conversões é preservada, mas deixou de ser usada.
+
+**Validação:** testes unitários sem mocks cobrem conversões métricas nos dois sentidos,
+unidade igual e rejeição de unidades incompatíveis. `./pre-push.sh` passou: typecheck,
+lint, 38 suítes e 271 testes.
+
+**Lição:** automatizar equivalências físicas universais; não presumir fatores para
+embalagens cujo conteúdo depende do produto ou fornecedor.
+
 **Lição:** testar somente o formato canônico não cobre a fronteira real do banco;
 testes do parser devem refletir o tipo JSON efetivamente recebido e validar a saída de
 apresentação consumida pela tela.

@@ -23,7 +23,7 @@ alterar código.
 | Configurações da empresa e tributos | `src/features/settings`, `src/features/channels`, `src/features/payments`, `src/features/costs`, `src/app/(dashboard)/configuracoes` | [`spec/030-configuracoes.md`](./spec/030-configuracoes.md) | Em andamento — 4.1 a 4.4 implementados |
 | Canais e taxas de pagamento | `src/features/pricing`, `src/app/(dashboard)/precificacao` | `spec/040-canais.md` | Não iniciado |
 | Fornecedores | `src/features/suppliers`, `src/app/(dashboard)/fornecedores` | [`spec/040-cadastros.md`](./spec/040-cadastros.md) | 5.1 implementado |
-| Insumos, aquisições e conversões | `src/features/supplies`, `src/app/(dashboard)/insumos` | [`spec/040-cadastros.md`](./spec/040-cadastros.md) | Código implementado, incluindo unidade original da compra; aplicação das migrations pendente |
+| Insumos e aquisições | `src/features/supplies`, `src/app/(dashboard)/insumos` | [`spec/040-cadastros.md`](./spec/040-cadastros.md) | Código implementado, incluindo unidade da compra e conversões métricas automáticas; aplicação das migrations pendente |
 | Produtos, receitas e kits | `src/features/products`, `src/app/(dashboard)/produtos` | [`spec/060-produtos.md`](./spec/060-produtos.md) | 5.3 implementado no código; migration pendente |
 | Motor de precificação | `src/services/calculations` | [`spec/070-precificacao.md`](./spec/070-precificacao.md) | Planejada — aguardando aprovação |
 | Produção e estoque | `src/features/production`, `src/features/inventory` | [`spec/080-producao-estoque.md`](./spec/080-producao-estoque.md) | Planejada — aguardando aprovação |

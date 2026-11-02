@@ -7,7 +7,7 @@
 ## Objetivo
 
 Permitir registrar a quantidade da compra junto com sua unidade de medida, convertendo
-para a unidade base do insumo antes de calcular o custo por unidade e mantendo a unidade
+automaticamente medidas métricas compatíveis para a unidade base e mantendo a unidade
 original no histórico.
 
 ## Arquivos previstos
@@ -32,10 +32,8 @@ original no histórico.
    já suportadas e selecionando por padrão a unidade base do insumo.
 3. Persistir a unidade informada em cada compra e exibi-la por compra no histórico.
 4. Calcular o custo por unidade base: usar quantidade diretamente se as unidades
-   coincidirem; caso contrário, converter pela conversão ativa cadastrada para o
-   insumo    (direta ou inversa). Se houver fatores nas duas direções, aceitar apenas
-   quando forem consistentes. Sem conversão válida, impedir o salvamento e
-   apontar como cadastrar a conversão, em vez de gravar custo incorreto.
+   coincidirem; converter automaticamente grama/quilograma e mililitro/litro. Rejeitar
+   unidades diferentes sem equivalência universal.
 5. Incluir testes unitários sem mocks para validação, conversão, snapshot de custo,
    payload, leitura dos registros antigos e rótulo exibido no histórico.
 6. Atualizar documentação, executar typecheck, lint, testes e `./pre-push.sh`; revisar
@@ -44,9 +42,9 @@ original no histórico.
 ## Critérios de aceitação
 
 - O formulário solicita quantidade e unidade de compra em campos claros.
-- Compras em unidade diferente da unidade base usam fator ativo e salvam custo
-  calculado corretamente na unidade base.
-- Uma conversão ausente ou ambígua bloqueia a gravação com erro explícito.
+- Compras em unidade métrica compatível usam conversão automática e salvam o custo na
+  unidade base.
+- Unidades sem conversão universal bloqueiam o salvamento quando diferentes da base.
 - O histórico identifica a quantidade e unidade originais de cada compra.
 - Compras anteriores continuam válidas e recebem a unidade base do insumo no backfill.
 - Testes unitários verificam os cálculos e os valores apresentados, sem mocks.
@@ -55,9 +53,10 @@ original no histórico.
 ## Execução
 
 - Implementados o campo `purchase_unit`, a seleção da unidade no formulário, a
-  conversão validada no servidor e a apresentação da unidade original no histórico.
+  conversão métrica automática e a apresentação da unidade original no histórico.
 - Migration criada, mas ainda não aplicada ao Supabase.
 - Validação final: `npm run typecheck`, `npm run lint` e `./pre-push.sh` aprovados;
   38 suítes e 282 testes passaram.
 - A migration ainda precisa ser aplicada no Supabase pelo responsável do projeto.
 - Commit de implementação: `dd22080` (`track purchase units for supply acquisitions`).
+- O cadastro manual de fatores foi removido pela alteração descrita na task de 16:05.

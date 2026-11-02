@@ -1,12 +1,10 @@
 import {
   parseSupplyPriceRow,
   parseSupplyRow,
-  parseSupplyUnitConversionRow,
 } from "./parse";
 import {
   buildSupplyPayload,
   buildSupplyPricePayload,
-  buildSupplyUnitConversionPayload,
   calculateUnitCostCents,
   convertQuantityToBaseUnit,
   parseSupplyUnit,
@@ -103,71 +101,28 @@ describe("calculateUnitCostCents", () => {
 });
 
 describe("convertQuantityToBaseUnit", () => {
-  const kilogramToGram = {
-    id: "conv-kg-g",
-    supplyId: SUPPLY_ROW.id,
-    fromUnit: "quilograma" as const,
-    toUnit: "grama" as const,
-    factor: 1000,
-    isActive: true,
-    notes: "",
-  };
-
-  it("uses a direct active conversion to normalize the purchase quantity", () => {
-    expect(
-      convertQuantityToBaseUnit(2, "quilograma", "grama", [kilogramToGram]),
-    ).toBe(2000);
+  it("converts kilogram to gram and liter to milliliter automatically", () => {
+    expect(convertQuantityToBaseUnit(2, "quilograma", "grama")).toBe(2000);
+    expect(convertQuantityToBaseUnit(1.5, "litro", "mililitro")).toBe(1500);
   });
 
-  it("uses the inverse of an active conversion when needed", () => {
-    expect(
-      convertQuantityToBaseUnit(500, "grama", "quilograma", [kilogramToGram]),
-    ).toBe(0.5);
+  it("converts gram to kilogram and milliliter to liter automatically", () => {
+    expect(convertQuantityToBaseUnit(500, "grama", "quilograma")).toBe(0.5);
+    expect(convertQuantityToBaseUnit(500, "mililitro", "litro")).toBe(0.5);
   });
 
-  it("does not use inactive conversions", () => {
-    expect(() =>
-      convertQuantityToBaseUnit(2, "quilograma", "grama", [
-        { ...kilogramToGram, isActive: false },
-      ]),
-    ).toThrow("Cadastre uma conversão ativa");
+  it("keeps the quantity unchanged when both units match", () => {
+    expect(convertQuantityToBaseUnit(2.5, "grama", "grama")).toBe(2.5);
+    expect(convertQuantityToBaseUnit(3, "pacote", "pacote")).toBe(3);
   });
 
-  it("rejects missing and conflicting conversion factors", () => {
-    expect(() => convertQuantityToBaseUnit(2, "quilograma", "grama", [])).toThrow(
-      "Cadastre uma conversão ativa",
+  it("rejects incompatible unit families instead of assuming a conversion", () => {
+    expect(() => convertQuantityToBaseUnit(2, "quilograma", "metro")).toThrow(
+      "Use a unidade base do insumo",
     );
-    expect(() =>
-      convertQuantityToBaseUnit(2, "quilograma", "grama", [
-        kilogramToGram,
-        {
-          ...kilogramToGram,
-          id: "conv-g-kg",
-          fromUnit: "grama",
-          toUnit: "quilograma",
-          factor: 0.002,
-        },
-      ]),
-    ).toThrow("conversões ativas conflitantes");
-  });
-
-  it("accepts consistent conversions registered in both directions", () => {
-    expect(
-      convertQuantityToBaseUnit(2, "quilograma", "grama", [
-        kilogramToGram,
-        {
-          ...kilogramToGram,
-          id: "conv-g-kg",
-          fromUnit: "grama",
-          toUnit: "quilograma",
-          factor: 0.001,
-        },
-      ]),
-    ).toBe(2000);
-  });
-
-  it("keeps the input quantity when the purchase already uses the base unit", () => {
-    expect(convertQuantityToBaseUnit(2.5, "grama", "grama", [])).toBe(2.5);
+    expect(() => convertQuantityToBaseUnit(2, "pacote", "unidade")).toThrow(
+      "Use a unidade base do insumo",
+    );
   });
 });
 
@@ -244,16 +199,7 @@ describe("buildSupplyPricePayload", () => {
     expect(payload.unit_cost_cents).toBe(500);
   });
 
-  it("calculates cost per base unit and stores the original purchase unit", () => {
-    const conversion = {
-      id: "conv-kg-g",
-      supplyId: SUPPLY_ROW.id,
-      fromUnit: "quilograma" as const,
-      toUnit: "grama" as const,
-      factor: 1000,
-      isActive: true,
-      notes: "",
-    };
+  it("calculates cost per base unit using the automatic metric conversion", () => {
     const payload = buildSupplyPricePayload(
       SUPPLY_ROW.id,
       {
@@ -266,95 +212,10 @@ describe("buildSupplyPricePayload", () => {
         notes: "",
       },
       "grama",
-      [conversion],
     );
 
     expect(payload.quantity).toBe(2);
     expect(payload.purchase_unit).toBe("quilograma");
     expect(payload.unit_cost_cents).toBe(1);
-  });
-});
-
-describe("parseSupplyUnitConversionRow", () => {
-  it("maps a conversion row", () => {
-    const conversion = parseSupplyUnitConversionRow({
-      id: "conv-1",
-      supply_id: "supply-1",
-      from_unit: "quilograma",
-      to_unit: "grama",
-      factor: 1000,
-      is_active: true,
-      notes: "fator padrão",
-    });
-
-    expect(conversion).toEqual({
-      id: "conv-1",
-      supplyId: "supply-1",
-      fromUnit: "quilograma",
-      toUnit: "grama",
-      factor: 1000,
-      isActive: true,
-      notes: "fator padrão",
-    });
-  });
-
-  it("rejects equal units and invalid factors", () => {
-    expect(
-      parseSupplyUnitConversionRow({
-        id: "conv-2",
-        supply_id: "supply-1",
-        from_unit: "grama",
-        to_unit: "grama",
-        factor: 1,
-        is_active: true,
-        notes: "",
-      }),
-    ).toBeNull();
-
-    expect(
-      parseSupplyUnitConversionRow({
-        id: "conv-3",
-        supply_id: "supply-1",
-        from_unit: "quilograma",
-        to_unit: "grama",
-        factor: 0,
-        is_active: true,
-        notes: "",
-      }),
-    ).toBeNull();
-
-    expect(parseSupplyUnitConversionRow(null)).toBeNull();
-  });
-});
-
-describe("buildSupplyUnitConversionPayload", () => {
-  it("builds the conversion payload", () => {
-    const payload = buildSupplyUnitConversionPayload({
-      supplyId: "supply-1",
-      fromUnit: "quilograma",
-      toUnit: "grama",
-      factor: 1000,
-      notes: "fator padrão",
-    });
-
-    expect(payload).toEqual({
-      supply_id: "supply-1",
-      from_unit: "quilograma",
-      to_unit: "grama",
-      factor: 1000,
-      notes: "fator padrão",
-    });
-  });
-
-  it("sends null notes when empty", () => {
-    const payload = buildSupplyUnitConversionPayload({
-      supplyId: "supply-1",
-      fromUnit: "litro",
-      toUnit: "mililitro",
-      factor: 1000,
-      notes: "",
-    });
-
-    expect(payload.notes).toBeNull();
   });
 });

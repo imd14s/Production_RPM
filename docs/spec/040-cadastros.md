@@ -1,6 +1,6 @@
 # Spec 040 — Cadastros (Etapa 5)
 
-**Status:** Em andamento — 5.1, 5.2 e 5.3 implementados no código; 5.4 pendente
+**Status:** Em andamento — 5.1 a 5.3 implementados; conversão métrica automática implementada
 **Fonte de verdade:** `task.md`, seção "Insumos" e "Cadastro de insumos e produtos"
 
 ## Sub-etapas
@@ -10,7 +10,7 @@
 | 5.1 | Fornecedores | `suppliers` | ✅ Implementada |
 | 5.2 | Insumos e aquisições (histórico de preços) | `supplies`, `supply_prices` | ✅ Implementada |
 | 5.3 | Produtos, receitas e composições | `products`, `product_components` | ✅ Implementada |
-| 5.4 | Conversões de unidades | `supply_unit_conversions` | ✅ Implementada no código; migration pendente |
+| 5.4 | Conversão automática de unidades métricas | — | ✅ Implementada |
 
 ## Fornecedores (5.1)
 
@@ -34,13 +34,13 @@
   (`purchase_unit`), valor pago e frete. A migration
   `20261102200000_add_purchase_unit_to_supply_prices.sql` preenche compras
   existentes com a unidade base do insumo antes de exigir o novo campo.
-- O **custo por unidade base é snapshot**. A quantidade é convertida para
-  `supplies.unit` pela conversão ativa do insumo (direta ou inversa) antes de
-  calcular e armazenar o custo unitário, incluindo frete. Sem conversão ou com
-  fatores conflitantes, o salvamento falha com mensagem explícita. Fatores
-  cadastrados nas duas direções são aceitos quando consistentes.
-- Mudar preço ou conversão depois da compra não altera o custo salvo nessa
-  aquisição nem custos históricos de peças já vendidas.
+- O **custo por unidade base é snapshot**. A quantidade é convertida
+  automaticamente para `supplies.unit` quando a compra usa quilograma/grama ou
+  litro/mililitro; unidades iguais não precisam de conversão. Para unidades sem
+  equivalência universal (unidade, metro, pacote, caixa e outro), uma unidade
+  diferente da base é rejeitada com mensagem explícita, evitando custo incorreto.
+- Mudar preço depois da compra não altera o custo salvo nessa aquisição nem custos
+  históricos de peças já vendidas.
 - Quantidade com vírgula: `lib/quantity.ts` (`parseQuantityInput`, 3 casas).
 - Telas: `/insumos` (lista com custo atual, data da última compra e link de
   compras) e `/insumos/[id]` (histórico completo de compras + registro; a
@@ -66,17 +66,16 @@
 - Sem cálculo de custo ou preço de venda nesta etapa. Detalhes em
   [`060-produtos.md`](./060-produtos.md).
 
-## Conversões de unidades (5.4)
+## Conversão automática de unidades métricas (5.4)
 
-- Migration `20261102140000_create_supply_unit_conversions.sql`: tabela filha de
-  `supplies`, com `from_unit`, `to_unit`, `factor` (numeric 12,6, > 0),
-  exclusão lógica, RLS e auditoria padrão.
-- Constraint `from_unit <> to_unit` e índice único por `(supply_id, from_unit, to_unit)`.
-- Tela na página de detalhe do insumo (`/insumos/[id]`), abaixo das compras.
-- Conversões podem ser criadas, editadas e ativadas/desativadas; apenas administrador escreve.
-- No registro de compra, as conversões ativas normalizam a quantidade para a
-  unidade base antes de gerar o snapshot de custo. A conversão também fica
-  disponível para integrações posteriores de consumo e precificação.
+- O sistema converte quilograma/grama e litro/mililitro automaticamente nos dois
+  sentidos antes de calcular o custo por unidade base.
+- Unidades de contagem, comprimento e embalagem (unidade, metro, pacote, caixa e
+  outro) só podem ser compradas na mesma unidade base; não há fator presumido.
+- Não existe tela para cadastrar fatores manuais. A migration
+  `20261102140000_create_supply_unit_conversions.sql` é legado do desenho anterior
+  e não é consultada nem escrita pela aplicação. Ela permanece inalterada para
+  preservar o histórico de migrations.
 
 ## Regras da etapa
 
@@ -84,9 +83,10 @@
   (snapshot do custo por unidade na própria compra).
 - Fornecedor é opcional na compra (aquisições avulsas existem).
 - A quantidade histórica permanece na unidade original da compra; o custo
-  unitário do snapshot é expresso na unidade base do insumo.
+  unitário do snapshot é expresso na unidade base do insumo após conversão métrica.
 
 ## Pendências
 
-- Aplicação das migrations da Etapa 5 no Supabase, incluindo a migration de
-  `purchase_unit` (ação manual).
+- Aplicação das migrations necessárias da Etapa 5 no Supabase, incluindo a
+  migration de `purchase_unit` (ação manual). A tabela legada de conversões
+  manuais não é utilizada pela aplicação.

@@ -1,4 +1,4 @@
-import { convertQuantity } from "./units";
+import { convertQuantity, convertStandardQuantity } from "./units";
 
 describe("convertQuantity", () => {
   it("converts using the factor", () => {
@@ -14,5 +14,21 @@ describe("convertQuantity", () => {
     expect(convertQuantity(2, 0)).toBeNull();
     expect(convertQuantity(NaN, 1000)).toBeNull();
     expect(convertQuantity(2, NaN)).toBeNull();
+  });
+});
+
+describe("convertStandardQuantity", () => {
+  it("converts metric mass and volume units in both directions", () => {
+    expect(convertStandardQuantity(2, "quilograma", "grama")).toBe(2000);
+    expect(convertStandardQuantity(500, "grama", "quilograma")).toBe(0.5);
+    expect(convertStandardQuantity(2, "litro", "mililitro")).toBe(2000);
+    expect(convertStandardQuantity(500, "mililitro", "litro")).toBe(0.5);
+  });
+
+  it("keeps identical units and rejects incompatible units", () => {
+    expect(convertStandardQuantity(3, "pacote", "pacote")).toBe(3);
+    expect(convertStandardQuantity(2, "pacote", "unidade")).toBeNull();
+    expect(convertStandardQuantity(2, "quilograma", "litro")).toBeNull();
+    expect(convertStandardQuantity(0, "quilograma", "grama")).toBeNull();
   });
 });

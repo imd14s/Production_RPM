@@ -33,3 +33,31 @@ export function convertQuantity(
 
   return Number(converted.toFixed(6));
 }
+
+/**
+ * Converte entre unidades com equivalência métrica fixa.
+ *
+ * @param quantity quantidade na unidade de origem
+ * @param fromUnit unidade de origem
+ * @param toUnit unidade de destino
+ * @returns quantidade convertida ou null para unidades incompatíveis/inválidas
+ */
+export function convertStandardQuantity(
+  quantity: number,
+  fromUnit: string,
+  toUnit: string,
+): number | null {
+  if (fromUnit === toUnit) {
+    return Number.isFinite(quantity) && quantity > 0 ? quantity : null;
+  }
+
+  const conversionFactors: Record<string, Record<string, number>> = {
+    grama: { quilograma: 0.001 },
+    quilograma: { grama: 1000 },
+    litro: { mililitro: 1000 },
+    mililitro: { litro: 0.001 },
+  };
+  const factor = conversionFactors[fromUnit]?.[toUnit];
+
+  return factor === undefined ? null : convertQuantity(quantity, factor);
+}

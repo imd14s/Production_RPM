@@ -6,7 +6,6 @@ import type {
   SupplyKind,
   SupplyPriceInput,
   SupplyUnit,
-  SupplyUnitConversionInput,
 } from "@/features/supplies/types";
 import { SUPPLY_KINDS, SUPPLY_UNITS } from "@/features/supplies/types";
 
@@ -159,96 +158,6 @@ export function validateSupplyPrice(
       purchaseUnit,
       amountCents: amountCents as number,
       freightCents,
-      notes,
-    },
-  };
-}
-
-/**
- * Converte o texto do fator em número decimal seguro.
- *
- * @param value texto digitado (vírgula ou ponto)
- * @returns número válido ou null
- */
-function parseFactorInput(value: string): number | null {
-  const normalized = value.trim().replace(",", ".");
-
-  if (!normalized) {
-    return null;
-  }
-
-  if (!/^[0-9]+(?:\.[0-9]{1,6})?$/.test(normalized)) {
-    return null;
-  }
-
-  const parsed = Number(normalized);
-
-  if (!Number.isFinite(parsed) || parsed <= 0) {
-    return null;
-  }
-
-  return parsed;
-}
-
-/**
- * Valida os dados de uma conversão de unidade.
- *
- * @param raw campos do formulário
- * @returns conversão normalizada ou mensagens por campo
- */
-export function validateUnitConversion(
-  raw: Record<string, unknown>,
-): ValidationResult<SupplyUnitConversionInput> {
-  const errors: Record<string, string> = {};
-
-  const supplyId = readText(raw, "supplyId");
-  const fromUnitText = readText(raw, "fromUnit");
-  const toUnitText = readText(raw, "toUnit");
-  const factor = parseFactorInput(readText(raw, "factor"));
-  const notes = readText(raw, "notes");
-
-  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(supplyId)) {
-    errors.supplyId = "Insumo inválido.";
-  }
-
-  const fromUnit = fromUnitText as SupplyUnit;
-  const toUnit = toUnitText as SupplyUnit;
-
-  if (!SUPPLY_UNITS.includes(fromUnit)) {
-    errors.fromUnit = "Escolha a unidade de origem.";
-  }
-
-  if (!SUPPLY_UNITS.includes(toUnit)) {
-    errors.toUnit = "Escolha a unidade de destino.";
-  }
-
-  if (
-    SUPPLY_UNITS.includes(fromUnit) &&
-    SUPPLY_UNITS.includes(toUnit) &&
-    fromUnit === toUnit
-  ) {
-    errors.toUnit = "A unidade de destino deve ser diferente da de origem.";
-  }
-
-  if (factor === null) {
-    errors.factor = "Informe um fator de conversão válido (maior que zero).";
-  }
-
-  if (notes.length > 500) {
-    errors.notes = "Observação deve ter até 500 caracteres.";
-  }
-
-  if (Object.keys(errors).length > 0) {
-    return { ok: false, errors };
-  }
-
-  return {
-    ok: true,
-    data: {
-      supplyId,
-      fromUnit,
-      toUnit,
-      factor: factor as number,
       notes,
     },
   };

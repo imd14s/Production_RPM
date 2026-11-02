@@ -2,7 +2,7 @@
 
 **Data de Criação:** 2026-11-02 12:00
 **Agente:** OpenCode — Beam Free
-**Status:** ✅ Código concluído; migrations pendentes de aplicação no Supabase
+**Status:** Substituída por conversão métrica automática; cadastro manual removido
 **Etapa:** 5 de 9 (ver `task.md`)
 
 ## Objetivo
@@ -71,5 +71,7 @@ supply_unit_conversions (
 
 ## Pendências
 
-- Aplicação da migration no Supabase (ação manual).
-- Integração ao motor de custo (Etapa 6).
+- A migration histórica `20261102140000_create_supply_unit_conversions.sql` permanece
+  inalterada; a aplicação não consulta nem grava nessa tabela.
+- O comportamento atual está documentado em
+  `task/2026-11-02_16-05-conversao-automatica-unidades-medida.md`.

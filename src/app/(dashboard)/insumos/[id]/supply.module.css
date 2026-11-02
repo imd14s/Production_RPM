@@ -15,14 +15,3 @@
 .back:hover {
   color: var(--color-primary);
 }
-
-.section {
-  display: grid;
-  gap: var(--space-3);
-}
-
-.sectionTitle {
-  margin: 0;
-  font-size: var(--font-size-lg);
-  font-weight: 600;
-}
