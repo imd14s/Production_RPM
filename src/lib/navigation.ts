@@ -38,8 +38,18 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
     available: true,
     minimumRole: "administrador",
   },
-  { label: "Produção", href: "/producao", available: false },
-  { label: "Estoque", href: "/estoque", available: false },
+  {
+    label: "Produção",
+    href: "/producao",
+    available: true,
+    minimumRole: "administrador",
+  },
+  {
+    label: "Estoque",
+    href: "/estoque",
+    available: true,
+    minimumRole: "administrador",
+  },
   { label: "Despesas", href: "/despesas", available: false },
   { label: "Relatórios", href: "/relatorios", available: false },
   {

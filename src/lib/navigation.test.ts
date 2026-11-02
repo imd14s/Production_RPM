@@ -55,6 +55,8 @@ describe("buildNavigation", () => {
       "/fornecedores",
       "/produtos",
       "/precificacao",
+      "/producao",
+      "/estoque",
       "/configuracoes",
     ]);
   });
@@ -62,7 +64,7 @@ describe("buildNavigation", () => {
 
 describe("countAvailableModules", () => {
   it("counts only available modules per role", () => {
-    expect(countAvailableModules("administrador")).toBe(6);
+    expect(countAvailableModules("administrador")).toBe(8);
     expect(countAvailableModules("operador")).toBe(1);
   });
 });
