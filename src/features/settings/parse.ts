@@ -7,6 +7,7 @@ import {
   type TaxRegime,
   type TaxSetting,
 } from "./types";
+import { parsePercentInput } from "@/lib/percent";
 
 /**
  * Lê um campo textual de uma linha do banco.
@@ -98,7 +99,10 @@ export function parseTaxRow(row: unknown): TaxSetting | null {
     return null;
   }
 
-  const rate = typeof candidate.rate === "string" ? candidate.rate : null;
+  const rate =
+    typeof candidate.rate === "string" || typeof candidate.rate === "number"
+      ? parsePercentInput(candidate.rate)
+      : null;
   const amountCents =
     typeof candidate.amount_cents === "number" ? candidate.amount_cents : null;
 

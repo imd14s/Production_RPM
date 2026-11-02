@@ -522,3 +522,27 @@ passaram; 38 suítes e 268 testes unitários.
 
 **Lição:** limpar o estado do formulário não atualiza propriedades de Server Components;
 após uma mutação bem-sucedida, invalidar os dados e atualizar a rota que os exibe.
+
+---
+
+## [Bug] - Parsers descartavam taxas com percentual numérico (2026-11-02)
+
+**Problema Identificado:** as telas de impostos, taxas de canal e taxas de pagamento
+indicavam lista vazia apesar de haver registros ativos no banco.
+
+**Causa Raiz:** consultas Supabase retornam colunas PostgreSQL `numeric` como números
+JSON; os parsers aceitavam somente strings para `rate` e retornavam `null`, removendo a
+linha da lista. Os testes cobriam somente taxas em string e não verificavam o valor
+formatado exibido pela tabela.
+
+**Correção:** o parser compartilhado de percentual passa a aceitar string ou número,
+validar a faixa e normalizar para o formato canônico. Os três parsers usam essa função;
+testes sem mocks percorrem o formato numérico de banco até o percentual formatado que
+cada célula exibe.
+
+**Validação:** testes focados cobriram os 3 parsers com percentuais numéricos e os rótulos
+formatados usados nas células, sem mocks; typecheck, lint e `./pre-push.sh` passaram.
+
+**Lição:** testar somente o formato canônico não cobre a fronteira real do banco;
+testes do parser devem refletir o tipo JSON efetivamente recebido e validar a saída de
+apresentação consumida pela tela.

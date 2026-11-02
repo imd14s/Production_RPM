@@ -1,4 +1,5 @@
 import { parseChannelFeeRow, parseChannelRow } from "./parse";
+import { formatPercentLabel } from "@/lib/percent";
 
 const CHANNEL_ROW = {
   id: "a1b2c3d4-0000-4000-8000-000000000001",
@@ -54,6 +55,13 @@ describe("parseChannelFeeRow", () => {
     expect(fee?.amountCents).toBeNull();
   });
 
+  it("parses numeric database rates into the value displayed by the channel list", () => {
+    const fee = parseChannelFeeRow({ ...FEE_ROW, rate: 8 });
+
+    expect(fee?.rate).toBe("8.000000");
+    expect(fee ? formatPercentLabel(fee.rate ?? "0") : null).toBe("8 %");
+  });
+
   it("parses a fixed fee with installments", () => {
     const fee = parseChannelFeeRow({ ...FEE_ROW, kind: "fixo", rate: null, amount_cents: 690, installments: 6 });
 
@@ -64,6 +72,8 @@ describe("parseChannelFeeRow", () => {
   it("rejects inconsistent value and kind", () => {
     expect(parseChannelFeeRow({ ...FEE_ROW, rate: null })).toBeNull();
     expect(parseChannelFeeRow({ ...FEE_ROW, kind: "fixo" })).toBeNull();
+    expect(parseChannelFeeRow({ ...FEE_ROW, rate: "inválido" })).toBeNull();
+    expect(parseChannelFeeRow({ ...FEE_ROW, rate: 101 })).toBeNull();
   });
 
   it("rejects installments outside the valid range", () => {

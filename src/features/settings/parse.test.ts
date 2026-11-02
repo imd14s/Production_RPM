@@ -1,4 +1,5 @@
 import { parseCompanyRow, parseTaxRow } from "./parse";
+import { formatPercentLabel } from "@/lib/percent";
 
 const COMPANY_ROW = {
   id: 1,
@@ -68,6 +69,13 @@ describe("parseTaxRow", () => {
     });
   });
 
+  it("parses numeric database rates into the value displayed by the tax list", () => {
+    const tax = parseTaxRow({ ...PERCENT_ROW, rate: 3 });
+
+    expect(tax?.rate).toBe("3.000000");
+    expect(tax ? formatPercentLabel(tax.rate ?? "0") : null).toBe("3 %");
+  });
+
   it("parses a fixed tax", () => {
     const tax = parseTaxRow({
       ...PERCENT_ROW,
@@ -85,5 +93,7 @@ describe("parseTaxRow", () => {
     expect(parseTaxRow({ ...PERCENT_ROW, kind: "outro" })).toBeNull();
     expect(parseTaxRow({ ...PERCENT_ROW, is_active: "sim" })).toBeNull();
     expect(parseTaxRow({ ...PERCENT_ROW, name: "" })).toBeNull();
+    expect(parseTaxRow({ ...PERCENT_ROW, rate: "inválido" })).toBeNull();
+    expect(parseTaxRow({ ...PERCENT_ROW, rate: 101 })).toBeNull();
   });
 });

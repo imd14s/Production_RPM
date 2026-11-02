@@ -2,6 +2,7 @@ import {
   parsePaymentFeeRow,
   parsePaymentMethodRow,
 } from "./parse";
+import { formatPercentLabel } from "@/lib/percent";
 
 const METHOD_ROW = {
   id: "c1b2c3d4-0000-4000-8000-000000000001",
@@ -66,6 +67,13 @@ describe("parsePaymentFeeRow", () => {
     });
   });
 
+  it("parses numeric database rates into the value displayed by the payment list", () => {
+    const fee = parsePaymentFeeRow({ ...FEE_ROW, rate: 5 });
+
+    expect(fee?.rate).toBe("5.000000");
+    expect(fee ? formatPercentLabel(fee.rate ?? "0") : null).toBe("5 %");
+  });
+
   it("maps a fixed fee with installments", () => {
     const fee = parsePaymentFeeRow({
       ...FEE_ROW,
@@ -86,5 +94,7 @@ describe("parsePaymentFeeRow", () => {
     expect(parsePaymentFeeRow({ ...FEE_ROW, installments: 1.5 })).toBeNull();
     expect(parsePaymentFeeRow({ ...FEE_ROW, kind: "fixo" })).toBeNull();
     expect(parsePaymentFeeRow({ ...FEE_ROW, method_id: null })).toBeNull();
+    expect(parsePaymentFeeRow({ ...FEE_ROW, rate: "inválido" })).toBeNull();
+    expect(parsePaymentFeeRow({ ...FEE_ROW, rate: 101 })).toBeNull();
   });
 });

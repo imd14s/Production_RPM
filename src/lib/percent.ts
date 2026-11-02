@@ -13,11 +13,12 @@ export const PERCENT_DECIMALS = 6;
 /**
  * Normaliza um percentual digitado para o formato canônico do banco ("12.500000").
  *
- * @param input texto como "12,5", "12.5" ou "12,5%"
+ * @param input texto como "12,5", "12.5" ou "12,5%", ou número do banco
  * @returns string canônica ou null quando inválido
  */
-export function parsePercentInput(input: string): string | null {
-  const cleaned = input.trim().replace(/%/g, "").replace(",", ".");
+export function parsePercentInput(input: string | number): string | null {
+  const text = typeof input === "number" ? String(input) : input;
+  const cleaned = text.trim().replace(/%/g, "").replace(",", ".");
 
   if (!/^[0-9]{1,3}(\.[0-9]{1,6})?$/.test(cleaned)) {
     return null;
@@ -61,4 +62,14 @@ export function formatPercent(value: string | number): string {
   const trimmed = text.replace(/(\.\d*?)0+$/, "$1").replace(/\.$/, "");
 
   return trimmed.replace(".", ",");
+}
+
+/**
+ * Formata um percentual como texto pronto para exibição em uma célula.
+ *
+ * @param value percentual canônico ou número
+ * @returns percentual formatado com símbolo e espaçamento pt-BR
+ */
+export function formatPercentLabel(value: string | number): string {
+  return `${formatPercent(value)} %`;
 }

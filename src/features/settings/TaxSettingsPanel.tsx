@@ -9,7 +9,7 @@ import { PendingButton } from "@/components/ui/PendingButton/PendingButton";
 import { TaxForm } from "@/features/settings/TaxForm";
 import { TAX_KIND_LABELS, type TaxSetting } from "@/features/settings/types";
 import { formatCents } from "@/lib/money";
-import { formatPercent } from "@/lib/percent";
+import { formatPercentLabel } from "@/lib/percent";
 import styles from "./TaxSettingsPanel.module.css";
 
 type TaxSettingsPanelProps = {
@@ -77,7 +77,7 @@ export function TaxSettingsPanel({ items }: TaxSettingsPanelProps) {
                     <td data-label="Tipo">{TAX_KIND_LABELS[tax.kind]}</td>
                     <td data-label="Valor">
                       {tax.kind === "percentual"
-                        ? `${formatPercent(tax.rate ?? "0")} %`
+                        ? formatPercentLabel(tax.rate ?? "0")
                         : formatCents(tax.amountCents ?? 0)}
                     </td>
                     <td data-label="Situação">

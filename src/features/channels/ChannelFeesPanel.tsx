@@ -9,7 +9,7 @@ import { PendingButton } from "@/components/ui/PendingButton/PendingButton";
 import { FeeForm } from "@/features/channels/FeeForm";
 import { TAX_KIND_LABELS, type Channel, type ChannelFee } from "@/features/channels/types";
 import { formatCents } from "@/lib/money";
-import { formatPercent } from "@/lib/percent";
+import { formatPercentLabel } from "@/lib/percent";
 import styles from "./ChannelFeesPanel.module.css";
 
 type ChannelFeesPanelProps = {
@@ -83,7 +83,7 @@ export function ChannelFeesPanel({ channel, fees }: ChannelFeesPanelProps) {
                     <td data-label="Tipo">{TAX_KIND_LABELS[fee.kind]}</td>
                     <td data-label="Valor">
                       {fee.kind === "percentual"
-                        ? `${formatPercent(fee.rate ?? "0")} %`
+                        ? formatPercentLabel(fee.rate ?? "0")
                         : formatCents(fee.amountCents ?? 0)}
                     </td>
                     <td data-label="Parcelas">{fee.installments ?? "Qualquer"}</td>

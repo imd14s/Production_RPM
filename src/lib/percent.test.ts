@@ -1,4 +1,9 @@
-import { formatPercent, parsePercentInput, percentToMicros } from "./percent";
+import {
+  formatPercent,
+  formatPercentLabel,
+  parsePercentInput,
+  percentToMicros,
+} from "./percent";
 
 describe("parsePercentInput", () => {
   it("normalizes brazilian comma to canonical format", () => {
@@ -16,6 +21,11 @@ describe("parsePercentInput", () => {
   it("accepts integers", () => {
     expect(parsePercentInput("0")).toBe("0.000000");
     expect(parsePercentInput("100")).toBe("100.000000");
+  });
+
+  it("normalizes numeric values returned by the database", () => {
+    expect(parsePercentInput(3)).toBe("3.000000");
+    expect(parsePercentInput(8.25)).toBe("8.250000");
   });
 
   it("rejects values above one hundred", () => {
@@ -60,5 +70,10 @@ describe("formatPercent", () => {
 
   it("formats numeric values", () => {
     expect(formatPercent(12.5)).toBe("12,5");
+  });
+
+  it("formats the complete percentage label displayed in configuration tables", () => {
+    expect(formatPercentLabel("3.000000")).toBe("3 %");
+    expect(formatPercentLabel("8.250000")).toBe("8,25 %");
   });
 });

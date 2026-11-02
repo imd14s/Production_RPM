@@ -1,4 +1,5 @@
 import type { TaxKind } from "@/features/settings/types";
+import { parsePercentInput } from "@/lib/percent";
 import { type PaymentFee, type PaymentMethod, type PaymentMethodKind, PAYMENT_METHOD_KINDS } from "./types";
 
 /**
@@ -97,7 +98,10 @@ export function parsePaymentFeeRow(row: unknown): PaymentFee | null {
     return null;
   }
 
-  const rate = typeof candidate.rate === "string" ? candidate.rate : null;
+  const rate =
+    typeof candidate.rate === "string" || typeof candidate.rate === "number"
+      ? parsePercentInput(candidate.rate)
+      : null;
   const amountCents = readNumber(candidate.amount_cents);
   const installments = readNumber(candidate.installments);
 

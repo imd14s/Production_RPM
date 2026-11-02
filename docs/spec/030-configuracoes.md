@@ -159,6 +159,12 @@ src/
 - **Atualização das listas:** após gravação bem-sucedida ou ativação/desativação,
   os painéis atualizam os dados do servidor. Totais e contagens de taxas são
   recalculados com os dados atualizados, sem recarga manual da página.
+- **Percentuais recebidos do banco:** parsers aceitam percentuais `numeric` serializados
+  como número ou texto, validam a faixa e normalizam para seis casas decimais antes
+  da formatação pt-BR nas tabelas.
+- **Testes de exibição percentual:** testes unitários sem mocks percorrem uma linha
+  numérica recebida do banco pelo parser e verificam o mesmo texto final produzido pela
+  função usada nas células de impostos, canais e pagamentos.
 - **Rotas de dados:** cada página que lê sessão ou banco declara
   `export const instant = false` (rota bloqueante, sem navegação instantânea).
 
