@@ -51,7 +51,12 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
     minimumRole: "administrador",
   },
   { label: "Despesas", href: "/despesas", available: false },
-  { label: "Relatórios", href: "/relatorios", available: false },
+  {
+    label: "Relatórios",
+    href: "/relatorios",
+    available: true,
+    minimumRole: "administrador",
+  },
   {
     label: "Configurações",
     href: "/configuracoes",
