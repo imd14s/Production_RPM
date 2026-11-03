@@ -21,6 +21,10 @@ SQL versionado do banco. Aplicar sempre na ordem do nome do arquivo.
 | `20261102210000_document_purchase_unit_cost_basis.sql` | Documenta a unidade de referência do custo unitário da compra |
 | `20261102220000_create_supply_with_initial_price.sql` | Criação transacional de insumo e primeira compra |
 | `20261102230000_replace_supply_price_history_with_current_cost.sql` | Migra o custo atual compatível para `supplies` e remove o histórico de aquisições |
+| `20261103070000_drop_production_and_inventory.sql` | Remove as tabelas de produção e estoque |
+| `20261103071000_add_cost_settings_to_company.sql` | Volume mensal estimado e margens padrão em `company_settings` |
+| `20261103072000_add_printing_costs_to_products.sql` | Custos auxiliares de impressão 3D em `products` |
+| `20261103073000_extend_product_costs.sql` | RPC de produto atualizada para gravar os custos auxiliares |
 
 ## Como aplicar
 
@@ -31,7 +35,17 @@ SQL versionado do banco. Aplicar sempre na ordem do nome do arquivo.
 3. Confira em **Table Editor** se `profiles`, `suppliers`, `supplies`,
    `products` e `product_components` existem.
 4. Após a última migration, confira em `supplies` as colunas de custo atual
-   (`quantity`, `acquired_on`, `amount_cents`, `freight_cents` e `unit_cost_cents`).
+   (`quantity`, `acquired_on`, `amount_cents`, `freight_cents` e `unit_cost_cents`);
+   em `company_settings` as colunas de rateio
+   (`monthly_output_units`, `default_retail_margin`, `default_wholesale_margin`);
+   e em `products` as colunas de impressão 3D
+   (`energy_cost_cents`, `machine_cost_cents`, `finishing_cost_cents`
+   e `failure_rate_percent`).
+5. Após aplicar qualquer migration que mude funções ou colunas, notifique o
+   PostgREST para recarregar o schema:
+   ```sql
+   notify pgrst, 'reload schema';
+   ```
 
 ### Opção 2 — Supabase CLI / conexão direta
 

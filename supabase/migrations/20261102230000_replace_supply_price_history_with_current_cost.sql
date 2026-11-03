@@ -98,7 +98,7 @@ set
 from valid_prices as valid
 where supply.id = valid.supply_id;
 
-drop function public.create_supply_with_initial_price(
+drop function if exists public.create_supply_with_initial_price(
   text,
   public.supply_kind,
   public.supply_unit,
