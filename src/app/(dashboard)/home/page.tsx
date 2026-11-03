@@ -39,8 +39,12 @@ export default async function HomePage() {
       getCompanySettings(),
     ]);
 
+    const activeProducts = catalog.products.filter(
+      (product) => product.isActive,
+    );
+
     const productsWithCostData = await Promise.all(
-      catalog.products.map(async (product) => {
+      activeProducts.map(async (product) => {
         const cost = await getProductCostBreakdown(product.id);
         return {
           product,
@@ -57,7 +61,7 @@ export default async function HomePage() {
     }));
 
     const simulationsByProduct = await Promise.all(
-      catalog.products.map(async (product) => ({
+      activeProducts.map(async (product) => ({
         productId: product.id,
         simulations: await listPricingSimulationsByProduct(product.id),
       })),
