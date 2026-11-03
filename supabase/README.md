@@ -25,6 +25,7 @@ SQL versionado do banco. Aplicar sempre na ordem do nome do arquivo.
 | `20261103071000_add_cost_settings_to_company.sql` | Volume mensal estimado e margens padrão em `company_settings` |
 | `20261103072000_add_printing_costs_to_products.sql` | Custos auxiliares de impressão 3D em `products` |
 | `20261103073000_extend_product_costs.sql` | RPC de produto atualizada para gravar os custos auxiliares |
+| `20261103080000_seed_market_base_fees.sql` | Valores base de mercado (11/2026): comissão e tarifa do ML, TikTok Shop, canais novos, Point desmembrado, DAS-MEI como despesa |
 
 ## Como aplicar
 
