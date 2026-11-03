@@ -1,11 +1,22 @@
 /**
  * Resolução do custo de um produto a partir do catálogo e dos insumos.
  *
- * Resolve recursivamente subprodutos e aplica o custo de material existente.
+ * Resolve recursivamente subprodutos, mão de obra, custos diretos
+ * (impressão 3D, acabamento) e o rateio de despesas operacionais.
  * Não acessa banco: recebe os dados já carregados.
+ *
+ * Regra do overhead: o rateio de despesas operacionais entra **uma vez por
+ * produto final** (chamada de nível superior). Quando um produto aparece como
+ * componente de outro, o custo retornado pelo cache não inclui overhead; quem
+ * cobra o rateio é o produto final que o contem.
  */
 
-import { calculateLaborCostCents, calculateMaterialCost } from "./productCost";
+import {
+  calculateFullProductCostCents,
+  calculateLaborCostCents,
+  calculateMaterialCost,
+  sumComponentCostsCents,
+} from "./productCost";
 
 export type CompositionEdge = {
   targetType: "supply" | "product";
@@ -38,12 +49,14 @@ export type ResolvedProductCost = {
 };
 
 /**
- * Resolve o custo de material de um produto, resolvendo subprodutos.
+ * Resolve o custo de um produto, resolvendo subprodutos.
  *
  * @param productId produto a resolver
  * @param productsById mapa de produtos
  * @param suppliesById mapa de insumos com custo
- * @param memo cache de resultados
+ * @param memo cache entre chamadas — guarda o custo SEM overhead
+ * @param laborCostPerMinuteCents custo de mão de obra por minuto, ou null
+ * @param overheadPerUnitCents despesa rateada por unidade (só nível superior)
  * @returns custo resolvido
  */
 export function resolveProductCost(
@@ -57,7 +70,9 @@ export function resolveProductCost(
   const cached = memo.get(productId);
 
   if (cached) {
-    return cached;
+    return overheadPerUnitCents > 0
+      ? { ...cached, totalCents: addOverheadCents(cached.totalCents, overheadPerUnitCents) }
+      : cached;
   }
 
   const product = productsById.get(productId);
@@ -88,29 +103,22 @@ export function resolveProductCost(
     }
 
     if (component.targetType === "product" && component.productId) {
+      // Componente: o overhead não é cobrado dentro do subproduto — quem cobra
+      // o rateio é o produto final. Por isso overhead = 0 na recursão.
       const subCost = resolveProductCost(
         component.productId,
         productsById,
         suppliesById,
         memo,
         laborCostPerMinuteCents,
-        overheadPerUnitCents,
+        0,
       );
 
-      if (subCost.totalCents === null) {
-        entries.push({
-          label: component.productId,
-          quantity: component.quantity,
-          unitCostCents: null,
-        });
-      } else {
-        const unitCost = Math.round(subCost.totalCents / 1); // custo por unidade do subproduto
-        entries.push({
-          label: component.productId,
-          quantity: component.quantity,
-          unitCostCents: unitCost,
-        });
-      }
+      entries.push({
+        label: component.productId,
+        quantity: component.quantity,
+        unitCostCents: subCost.totalCents,
+      });
     }
   }
 
@@ -141,35 +149,51 @@ export function resolveProductCost(
       ? calculateLaborCostCents(product.laborMinutes, laborCostPerMinuteCents)
       : 0;
 
-  let directCosts = 0;
+  const directCosts = sumComponentCostsCents(
+    [
+      product.energyCostCents,
+      product.machineCostCents,
+      product.finishingCostCents,
+    ].filter((cost): cost is number => cost !== null),
+  );
 
-  for (const cost of [
-    product.energyCostCents,
-    product.machineCostCents,
-    product.finishingCostCents,
-  ]) {
-    if (cost !== null) {
-      directCosts += cost;
-    }
-  }
-
-  if (!Number.isSafeInteger(directCosts)) {
-    directCosts = 0;
-  }
-
-  const totalCents =
-    materialCents === null || laborCents === null
-      ? null
-      : materialCents + laborCents + directCosts + overheadPerUnitCents;
+  const productionCents = calculateFullProductCostCents(
+    materialCents,
+    laborCents,
+    directCosts,
+  );
 
   const result: ResolvedProductCost = {
     materialCents,
     laborCents,
-    totalCents,
+    totalCents: productionCents,
     missing: materialResult.missing,
     components: entries,
   };
 
+  // O cache guarda o custo SEM overhead: assim um produto usado como componente
+  // não propaga rateio para o pai, e o produto final é quem o acumula.
   memo.set(productId, result);
-  return result;
+
+  return overheadPerUnitCents > 0
+    ? { ...result, totalCents: addOverheadCents(productionCents, overheadPerUnitCents) }
+    : result;
+}
+
+/**
+ * Soma o overhead ao custo do produto, mantendo a proteção de inteiro seguro.
+ *
+ * @param productionCents custo de produção sem overhead, ou null
+ * @param overheadPerUnitCents despesa rateada por unidade
+ * @returns total com overhead, ou null quando inválido
+ */
+function addOverheadCents(
+  productionCents: number | null,
+  overheadPerUnitCents: number,
+): number | null {
+  if (productionCents === null) {
+    return null;
+  }
+
+  return calculateFullProductCostCents(productionCents, overheadPerUnitCents, 0);
 }

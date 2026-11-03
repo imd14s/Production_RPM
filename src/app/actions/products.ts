@@ -98,6 +98,7 @@ export async function saveProductAction(
   }
 
   revalidatePath("/produtos");
+  revalidatePath("/home");
 
   return {
     status: "success",
@@ -127,4 +128,5 @@ export async function toggleProductAction(formData: FormData): Promise<void> {
 
   await setProductActive(productId, activeText === "true");
   revalidatePath("/produtos");
+  revalidatePath("/home");
 }

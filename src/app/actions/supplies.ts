@@ -55,6 +55,8 @@ export async function saveSupplyAction(
   }
 
   revalidatePath("/insumos");
+  revalidatePath("/home");
+  revalidatePath("/relatorios");
 
   return {
     status: "success",
@@ -84,4 +86,6 @@ export async function toggleSupplyAction(formData: FormData): Promise<void> {
 
   await setSupplyActive(id, isActive);
   revalidatePath("/insumos");
+  revalidatePath("/home");
+  revalidatePath("/relatorios");
 }
