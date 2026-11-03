@@ -227,3 +227,63 @@ Regras:
 - Formulário: seção "Precificação e rateio" no cadastro da empresa.
 - Validação: `lib/validations/settings.ts` — volume inteiro > 0; margens entre
   0 e 100; campos opcionais ficam nulos quando vazios.
+
+---
+
+## Valores base de mercado (conferidos em 11/2026)
+
+Taxas iniciais gravadas no banco pela migration
+`20261103080000_seed_market_base_fees.sql` para iniciar o cálculo real. As
+plataformas mudam comissões e tarifas com frequência — conferir sempre o painel
+do canal antes de decisões de preço e atualizar aqui quando isso acontecer.
+
+### Canais e taxas
+
+| Canal | Taxa | Valor | Observações |
+|---|---|---|---|
+| Mercado Livre | Comissão (anúncio Clássico) | 12% | Varia 10–14% por categoria (casa/decoração 12–14%; beleza 14%; artesanato 11,5%). Premium: +5 p.p. |
+| Mercado Livre | Tarifa por unidade | R$ 6,00 | Só itens < R$ 79 (R$ 5,50 até R$ 19,99; 50% do valor abaixo de R$ 12,50) |
+| TikTok Shop | Comissão (itens < R$ 50) | 10% | ≥ R$ 50: 6%. Base: preço após desconto do vendedor |
+| TikTok Shop | Tarifa por item (itens < R$ 50) | R$ 4,00 | ≥ R$ 50: R$ 6,00. Programa de Taxas de Envio: +6% (teto R$ 50/item, adesão automática). Afiliados: opcional |
+| Site próprio | — | 0% | Recebimento via Mercado Pago online |
+| Loja física | — | 0% | Custo vem do meio de pagamento (Maquininha) |
+| WhatsApp / Pix direto | — | 0% | Pix direto na chave, sem custo |
+
+### Meios de pagamento
+
+| Meio | Linha | Valor |
+|---|---|---|
+| Maquininha (Mercado Pago Point) | Pix | 0,49% |
+| Maquininha (Mercado Pago Point) | Débito à vista | 1,99% |
+| Maquininha (Mercado Pago Point) | Crédito à vista | 4,98% (recebimento na hora; 3,08–4,98% conforme faturamento/prazo) |
+| Mercado Pago online | Pix | 0,99% |
+| Mercado Pago online | Crédito à vista (D0) | 4,98% (3,98% em 30 dias; boleto R$ 3,49 fixo) |
+| Pix direto (chave) | — | sem taxa |
+
+### Tributação MEI
+
+- **O MEI não recolhe imposto por venda** — paga o **DAS fixo mensal**, que vence
+  no dia 20 e não depende do faturamento do mês.
+- DAS mensal 2026 (salário mínimo R$ 1.621,00; Decreto 12.797/2025):
+  - comércio ou indústria: **R$ 82,05** (INSS R$ 81,05 + ICMS R$ 1,00);
+  - serviços: R$ 86,05 (ISS R$ 5,00);
+  - comércio e serviços: R$ 87,05.
+- A taxa "ICMS" (3%) foi **desativada** com nota — não se aplica ao MEI por venda.
+- O DAS-MEI entrou como **despesa operacional mensal** ("DAS-MEI — imposto
+  mensal", R$ 82,05) e é rateado automaticamente pelo volume mensal estimado da
+  empresa. Se a atividade mudar (serviço), atualizar a despesa no painel.
+- Limite de faturamento do MEI: R$ 81.000,00/ano. Ultrapassar exige reavaliar o
+  regime (Simples Nacional — alíquota por faixa, que passa a ser imposto por
+  venda).
+
+### Como o motor usa esses valores
+
+- Cada linha **percentual** ativa soma em `variable_percent`; cada linha **fixa**
+  soma em `fixed_fees_cents` (por unidade vendida — vale para as tarifas de item
+  do ML/TikTok, porque cada simulação calcula uma unidade).
+- O meio de pagamento entra na **simulação** de `/precificacao`; a matriz da
+  home usa apenas as taxas do canal + impostos.
+- Fontes: Central de Vendedores do Mercado Livre; Tarifa de Comissão da
+  Plataforma do TikTok Shop (vigor desde 15/07/2026); tabela oficial de taxas e
+  tarifas do Mercado Pago; Simples Nacional/Portal do Empreendedor. Conferidos
+  em 03/11/2026.

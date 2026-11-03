@@ -702,3 +702,70 @@ anônimo = função reconhecida com a nova assinatura).
   produto usado como componente de kit não cobre o rateio em dobro.
 - O script de aplicação de migrations precisa carregar `pg` do `node_modules`
   do projeto quando executado de fora (ex.: `/tmp`).
+
+## [Bug] - Duplicação de linhas de taxa ao reaplicar migration de dados (2026-11-03)
+
+**Problema Identificado:** após aplicar
+`20261103080000_seed_market_base_fees.sql` pelo script ad-hoc de pooler, o script
+foi executado uma segunda vez para conferir a saída completa; as 5 linhas novas de
+`payment_fees` foram inseridas duas vezes (guarda `not exists` não enxergou a
+primeira onda), enquanto canais, métodos e despesas ficaram únicos.
+
+**Causa Raiz:** reexecução manual do script de aplicação — a migration de dados é
+idempotente apenas no papel quando compostas por `insert ... where not exists`; a
+segunda execução rodou contra um estado em que a guarda não garantia unicidade
+(sem constraint UNIQUE declarativa em `label` + `method_id`). A lição anterior
+dizia "migration não aplicada pode ser ajustada"; re-aplicação **não** é
+verificação — é uma segunda escrita.
+
+**Correção:** `delete` das linhas duplicadas mantendo a onda mais antiga
+(created_at menor) por `(method_id, label)`, em transação única; conferência após
+a limpeza mostrou exatamente uma linha por etiqueta (Pix 0,49%, Débito 1,99%,
+Crédito 4,98%, Pix online 0,99%, Crédito D0 4,98%).
+
+**Validação:** consulta de contagem por `(method_id, label)` retornou 1 para cada
+etiqueta; canais, meios, despesas e impostos restantes conferidos um a um.
+
+**Lições:**
+- Script ad-hoc de aplicação deve ser executado **uma única vez por migration**;
+  conferência é feita por consulta, nunca re-aplicando.
+- Para seeds de dados, preferir `on conflict do nothing` com **constraint
+  declarativa** (índice único em expressão ou coluna) em vez de `not exists`.
+- As taxas do Mercado Livre 2026: comissão por categoria (Clássico 10–14%,
+  Premium +5 p.p.) + tarifa por unidade apenas para itens < R$ 79 — um
+  percentual único de "8%" está defasado.
+- TikTok Shop Brasil (desde 15/07/2026): < R$ 50 → 10% + R$ 4,00/item;
+  ≥ R$ 50 → 6% + R$ 6,00/item; Programa de Taxas de Envio +6% com adesão
+  automática.
+- MEI não recolhe imposto por venda: o DAS fixo mensal (R$ 82,05 comércio/
+  indústria em 2026, INSS 5% do mínimo R$ 1.621,00 + ICMS R$ 1,00) entra como
+  **despesa operacional** para rateio — a taxa percentual "ICMS" foi desativada.
+
+## [Decisão] - Valores base de mercado gravados para o cálculo real (2026-11-03)
+
+**Problema Identificado:** a matriz da home e as simulações exigiam taxas reais
+de canal, meio de pagamento e tributos; o banco tinha apenas placeholders
+(Mercado Livre 8%, ICMS 3%, maquininha 5%).
+
+**Alternativas:** deixar o responsável cadastrar manualmente tudo pela interface
+(lena, sujeito a erro) ou gravar os valores pesquisados via migration de dados
+(erro corrigível e registrada). Escolhida a migration
+`20261103080000_seed_market_base_fees.sql` (idempotente, sem exclusão física —
+linhas substituídas ficam inativas com nota).
+
+**Correção:** canais criados (TikTok Shop, Site próprio, Loja física,
+WhatsApp/Pix direto), Mercado Livre corrigido (comissão Clássico 12% + tarifa
+fixa R$ 6,00 por unidade), maquininha desmembrada (Point: Pix 0,49%, débito
+1,99%, crédito à vista 4,98%), Mercado Pago online (Pix 0,99%, crédito à vista
+4,98%), DAS-MEI como despesa de R$ 82,05/mês. Tabela completa e fontes em
+`docs/spec/030-configuracoes.md`, seção "Valores base de mercado".
+
+**Validação:** migration aplicada via pooler e estado do banco conferido linha a
+linha (impostos, canais, taxas, meios, despesas).
+
+**Lições:**
+- Os valores pesquisados são **base de mercado** (novembro/2026), não garantia
+  contratual: comissões variam por categoria do produto, faturamento e prazo de
+  recebimento — conferir no painel do canal antes de fixar preços.
+- Percentuais do sistema usam formato micro-percentual ("12.000000"); o SQL da
+  migration aceita `12` e o Postgres normaliza.
