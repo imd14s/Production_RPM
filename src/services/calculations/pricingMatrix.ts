@@ -1,5 +1,12 @@
 /**
- * Montagem da matriz de preços por produto, canal e modalidade.
+ * Montagem da matriz de preços por produto e plataforma.
+ *
+ * Regra de negócio (decisão do responsável, 2026-11-03):
+ * - as plataformas/canais vendem apenas **varejo** — uma linha por canal;
+ * - o **atacado** é venda direta ao comerciante, fora das plataformas —
+ *   uma única linha por produto, sem comissão de canal, com margem padrão;
+ * - o recebimento no atacado direto acontece por Pix direto ou crediário,
+ *   combinados com o comprador, sem alterar o preço base da matriz.
  *
  * Função pura: a página apenas carrega os dados e exibe o resultado. O motor
  * financeiro continua sendo a única fonte dos cálculos.
@@ -7,6 +14,9 @@
 
 import { calculateChannelPriceCents } from "./channelPricing";
 import type { Fee } from "./pricing";
+
+/** Rótulo da linha de venda direta (atacado), fora das plataformas. */
+export const WHOLESALE_DIRECT_NAME = "Atacado (venda direta)";
 
 export type MatrixChannel = {
   id: string;
@@ -42,7 +52,7 @@ export type MatrixProduct = {
 };
 
 export type MatrixPriceCell = {
-  channelId: string;
+  channelId: string | null;
   channelName: string;
   modality: "varejo" | "atacado";
   marginPercent: number;
@@ -88,19 +98,17 @@ function toFee(
 }
 
 /**
- * Localiza a última simulação do produto para o canal e a modalidade.
+ * Localiza a última simulação de VAREJO do produto para o canal.
  *
  * @param simulations simulações disponíveis
  * @param productId produto
- * @param channelId canal
- * @param modality modalidade
- * @returns simulação mais recente, ou null
+ * @param channelId canal da plataforma
+ * @returns simulação mais recente de varejo, ou null
  */
-function latestSimulation(
+function latestRetailSimulation(
   simulations: MatrixSimulation[],
   productId: string,
   channelId: string,
-  modality: "varejo" | "atacado",
 ): MatrixSimulation | null {
   return (
     simulations
@@ -108,99 +116,126 @@ function latestSimulation(
         (simulation) =>
           simulation.productId === productId &&
           simulation.channelId === channelId &&
-          simulation.modality === modality,
+          simulation.modality === "varejo",
       )
       .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))[0] ?? null
   );
 }
 
 /**
- * Define a margem padrão por modalidade quando não há simulação.
+ * Define a margem padrão de varejo quando não há simulação para o canal.
  *
- * @param modality modalidade de venda
- * @param retail margem padrão de varejo em percentual
- * @param wholesale margem padrão de atacado em percentual
+ * @param retail margem padrão de varejo em percentual (30 quando ausente)
  * @returns margem em decimal
  */
-function defaultMargin(
-  modality: "varejo" | "atacado",
-  retail: number | null,
-  wholesale: number | null,
-): number {
-  if (modality === "varejo") {
-    return (retail ?? 30) / 100;
-  }
+function defaultRetailMargin(retail: number | null): number {
+  return (retail ?? 30) / 100;
+}
 
+/**
+ * Define a margem padrão de atacado da venda direta.
+ *
+ * @param wholesale margem padrão de atacado em percentual (20 quando ausente)
+ * @returns margem em decimal
+ */
+function defaultWholesaleMargin(wholesale: number | null): number {
   return (wholesale ?? 20) / 100;
 }
 
 /**
- * Monta a matriz de preços por produto, canal e modalidade.
+ * Monta a matriz de preços: linhas de varejo por plataforma, uma linha de
+ * atacado direto e os impostos ativos aplicados em todas.
  *
  * @param input produtos, canais, impostos, simulações e margens padrão
  * @returns linhas da matriz
  */
 export function buildPricingMatrix(input: PricingMatrixInput): MatrixRow[] {
-  const activeChannels = input.channels;
+  const taxFees: Fee[] = input.taxes
+    .filter((tax) => tax.isActive)
+    .map((tax) => toFee(tax.kind, tax.rate, tax.amountCents));
+
+  const wholesaleMarginPercent = defaultWholesaleMargin(
+    input.defaultWholesaleMarginPercent,
+  );
 
   return input.products.map((product) => {
     const cells: MatrixPriceCell[] = [];
 
-    for (const channel of activeChannels) {
+    for (const channel of input.channels) {
       const channelFees: Fee[] = channel.fees
         .filter((fee) => fee.isActive)
         .map((fee) => toFee(fee.kind, fee.rate, fee.amountCents));
 
-      const taxFees: Fee[] = input.taxes
-        .filter((tax) => tax.isActive)
-        .map((tax) => toFee(tax.kind, tax.rate, tax.amountCents));
+      const simulation = latestRetailSimulation(
+        input.simulations,
+        product.id,
+        channel.id,
+      );
 
-      for (const modality of ["varejo", "atacado"] as const) {
-        const simulation = latestSimulation(
-          input.simulations,
-          product.id,
-          channel.id,
-          modality,
-        );
+      const marginPercent =
+        simulation !== null
+          ? simulation.marginPercent
+          : defaultRetailMargin(input.defaultRetailMarginPercent);
 
-        const marginPercent =
-          simulation !== null
-            ? simulation.marginPercent
-            : defaultMargin(
-                modality,
-                input.defaultRetailMarginPercent,
-                input.defaultWholesaleMarginPercent,
-              );
-
-        if (product.costCents === null) {
-          cells.push({
-            channelId: channel.id,
-            channelName: channel.name,
-            modality,
-            marginPercent,
-            priceCents: null,
-            reason: "Custo incompleto",
-          });
-          continue;
-        }
-
-        const result = calculateChannelPriceCents({
-          costCents: product.costCents,
-          channelFees,
-          paymentFees: [],
-          taxFees,
-          marginPercent,
-        });
-
+      if (product.costCents === null) {
         cells.push({
           channelId: channel.id,
           channelName: channel.name,
-          modality,
+          modality: "varejo",
           marginPercent,
-          priceCents: result.ok ? result.priceCents : null,
-          reason: result.ok ? null : result.reason,
+          priceCents: null,
+          reason: "Custo incompleto",
         });
+        continue;
       }
+
+      const result = calculateChannelPriceCents({
+        costCents: product.costCents,
+        channelFees,
+        paymentFees: [],
+        taxFees,
+        marginPercent,
+      });
+
+      cells.push({
+        channelId: channel.id,
+        channelName: channel.name,
+        modality: "varejo",
+        marginPercent,
+        priceCents: result.ok ? result.priceCents : null,
+        reason: result.ok ? null : result.reason,
+      });
+    }
+
+    // Atacado: venda direta fora das plataformas — sem comissão de canal.
+    // O recebimento (Pix direto ou crediário) é combinado com o comprador e
+    // sem custo; o preço base usa apenas custo + impostos ativos + margem.
+    if (product.costCents === null) {
+      cells.push({
+        channelId: null,
+        channelName: WHOLESALE_DIRECT_NAME,
+        modality: "atacado",
+        marginPercent: wholesaleMarginPercent,
+        priceCents: null,
+        reason: "Custo incompleto",
+      });
+    } else {
+      const wholesaleResult = calculateChannelPriceCents({
+        costCents: product.costCents,
+        channelFees: [],
+        paymentFees: [],
+        taxFees,
+        marginPercent: wholesaleMarginPercent,
+      });
+
+      cells.push({
+        channelId: null,
+        channelName: WHOLESALE_DIRECT_NAME,
+        modality: "atacado",
+        marginPercent: wholesaleMarginPercent,
+        priceCents: wholesaleResult.ok ? wholesaleResult.priceCents : null,
+        reason: wholesaleResult.ok ? null : wholesaleResult.reason,
+      });
     }
 
     return {
