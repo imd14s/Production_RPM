@@ -65,29 +65,32 @@ aplicado por `buildNavigation`, coberto por teste.
 
 ## Tela inicial
 
-`/home` exibe apenas dados reais:
+`/home` é a **planilha de preços do ateliê** (decisão do responsável, 2026-11-03):
 
-1. Saudação conforme a hora em `America/Sao_Paulo` e data por extenso.
-2. Cartão **Seu acesso**: perfil, e-mail e situação da conta.
-3. Cartão **Módulos disponíveis**: contagem derivada do catálogo e a lista do que
-   está em desenvolvimento.
+1. **Matriz de preços por plataforma** — para administradores, com os produtos
+   ativos, custo atual de fabricação, sugestões de preço e marcação "Revisar
+   preço" quando o custo mudou desde o último snapshot.
+2. Nota de rodapé indicando onde pedir acesso quando faltar algum módulo.
 
-Não há indicadores financeiros, gráficos ou números simulados — nada disso existe no
-banco ainda.
+A saudação com data por extenso ("Bom dia, eversond14s") os cartões **Seu
+acesso** e **Módulos disponíveis** foram **removidos** a pedido do responsável —
+essas informações vivem no cabeçalho do painel (usuário, perfil, saída) e na
+navegação lateral. Não há indicadores financeiros, gráficos ou números
+simulados — nada é exibido além do que existe no banco.
 
 ## Fuso horário
 
-O servidor roda em UTC. `getHourInTimeZone` converte para `America/Sao_Paulo` antes de
-escolher a saudação, e `formatLongDate` formata data também nesse fuso. Sem isso, "Bom
-dia" apareceria à noite para o usuário brasileiro.
+O fuso `America/Sao_Paulo` (utilitários em `src/lib/date`) permanece disponível
+para as telas que precisarem de data formatada; a tela inicial não exibe mais
+data nem saudação.
 
 ## Componentes: escopo desta etapa
 
 | Componente | Usado por |
 |---|---|
-| `Button` | login e cabeçalho |
-| `Badge` | perfil, situação da conta, módulos planejados |
-| `Card` | tela inicial |
+| `Button` |登录 e cabeçalho |
+| `Badge` | matriz de preços, cabeçalho, módulos planejados nas configurações |
+| `Card` | matriz de preços e painéis das configurações |
 | `Sidebar`, `AppHeader`, `AppShell` | área restrita |
 
 **Adiados de propósito:** tabela, modal, formulário genérico e notificações só nascem
