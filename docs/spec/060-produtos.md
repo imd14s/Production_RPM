@@ -1,6 +1,6 @@
 # Spec 060 — Produtos e composições (Etapa 5.3)
 
-**Status:** Implementada no código; migrations pendentes de aplicação no Supabase
+**Status:** Implementada — migrations aplicadas ao Supabase
 **Fonte de verdade:** `task.md`, seções "Produtos" e "Etapa 5 — Cadastros"
 
 ## Objetivo
@@ -16,8 +16,9 @@ posteriores. Esta etapa não calcula custo total nem preço de venda.
 - **Kit:** deve ser composto por um ou mais produtos cadastrados.
 
 O tempo de mão de obra é opcional, expresso em minutos por unidade e limitado a
-48 horas. Custos de máquina, perdas, energia, taxas e preços pertencem às etapas
-de precificação e operação.
+48 horas. Custos de energia, máquina, acabamento e taxa de falha são informados
+diretamente na ficha do produto (ver `products`). Taxas e preços pertencem ao
+motor de precificação (Etapa 6).
 
 ## Modelo de dados
 
@@ -35,6 +36,14 @@ erDiagram
 
 - UUID, nome único sem distinção entre maiúsculas/minúsculas, modalidade,
   minutos de mão de obra opcionais, observações, situação e timestamps.
+- Custos auxiliares opcionais de impressão 3D (migration
+  `20261103072000_add_printing_costs_to_products.sql`):
+  - `energy_cost_cents` — energia por unidade;
+  - `machine_cost_cents` — depreciação da máquina por unidade;
+  - `finishing_cost_cents` — acabamento por unidade;
+  - `failure_rate_percent` — percentual de perda 0–100, usado para ampliar o
+    custo de material (`material × (1 + taxa)`).
+  Todos opcionais: **entram no custo apenas quando informados**.
 - Desativação lógica por `is_active`; não há exclusão física pela aplicação.
 
 ### `product_components`

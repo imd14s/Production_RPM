@@ -9,6 +9,11 @@ Apresentar indicadores de rentabilidade, custos por categoria, comparação
 entre canais e evolução de preços de insumos, a partir dos dados já
 cadastrados.
 
+> **Obs. (2026-11-03):** com a matriz de preços por plataforma na **home**
+> (spec 070), a comparação de canais principal é de leitura rápida e não
+> substitui a comparação em `/relatorios`. A evolução de preços de insumos
+> tem base nos snapshots (não há histórico de aquisições).
+
 ## Sub-etapas
 
 | Sub-etapa | Entrega | Rota |

@@ -3,7 +3,9 @@ Ateliê Filhos de Aruanda
 Arquitetura definida
 
 Sistema de Gestão e Precificação
-Aplicação interna para gestão de custos, produção, estoque e formação de preços.
+Aplicação interna para gestão de custos e formação de preços.
+Planilha de cálculo de preço: insumos → produto → custo completo de fabricação → preço sugerido por plataforma, com a matriz de preços por canal na página inicial.
+Revisão de 2026-11-03: módulos de produção (lotes/consumo real) e de estoque de itens acabados foram removidos do escopo — o sistema não controla unidades produzidas; mão de obra, despesas rateadas e custos de impressão 3D entram no cálculo pelo cadastro e pelos parâmetros de configuração.
 Next.js
 
 Frontend e servidor integrado
@@ -64,17 +66,17 @@ Podemos executar o Next.js localmente e utilizar o Supabase online. Para trabalh
 Eu dividiria o sistema em módulos independentes, mas interligados.
 Prioridade	Módulo	Responsabilidade
 P0	Autenticação	Login, usuários e permissões
-P0	Configurações	Empresa, tributação e parâmetros
+P0	Configurações	Empresa, tributação, despesas, mão de obra e parâmetros de rateio
 P1	Insumos	Materiais, unidades e fornecedores
 P1	Produtos	Produtos, receitas e composições
-P1	Precificação	Custos, margens, varejo e atacado
+P1	Precificação	Custos, margens, varejo e atacado (matriz por canal na home)
 P1	Canais	Marketplaces e taxas de pagamento
-P2	Produção	Lotes, tempo e consumo de materiais
-P2	Estoque	Entradas, saídas e perdas
-P2	Despesas	Custos fixos e rateios
+P2	Despesas	Custos fixos e rateio por volume mensal estimado
 P2	Relatórios	Rentabilidade e indicadores
 P3	Vendas	Registro e acompanhamento de vendas
 P3	Integrações	Loja virtual e marketplaces
+
+Módulos removidos em 2026-11-03 (revisão do objetivo): Produção (lotes, tempo e consumo de materiais) e Estoque (entradas, saídas e perdas). O rateio de despesas passou a usar volume mensal estimado na configuração da empresa, sem controle de produção real.
 
 Organização dos produtos
 O sistema deverá suportar quatro modalidades principais:
@@ -118,8 +120,6 @@ src/
 │   │   ├── home/
 │   │   ├── produtos/
 │   │   ├── insumos/
-│   │   ├── producao/
-│   │   ├── estoque/
 │   │   ├── precificacao/
 │   │   ├── despesas/
 │   │   ├── fornecedores/
@@ -140,9 +140,7 @@ src/
 ├── features/
 │   ├── products/
 │   ├── supplies/
-│   ├── production/
 │   ├── pricing/
-│   ├── inventory/
 │   ├── expenses/
 │   └── settings/
 │
@@ -190,11 +188,11 @@ Pagamentos	payment_methods, payment_fees
 Insumos	supplies
 Fornecedores	suppliers
 Produtos	products, product_components
-Produção	production_batches, production_consumption
 Custos	labor_costs, operating_expenses
-Estoque	inventory_movements
 Precificação	pricing_profiles, pricing_simulations
 Histórico	cost_snapshots, configuration_history
+
+Tabelas removidas em 2026-11-03: production_batches, production_consumption e inventory_movements (produção e estoque fora do escopo).
 
 Algumas regras de modelagem:
 - Identificadores UUID.
@@ -225,11 +223,11 @@ Não quero que o agente crie todas essas tabelas de uma só vez sem analisar os 
    
    Implementar unidades de medida, fornecedores, fichas técnicas, componentes e modalidades de produtos.
 6. Motor de precificação
-   
+    
    Implementar fórmulas, impostos, taxas, margens, varejo, atacado e simulações por canal. Criar testes automatizados.
 7. Produção e estoque
-   
-   Implementar lotes, consumo real, perdas, impressão 3D, movimentações e saldo de estoque.
+    
+   ~~Implementar lotes, consumo real, perdas, impressão 3D, movimentações e saldo de estoque.~~ **Removida em 2026-11-03:** o sistema é planilha de precificação; os custos de tempo, perdas, energia, máquina e acabamento passaram a ser campos da ficha do produto (Etapa 5) e das configurações (Etapa 4).
 8. Relatórios e validação
    
    Indicadores, histórico, comparações, testes de integração e revisão de segurança.
@@ -247,7 +245,7 @@ Idioma: Português brasileiro
 Moeda: BRL (R$)
 
 1. Objetivo
-Desenvolver uma aplicação web privada para gerenciamento de produtos, insumos, fornecedores, produção, estoque, despesas e formação de preços do Ateliê Filhos de Aruanda.
+Desenvolver uma aplicação web privada para gerenciamento de produtos, insumos, fornecedores, despesas e formação de preços do Ateliê Filhos de Aruanda. (Revisão de 2026-11-03: sem módulos de produção e estoque — o foco é a planilha de cálculo de preço, com a matriz de preços por plataforma na página inicial.)
 
 A aplicação deverá atender produtos artesanais, artigos religiosos, velas, guias, produtos de impressão 3D, revenda e kits.
 
@@ -331,7 +329,7 @@ Configurações empresariais
 - Histórico de alterações.
 - Despesas fixas.
 - Mão de obra.
-- Configurações de produção.
+- Volume mensal estimado de unidades para rateio das despesas.
 Canais de venda
 - Mercado Livre.
 - TikTok Shop.
@@ -361,16 +359,14 @@ Suportar:
 - Produtos compostos.
 - Kits e combos.
 Permitir fichas técnicas com múltiplos componentes e subprodutos.
-Produção
-- Tempo de fabricação.
-- Quantidade produzida.
-- Consumo de materiais.
-- Perdas.
-- Mão de obra.
-- Energia.
-- Depreciação de máquinas.
-- Custos de acabamento.
-- Produção em lotes.
+Produção (removida em 2026-11-03)
+Sem controle de lotes e produção real. Os custos abaixo pertencem à ficha do
+produto e às configurações:
+- Tempo de fabricação (minutos na ficha do produto).
+- Mão de obra (salários e horas cadastrados em configurações).
+- Perdas (taxa de falha na ficha do produto).
+- Energia, depreciação de máquinas e acabamento (custos diretos na ficha do
+  produto, usados para impressão 3D e outros casos)
 Precificação
 Calcular automaticamente:
 - Custo dos insumos.
@@ -387,14 +383,9 @@ Calcular automaticamente:
 - Lucro líquido estimado.
 - Margem percentual.
 Permitir simulações por canal, quantidade e margem desejada.
-Estoque
-- Entrada de materiais.
-- Saída de materiais.
-- Consumo na produção.
-- Produtos acabados.
-- Perdas.
-- Ajustes.
-- Histórico de movimentações.
+Estoque (removido em 2026-11-03)
+Sem controle de estoque de insumos ou produtos acabados. A quantidade da
+compra atual fica registrada no cadastro do insumo, sem movimentações.
 Relatórios
 - Produtos mais rentáveis.
 - Produtos com menor margem.
@@ -489,12 +480,12 @@ ETAPA 6 — Precificação:
 - Simulações.
 - Varejo.
 - Atacado.
-- Comparação por canal.
-ETAPA 7 — Operação:
-- Produção.
-- Estoque.
-- Perdas.
-- Despesas.
+- Comparação por canal (matriz de preços na página inicial).
+ETAPA 7 — Operação (removida em 2026-11-03):
+- Produção: removida.
+- Estoque: removido.
+- Perdas: taxas de falha e custos diretos na ficha do produto (Etapa 5).
+- Despesas: rateio por volume mensal estimado (Etapa 4).
 ETAPA 8 — Relatórios:
 - Indicadores.
 - Histórico.

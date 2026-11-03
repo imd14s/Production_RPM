@@ -201,3 +201,29 @@ src/
   (vírgula aceita, "176,5"); parser e payload de `features/costs` (testados).
 - Constraints no banco: valor maior que zero e horas entre 0 e 438 — rejeitados
   na migração testados com insert de 0 e 500.
+
+---
+
+## Precificação e rateio na configuração da empresa
+
+A partir do reposicionamento do sistema (2026-11-03), `company_settings` também
+guarda os parâmetros do rateio e das margens padrão:
+
+| Coluna | Conteúdo |
+|---|---|
+| `monthly_output_units` | Volume mensal **estimado** de unidades, usado para ratear as despesas operacionais por unidade |
+| `default_retail_margin` | Margem padrão de varejo (percentual 0–100) usada na matriz automática |
+| `default_wholesale_margin` | Margem padrão de atacado (percentual 0–100) usada na matriz automática |
+
+Regras:
+
+- O sistema **não controla produção real**. Sem gravação do volume, é
+  impossível ratear: nesse caso as despesas **não** entram no custo (0), em vez
+  de bloquear o cálculo.
+- A prioridade na matriz da home é: **última simulação do produto > margem
+  padrão > valores de contingência (30% varejo / 20% atacado)**.
+- Migration `20261103071000_add_cost_settings_to_company.sql` (aplicada ao
+  Supabase em 2026-11-03).
+- Formulário: seção "Precificação e rateio" no cadastro da empresa.
+- Validação: `lib/validations/settings.ts` — volume inteiro > 0; margens entre
+  0 e 100; campos opcionais ficam nulos quando vazios.

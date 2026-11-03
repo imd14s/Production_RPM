@@ -1,6 +1,6 @@
 # Spec 040 — Cadastros (Etapa 5)
 
-**Status:** Em andamento — 5.1 a 5.3 implementados; simplificação do custo atual em andamento
+**Status:** Implementada — migrations aplicadas ao Supabase
 **Fonte de verdade:** `task.md`, seção "Insumos" e "Cadastro de insumos e produtos"
 
 ## Sub-etapas
@@ -8,7 +8,7 @@
 | Sub-etapa | Área | Tabelas |
 |---|---|---|
 | 5.1 | Fornecedores | `suppliers` | ✅ Implementada |
-| 5.2 | Insumos e custo atual | `supplies` | Em migração |
+| 5.2 | Insumos e custo atual | `supplies` | ✅ Implementada |
 | 5.3 | Produtos, receitas e composições | `products`, `product_components` | ✅ Implementada |
 
 ## Fornecedores (5.1)
@@ -80,13 +80,11 @@
 ## Conversões de unidade
 
 - Quantidades usadas e compradas são sempre expressas na unidade base selecionada
-  no insumo. O cadastro não converte automaticamente entre unidades.
+  no insumo. Conversões métricas automáticas (kg↔g, L↔ml) são aceitas.
 - Não há formulário para cadastrar fatores de conversão. A tabela legada de
   conversões manuais permanece fora dos fluxos ativos da aplicação.
 
 ## Pendências
 
-- Aplicar `20261102230000_replace_supply_price_history_with_current_cost.sql` ao
-  Supabase e conferir as colunas de custo atual em `supplies`.
-- Verificar pelo PostgREST a leitura e gravação do novo formato antes de usar a
-  tela com dados remotos.
+Nenhuma pendência registrada nesta spec. As migrations de cadastro foram
+aplicadas ao Supabase em 2026-11-03 e confirmadas pelo PostgREST.

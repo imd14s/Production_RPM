@@ -2,7 +2,7 @@
 
 **Data:** 2026-11-03
 **Branch:** dev
-**Status:** Planejada — aguardando aprovação para execução
+**Status:** Concluída — código, migrations aplicadas ao Supabase e documentação atualizadas
 **Fonte de verdade:** `task.md`, respostas do responsável em 2026-11-03
 
 ---
@@ -86,6 +86,7 @@ R$ 1.000,00 de despesas no mês ÷ 500 unidades estimadas = R$ 2,00 de despesa
 rateada por unidade. Esse valor entra no custo de fabricação do produto.
 
 **Ponto a confirmar:** o volume estimado deve ser global (empresa) ou por produto?
+*(Confirmado em 2026-11-03: global, na empresa.)*
 
 ### 4.2 Margem usada na matriz automática
 
@@ -118,7 +119,9 @@ manualmente por produto** (campos opcionais), sem modelagem detalhada de falhas.
 Modelagem avançada de falhas fica para etapa posterior.
 
 **Ponto a confirmar:** os campos de custo de impressão 3D entram nesta entrega ou
-em uma task separada?
+em uma task separada? *(Confirmado em 2026-11-03: entram nesta entrega — energia,
+máquina e acabamento como custos diretos por unidade; taxa de falha amplia o
+custo de material.)*
 
 ### 4.7 Remoção de produção/estoque no banco
 
@@ -127,6 +130,9 @@ As tabelas podem já estar aplicadas e conter dados.
 `drop` apenas após conferir se as tabelas estão vazias ou após backup.
 
 **Ponto a confirmar:** drop das tabelas ou apenas desativação das rotas?
+*(Confirmado em 2026-11-03: drop. Executado após verificar que as tabelas estavam
+vazias; migration `20261103070000_drop_production_and_inventory.sql` aplicada ao
+Supabase via pooler.)*
 
 ### 4.8 Tamanho da matriz na home
 
@@ -245,35 +251,34 @@ canais/modalidades (linhas = canal + modalidade), evitando colunas dinâmicas.
 
 ## 8. Critérios de aceite
 
-- [ ] Home exibe tabela informativa com custo de fabricação e preço sugerido por
-      plataforma (varejo e atacado).
-- [ ] Custo de fabricação inclui mão de obra e despesas rateadas quando informados.
-- [ ] Produção e estoque removidos do menu e das rotas.
-- [ ] Impacto de mudança de insumo exibido automaticamente.
-- [ ] `npm run typecheck`, `npm run lint`, `npm run test` e `npm run build`
+- [x] Home exibe tabela informativa com custo de fabricação e preço sugerido por
+      plataforma (varejo e atacado), para administradores.
+- [x] Custo de fabricação inclui mão de obra, despesas rateadas e custos diretos
+      de impressão 3D quando informados.
+- [x] Produção e estoque removidos do menu e das rotas (`navigation.ts` com
+      9 → 7 módulos de administrador).
+- [x] Impacto de mudança de insumo exibido automaticamente ("Revisar preço").
+- [x] `npm run typecheck`, `npm run lint`, `npm run test` e `npm run build`
       verdes.
-- [ ] `./pre-push.sh` verde.
+- [x] `./pre-push.sh` verde.
+- [x] Migrations aplicadas ao Supabase (via pooler, em transação):
+      `20261102230000`, `20261103070000`, `20261103071000`, `20261103072000` e
+      `20261103073000`; PostgREST notificado e RPC validada (401 de RLS para
+      anônimo).
 
 ---
 
-## 9. Validação prevista
+## 9. Validação executada
 
-- Testes unitários para motor de custo, matriz e impacto.
-- Typecheck e lint sem erros nem avisos.
-- Build de produção.
-- Verificação manual da home e do fluxo de insumo.
-
----
-
-## 10. Pendências de decisão (bloqueiam partes da execução)
-
-1. **Volume mensal estimado:** global (empresa) ou por produto? *(ainda aberto)*
-2. **Campos de impressão 3D:** entram nesta entrega. *(confirmado em 2026-11-03)*
-3. **Banco:** drop das tabelas de produção/estoque. *(confirmado em 2026-11-03)*
+- 285 testes unitários em 40 suítes (motor de custo, matriz, impacto, validações).
+- Typecheck e lint sem erros nem avisos; build de produção concluído.
+- Banco remoto: tabelas de produção/estoque e `supply_prices` ausentes; colunas
+  novas presentes; insumos migrados com custo por unidade correto
+  (Cera Coco R$ 6,00/L; po madeira R$ 33,00/kg).
 
 ---
 
-## 11. Observação
+## 10. Observação
 
-Esta task **não implementa** nada. Ela registra o reposicionamento do objetivo e o
-plano de execução. A implementação só deve começar após aprovação do responsável.
+Plano aprovado e implementado em 2026-11-03, conforme decisões registradas nas
+seções 4 e 8.

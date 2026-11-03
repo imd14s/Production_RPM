@@ -32,14 +32,17 @@ pipeline local de validação.
 src/
 ├── app/            rotas e layouts
 ├── components/     ui, layout, forms, tables, feedback
-├── features/       products, supplies, production, pricing,
-│                   inventory, expenses, settings
+├── features/       products, supplies, pricing, channels,
+│                   payments, costs, expenses, reports, settings
 ├── services/       supabase, calculations
 ├── lib/            auth, validations, constants, utils
 ├── hooks/
 ├── types/
 └── styles/         variables.css, typography.css, globals.css
 ```
+
+> Revisão de 2026-11-03: sem `production`/`inventory` — sistema posicionado
+> como planilha de cálculo de preço (ver `spec/080` para o histórico da remoção).
 
 ## Contratos técnicos
 

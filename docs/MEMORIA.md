@@ -665,3 +665,40 @@ HTTP 200 ao selecionar `purchase_unit`, confirmando que o PostgREST reconhece a 
 
 **Lição:** ao alterar o payload enviado ao Supabase, confirmar no banco remoto a
 aplicação da migration correspondente e validar a coluna também pela API PostgREST.
+
+## [Decisão] - Reposicionamento como planilha de precificação (2026-11-03)
+
+**Problema Identificado:** o sistema herdava módulos de produção e estoque de um
+planejamento anterior; o responsável definiu que a ferramenta é uma **planilha de
+cálculo de preço** (insumos → produto → custo completo → preço por plataforma).
+
+**Alternativas:** manter produção/estoque e derivar rateios do histórico real, ou
+remover e usar volume **estimado** da empresa. Escolhida a segunda: sem produção
+real, rateio por histórico é impossível, e o estimado satisfaz o objetivo de
+planilha. Impacto de mudança de preço de insumo é automático, comparando o custo
+atual com o último `cost_snapshots` (flag "Revisar preço" para qualquer diferença,
+sem limite mínimo).
+
+**Correção:** módulos de produção/estoque removidos (código, rotas, navegação e
+tabelas); matriz de preços por canal movida para a **home**; `resolveProductCost`
+agora soma mão de obra, despesas rateadas e custos diretos de impressão 3D
+(energia, máquina, acabamento e taxa de falha) — todos apenas quando informados,
+permitindo também produtos **revendidos**. `/task.md` e specs atualizadas.
+
+**Validação:** typecheck, lint (sem avisos), 285 testes unitários e build passam;
+migrations `20261102230000`–`20261103073000` aplicadas ao Supabase via pooler em
+transação, com RPC validada pelo PostgREST (401 "apenas administradores" para
+anônimo = função reconhecida com a nova assinatura).
+
+**Lições:**
+- Migrations não aplicadas podem ser ajustadas: a `20261102230000` tentava remover
+  função inexistente no banco remoto (`drop function` sem `if exists`) e falhou;
+  ajustada para `drop function if exists` porque nunca fora aplicada em nenhum
+  ambiente. Migration **aplicada** continua intocável.
+- Antes de dropar tabelas, verificar se estão vazias — `production_batches`,
+  `production_consumption` e `inventory_movements` estavam com 0 linhas.
+- O rateio de despesas entra **uma vez por produto final** (chamada de nível
+  superior do resolvedor); o cache guarda o custo **sem** overhead para que um
+  produto usado como componente de kit não cobre o rateio em dobro.
+- O script de aplicação de migrations precisa carregar `pg` do `node_modules`
+  do projeto quando executado de fora (ex.: `/tmp`).
