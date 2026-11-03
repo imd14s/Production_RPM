@@ -4,7 +4,6 @@ import { readText } from "@/lib/validations/settings";
 import type {
   SupplyInput,
   SupplyKind,
-  SupplyPriceInput,
   SupplyUnit,
 } from "@/features/supplies/types";
 import { SUPPLY_KINDS, SUPPLY_UNITS } from "@/features/supplies/types";
@@ -66,6 +65,11 @@ export function validateSupply(raw: Record<string, unknown>): ValidationResult<S
   const kind = readText(raw, "kind") as SupplyKind;
   const unit = readText(raw, "unit") as SupplyUnit;
   const notes = readText(raw, "notes");
+  const acquiredOn = resolveAcquiredOn(readText(raw, "acquiredOn"));
+  const quantity = parseQuantityInput(readText(raw, "quantity"));
+  const amountCents = parseAmountToCents(readText(raw, "amount"));
+  const freightText = readText(raw, "freight");
+  let freightCents = 0;
 
   if (name.length < 2 || name.length > 120) {
     errors.name = "Informe o nome do insumo (2 a 120 caracteres).";
@@ -83,80 +87,17 @@ export function validateSupply(raw: Record<string, unknown>): ValidationResult<S
     errors.notes = "Observação deve ter até 500 caracteres.";
   }
 
-  if (Object.keys(errors).length > 0) {
-    return { ok: false, errors };
-  }
-
-  return { ok: true, data: { name, kind, unit, notes } };
-}
-
-/**
- * Valida os dados do insumo e da compra inicial do formulário unificado.
- *
- * @param raw campos enviados pelo formulário
- * @returns os dois registros normalizados ou erros associados aos campos
- */
-export function validateNewSupplyWithPrice(
-  raw: Record<string, unknown>,
-): ValidationResult<{ supply: SupplyInput; price: SupplyPriceInput }> {
-  const supplyValidation = validateSupply(raw);
-  const priceValidation = validateSupplyPrice(raw);
-
-  if (!supplyValidation.ok || !priceValidation.ok) {
-    return {
-      ok: false,
-      errors: {
-        ...(!supplyValidation.ok ? supplyValidation.errors : {}),
-        ...(!priceValidation.ok ? priceValidation.errors : {}),
-      },
-    };
-  }
-
-  return {
-    ok: true,
-    data: {
-      supply: supplyValidation.data,
-      price: priceValidation.data,
-    },
-  };
-}
-
-/**
- * Valida os dados de uma aquisição.
- *
- * @param raw campos do formulário
- * @returns aquisição normalizada ou mensagens por campo
- */
-export function validateSupplyPrice(
-  raw: Record<string, unknown>,
-): ValidationResult<SupplyPriceInput> {
-  const errors: Record<string, string> = {};
-
-  const supplierId = readText(raw, "supplierId");
-  const notes = readText(raw, "notes");
-  const purchaseUnit = readText(raw, "purchaseUnit") as SupplyUnit;
-  const acquiredOn = resolveAcquiredOn(readText(raw, "acquiredOn"));
-  const quantity = parseQuantityInput(readText(raw, "quantity"));
-  const amountCents = parseAmountToCents(readText(raw, "amount"));
-  const freightText = readText(raw, "freight");
-
   if (!acquiredOn) {
-    errors.acquiredOn = "Informe uma data de compra válida.";
+    errors.acquiredOn = "Informe uma data válida.";
   }
 
   if (quantity === null) {
-    errors.quantity = "Informe a quantidade comprada (positiva, com vírgula se precisar).";
-  }
-
-  if (!SUPPLY_UNITS.includes(purchaseUnit)) {
-    errors.purchaseUnit = "Escolha a unidade de medida da compra.";
+    errors.quantity = "Informe a quantidade na unidade de medida do insumo.";
   }
 
   if (amountCents === null || amountCents <= 0) {
-    errors.amount = "Informe o valor pago pela compra.";
+    errors.amount = "Informe o valor pago pelo insumo.";
   }
-
-  let freightCents = 0;
 
   if (freightText) {
     const parsedFreight = parseAmountToCents(freightText);
@@ -168,26 +109,24 @@ export function validateSupplyPrice(
     }
   }
 
-  if (supplierId && !/^[0-9a-f-]{36}$/i.test(supplierId)) {
-    errors.supplierId = "Fornecedor inválido.";
-  }
-
-  if (notes.length > 500) {
-    errors.notes = "Observação deve ter até 500 caracteres.";
-  }
-
-  if (Object.keys(errors).length > 0) {
+  if (
+    Object.keys(errors).length > 0 ||
+    !acquiredOn ||
+    quantity === null ||
+    amountCents === null
+  ) {
     return { ok: false, errors };
   }
 
   return {
     ok: true,
     data: {
-      supplierId: supplierId || null,
-      acquiredOn: acquiredOn as string,
-      quantity: quantity as number,
-      purchaseUnit,
-      amountCents: amountCents as number,
+      name,
+      kind,
+      unit,
+      quantity,
+      acquiredOn,
+      amountCents,
       freightCents,
       notes,
     },

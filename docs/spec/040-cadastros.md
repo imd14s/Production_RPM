@@ -1,6 +1,6 @@
 # Spec 040 — Cadastros (Etapa 5)
 
-**Status:** Em andamento — 5.1 a 5.3 implementados; conversão métrica automática implementada
+**Status:** Em andamento — 5.1 a 5.3 implementados; simplificação do custo atual em andamento
 **Fonte de verdade:** `task.md`, seção "Insumos" e "Cadastro de insumos e produtos"
 
 ## Sub-etapas
@@ -8,9 +8,8 @@
 | Sub-etapa | Área | Tabelas |
 |---|---|---|
 | 5.1 | Fornecedores | `suppliers` | ✅ Implementada |
-| 5.2 | Insumos e aquisições (histórico de preços) | `supplies`, `supply_prices` | ✅ Implementada |
+| 5.2 | Insumos e custo atual | `supplies` | Em migração |
 | 5.3 | Produtos, receitas e composições | `products`, `product_components` | ✅ Implementada |
-| 5.4 | Conversão automática de unidades métricas | — | ✅ Implementada |
 
 ## Fornecedores (5.1)
 
@@ -24,40 +23,42 @@
 - Tela `/fornecedores` (lista + formulário). Menu visível apenas ao administrador.
 - Serviços em `services/supabase/suppliers.ts`, ações em `app/actions/suppliers.ts`.
 
-## Insumos e aquisições (5.2)
+## Insumos e custo atual (5.2)
 
-- Migration `20261102110000_create_supplies.sql`: enums `supply_kind`
+- Migration inicial `20261102110000_create_supplies.sql`: enums `supply_kind`
   (matéria-prima, revenda, impressão 3D, embalagem, outro) e `supply_unit`
   (unidade, metro, grama, quilograma, mililitro, litro, pacote, caixa, outro).
-- `supply_prices`: uma linha por compra — data (`acquired_on`), fornecedor
-  opcional, quantidade comprada (numeric 3 casas, > 0), unidade original
-  (`purchase_unit`), valor pago e frete. A migration
-  `20261102200000_add_purchase_unit_to_supply_prices.sql` preenche compras
-  existentes com a unidade base do insumo antes de exigir o novo campo.
-- Cada aquisição salva quantidade e unidade escolhidas (`purchase_unit`), sem
-  exigir compatibilidade com a unidade cadastrada no insumo. O seletor oferece
-  kg, gm, L, unidade e outro; unidades históricas já registradas continuam
-  disponíveis ao editar a compra correspondente.
-- Na inclusão de um novo insumo, um único formulário, sem seções separadas,
-  solicita os dados do cadastro e da compra. A função
-  `create_supply_with_initial_price` grava os dois registros na mesma transação,
-  sob RLS e autorização de administrador. Observação é o último campo. A edição
-  do cadastro não exige compra nova; compras posteriores continuam sendo
-  registradas na página do insumo.
-- O snapshot `unit_cost_cents` é calculado por quantidade comprada e sua unidade.
-  Quando é possível determinar o custo na unidade base (mesma unidade ou
-  conversão métrica do mesmo tipo), a lista de insumos usa esse custo. Quando as
-  unidades não são comparáveis, a compra é salva e exibida no histórico, mas não
-  fornece custo para a precificação do produto.
-- Mudar preço depois da compra não altera o custo salvo nessa aquisição nem custos
-  históricos de peças já vendidas.
-- Quantidade com vírgula: `lib/quantity.ts` (`parseQuantityInput`, 3 casas).
-- Telas: `/insumos` (lista com custo atual, data da última compra e link de
-  compras) e `/insumos/[id]` (histórico completo de compras + registro; a
-  compra mais recente é marcada como "Atual" e define o custo).
-- Sem fornecedor na compra = "Compra avulsa"; fornecedor pode estar inativo e
-  continua listado se for o dono da compra em edição.
-- Serviços em `services/supabase/supplies.ts`; ações em `app/actions/supplies.ts`.
+- O registro `supplies` guarda os dados do insumo e da compra atual: quantidade
+  na unidade base, data, valor pago, frete e custo por unidade em centavos.
+- Não há histórico de aquisições. Editar esses dados substitui o custo atual do
+  insumo; snapshots já registrados em custos de produção/precificação não são
+  alterados retroativamente.
+- Um único formulário cria e edita o insumo e seus dados atuais de custo.
+  Observação é o último campo. A quantidade sempre usa a unidade do insumo;
+  não existe campo ou conversão de unidade da compra.
+- A data vazia usa o dia atual. Quantidade aceita vírgula e até três casas
+  decimais (`lib/quantity.ts`, `parseQuantityInput`). Dinheiro é salvo em
+  centavos inteiros.
+- O custo unitário é calculado como
+  `(valor pago + frete) / quantidade`, com arredondamento para centavos.
+- A lista `/insumos` exibe a unidade base e o custo por unidade. Insumos sem
+  custo atual são exibidos sem custo, não como erro de conversão.
+- Serviços em `services/supabase/supplies.ts`; gravação administrativa em
+  `app/actions/supplies.ts`, protegida por verificação de perfil e RLS.
+- Fornecedores continuam cadastrados em seu módulo próprio; a compra atual de
+  insumo não mantém referência de fornecedor.
+
+### Migração do histórico existente
+
+- A migration `20261102230000_replace_supply_price_history_with_current_cost.sql`
+  copia somente a aquisição mais recente por insumo.
+- Quantidades iguais à unidade base são mantidas; conversões métricas conhecidas
+  entre kg/g e L/ml são normalizadas para a unidade base.
+- Quantidades incompatíveis, nulas após arredondamento ou fora do limite seguro
+  não são convertidas: os campos de custo daquele insumo permanecem vazios para
+  preenchimento no formulário.
+- A migration remove `supply_prices` e a função
+  `create_supply_with_initial_price`. Migrations anteriores permanecem imutáveis.
 
 ## Produtos e composições (5.3)
 
@@ -76,30 +77,16 @@
 - Sem cálculo de custo ou preço de venda nesta etapa. Detalhes em
   [`060-produtos.md`](./060-produtos.md).
 
-## Unidades da compra (5.4)
+## Conversões de unidade
 
-- O seletor oferece kg, gm, L, unidade e outro sem filtrar opções pela unidade
-  base do insumo.
-- A compra persiste exatamente quantidade, unidade, valor e frete informados.
-- Conversões métricas podem ser usadas apenas para apresentar custo na unidade
-  base quando forem compatíveis; a compra não é bloqueada por falta de conversão.
-- Não existe tela para cadastrar fatores manuais. A tabela de conversões
-  anterior permanece legada e não é consultada nem escrita pela aplicação.
-
-## Regras da etapa
-
-- O preço do insumo vindo de cada compra não altera custos de peças já vendidas
-  (snapshot do custo por unidade na própria compra).
-- Fornecedor é opcional na compra (aquisições avulsas existem).
-- A quantidade histórica permanece na unidade original da compra; o custo
-  unitário do snapshot também usa a unidade informada na compra. A aplicação só
-  converte o custo para a unidade base quando há equivalência métrica conhecida.
+- Quantidades usadas e compradas são sempre expressas na unidade base selecionada
+  no insumo. O cadastro não converte automaticamente entre unidades.
+- Não há formulário para cadastrar fatores de conversão. A tabela legada de
+  conversões manuais permanece fora dos fluxos ativos da aplicação.
 
 ## Pendências
 
-- A migration `20261102200000_add_purchase_unit_to_supply_prices.sql` foi aplicada ao
-  Supabase e verificada em 2026-11-02: a coluna `purchase_unit` existe, é obrigatória,
-  está preenchida para as aquisições existentes e é reconhecida pelo PostgREST.
-- A migration `20261102220000_create_supply_with_initial_price.sql` precisa ser aplicada
-  ao Supabase antes de usar o cadastro unificado.
-- A tabela legada de conversões manuais não é utilizada pela aplicação.
+- Aplicar `20261102230000_replace_supply_price_history_with_current_cost.sql` ao
+  Supabase e conferir as colunas de custo atual em `supplies`.
+- Verificar pelo PostgREST a leitura e gravação do novo formato antes de usar a
+  tela com dados remotos.

@@ -9,12 +9,11 @@ import { SelectField } from "@/components/ui/SelectField/SelectField";
 import { TextAreaField } from "@/components/ui/TextAreaField/TextAreaField";
 import { TextField } from "@/components/ui/TextField/TextField";
 import { EMPTY_SETTINGS_STATE } from "@/features/settings/formState";
+import { formatCentsInput } from "@/lib/money";
 import type { Supply } from "@/features/supplies/types";
 import {
   SUPPLY_KINDS,
   SUPPLY_KIND_LABELS,
-  SUPPLY_PURCHASE_UNITS,
-  SUPPLY_PURCHASE_UNIT_LABELS,
   SUPPLY_UNITS,
   SUPPLY_UNIT_LABELS,
 } from "@/features/supplies/types";
@@ -50,8 +49,6 @@ export function SupplyForm({ supply, onCancel, onSaved }: SupplyFormProps) {
     EMPTY_SETTINGS_STATE,
   );
   const isEditing = supply !== null;
-  const defaultPurchaseUnit =
-    supply && SUPPLY_PURCHASE_UNITS.includes(supply.unit) ? supply.unit : "unidade";
 
   useEffect(() => {
     if (state.status === "success") {
@@ -94,68 +91,64 @@ export function SupplyForm({ supply, onCancel, onSaved }: SupplyFormProps) {
         options={UNIT_OPTIONS}
         defaultValue={supply?.unit ?? "unidade"}
         error={state.errors.unit}
-        hint="Como você compra e usa: metro, grama, unidade, pacote..."
+        hint="A quantidade e o custo serão registrados nesta unidade."
         required
       />
 
-      {!isEditing ? (
-        <>
-          <SelectField
-            label="Unidade da compra"
-            name="purchaseUnit"
-            options={SUPPLY_PURCHASE_UNITS.map((value) => ({
-              value,
-              label: SUPPLY_PURCHASE_UNIT_LABELS[value],
-            }))}
-            defaultValue={defaultPurchaseUnit}
-            error={state.errors.purchaseUnit}
-            required
-          />
+      <TextField
+        label="Quantidade"
+        name="quantity"
+        inputMode="decimal"
+        defaultValue={
+          supply?.quantity === null || supply?.quantity === undefined
+            ? ""
+            : new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 3 }).format(
+                supply.quantity,
+              )
+        }
+        error={state.errors.quantity}
+        placeholder="5"
+        hint="Quantidade na unidade de medida do insumo."
+        required
+      />
 
-          <TextField
-            label="Quantidade comprada"
-            name="quantity"
-            inputMode="decimal"
-            error={state.errors.quantity}
-            placeholder="5"
-            hint="Número com até 3 casas decimais (ex: 2,5)."
-            required
-          />
+      <TextField
+        label="Valor pago (R$)"
+        name="amount"
+        inputMode="decimal"
+        defaultValue={
+          supply?.amountCents === null || supply?.amountCents === undefined
+            ? ""
+            : formatCentsInput(supply.amountCents)
+        }
+        error={state.errors.amount}
+        placeholder="25,00"
+        hint="Total pago, sem frete."
+        required
+      />
 
-          <TextField
-            label="Valor pago (R$)"
-            name="amount"
-            inputMode="decimal"
-            error={state.errors.amount}
-            placeholder="25,00"
-            hint="Total da compra, sem frete."
-            required
-          />
+      <TextField
+        label="Frete (R$)"
+        name="freight"
+        inputMode="decimal"
+        defaultValue={
+          supply?.freightCents === null || supply?.freightCents === undefined
+            ? ""
+            : formatCentsInput(supply.freightCents)
+        }
+        error={state.errors.freight}
+        placeholder="0,00"
+        hint="Opcional. Entra no custo rateado por unidade."
+      />
 
-          <TextField
-            label="Frete (R$)"
-            name="freight"
-            inputMode="decimal"
-            error={state.errors.freight}
-            placeholder="0,00"
-            hint="Opcional. Entra no custo rateado por unidade."
-          />
-
-          <TextField
-            label="Data da compra"
-            name="acquiredOn"
-            type="date"
-            error={state.errors.acquiredOn}
-            hint="Vazio usa o dia de hoje."
-          />
-        </>
-      ) : null}
-
-      {isEditing ? (
-        <p className={styles.tip}>
-          O custo por unidade nasce das compras registradas na página do insumo.
-        </p>
-      ) : null}
+      <TextField
+        label="Data da compra"
+        name="acquiredOn"
+        type="date"
+        defaultValue={supply?.acquiredOn ?? ""}
+        error={state.errors.acquiredOn}
+        hint="Vazio usa o dia de hoje."
+      />
 
       <TextAreaField
         label="Observação"

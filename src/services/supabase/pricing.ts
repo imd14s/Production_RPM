@@ -130,8 +130,8 @@ export async function getProductCostBreakdown(
 
   const suppliesById = new Map<string, SupplyNode>();
   for (const supply of suppliesWithCost) {
-    suppliesById.set(supply.supply.id, {
-      id: supply.supply.id,
+    suppliesById.set(supply.id, {
+      id: supply.id,
       currentUnitCostCents: supply.currentUnitCostCents,
     });
   }

@@ -1,54 +1,64 @@
-import {
-  validateNewSupplyWithPrice,
-  validateSupply,
-  validateSupplyPrice,
-} from "./supplies";
+import { validateSupply } from "./supplies";
 
-describe("validateNewSupplyWithPrice", () => {
-  it("normalizes supply and initial purchase fields from one form", () => {
-    const result = validateNewSupplyWithPrice({
+describe("validateSupply", () => {
+  it("normalizes supply and current cost fields from one form", () => {
+    const result = validateSupply({
       name: "Cera Coco",
       kind: "materia_prima",
       unit: "litro",
-      notes: "",
-      purchaseUnit: "litro",
       quantity: "5",
+      acquiredOn: "2026-11-02",
       amount: "25,00",
-      freight: "",
+      freight: "2,50",
+      notes: "",
+    });
+
+    expect(result).toEqual({
+      ok: true,
+      data: {
+        name: "Cera Coco",
+        kind: "materia_prima",
+        unit: "litro",
+        quantity: 5,
+        acquiredOn: "2026-11-02",
+        amountCents: 2500,
+        freightCents: 250,
+        notes: "",
+      },
+    });
+  });
+
+  it("defaults an empty acquisition date to today", () => {
+    const result = validateSupply({
+      name: "Tecido bolso",
+      kind: "materia_prima",
+      unit: "metro",
+      quantity: "12,5",
       acquiredOn: "",
+      amount: "249,00",
+      freight: "",
+      notes: "",
     });
 
     expect(result.ok).toBe(true);
 
     if (result.ok) {
-      expect(result.data.supply).toEqual({
-        name: "Cera Coco",
-        kind: "materia_prima",
-        unit: "litro",
-        notes: "",
-      });
-      expect(result.data.price).toMatchObject({
-        quantity: 5,
-        purchaseUnit: "litro",
-        amountCents: 2500,
-        freightCents: 0,
-        supplierId: null,
-      });
-      expect(result.data.price.acquiredOn).toMatch(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/);
+      expect(result.data.quantity).toBe(12.5);
+      expect(result.data.freightCents).toBe(0);
+      expect(result.data.acquiredOn).toMatch(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/);
     }
   });
 
-  it("reports missing initial purchase values alongside supply validation", () => {
-    const result = validateNewSupplyWithPrice({
+  it("reports missing quantity and amount", () => {
+    const result = validateSupply({
       name: "Cera Coco",
       kind: "materia_prima",
       unit: "litro",
-      notes: "",
-      purchaseUnit: "litro",
       quantity: "",
+      acquiredOn: "",
       amount: "",
       freight: "",
-      acquiredOn: "",
+      notes: "",
     });
 
     expect(result.ok).toBe(false);
@@ -58,31 +68,18 @@ describe("validateNewSupplyWithPrice", () => {
       expect(result.errors.amount).toBeDefined();
     }
   });
-});
 
-describe("validateSupply", () => {
-  it("normalizes a valid supply", () => {
+  it("requires a known kind and unit", () => {
     const result = validateSupply({
       name: "Tecido bolso",
-      kind: "materia_prima",
-      unit: "metro",
+      kind: "loja",
+      unit: "jarda",
+      quantity: "1",
+      acquiredOn: "",
+      amount: "100",
+      freight: "",
       notes: "",
     });
-
-    expect(result.ok).toBe(true);
-
-    if (result.ok) {
-      expect(result.data).toEqual({
-        name: "Tecido bolso",
-        kind: "materia_prima",
-        unit: "metro",
-        notes: "",
-      });
-    }
-  });
-
-  it("requires known kind and unit", () => {
-    const result = validateSupply({ name: "Tecido bolso", kind: "loja", unit: "jarda", notes: "" });
 
     expect(result.ok).toBe(false);
 
@@ -92,131 +89,66 @@ describe("validateSupply", () => {
     }
   });
 
-  it("requires a name", () => {
-    const result = validateSupply({ name: "a", kind: "materia_prima", unit: "metro", notes: "" });
-
-    expect(result.ok).toBe(false);
-
-    if (!result.ok) {
-      expect(result.errors.name).toBeDefined();
-    }
-  });
-});
-
-describe("validateSupplyPrice", () => {
-  it("normalizes an acquisition and defaults the date to today", () => {
-    const result = validateSupplyPrice({
-      supplierId: "",
-      acquiredOn: "",
-      quantity: "12,5",
-      purchaseUnit: "quilograma",
-      amount: "249,00",
-      freight: "15,00",
-      notes: "",
-    });
-
-    expect(result.ok).toBe(true);
-
-    if (result.ok) {
-      expect(result.data.quantity).toBe(12.5);
-      expect(result.data.purchaseUnit).toBe("quilograma");
-      expect(result.data.amountCents).toBe(24900);
-      expect(result.data.freightCents).toBe(1500);
-      expect(result.data.acquiredOn).toMatch(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/);
-      expect(result.data.supplierId).toBeNull();
-    }
-  });
-
-  it("rejects invalid quantities, amounts and dates", () => {
-    const zeroQuantity = validateSupplyPrice({
-      supplierId: "",
-      acquiredOn: "2026-10-28",
+  it("rejects invalid quantities, dates, and freight", () => {
+    const invalidQuantity = validateSupply({
+      name: "Tecido bolso",
+      kind: "materia_prima",
+      unit: "metro",
       quantity: "0",
-      purchaseUnit: "metro",
+      acquiredOn: "",
       amount: "100",
       freight: "",
       notes: "",
     });
 
-    expect(zeroQuantity.ok).toBe(false);
+    expect(invalidQuantity.ok).toBe(false);
 
-    if (!zeroQuantity.ok) {
-      expect(zeroQuantity.errors.quantity).toBeDefined();
+    if (!invalidQuantity.ok) {
+      expect(invalidQuantity.errors.quantity).toBeDefined();
     }
 
-    const zeroAmount = validateSupplyPrice({
-      supplierId: "",
-      acquiredOn: "2026-10-28",
-      quantity: "2",
-      purchaseUnit: "metro",
-      amount: "",
-      freight: "",
-      notes: "",
-    });
-
-    expect(zeroAmount.ok).toBe(false);
-
-    if (!zeroAmount.ok) {
-      expect(zeroAmount.errors.amount).toBeDefined();
-    }
-
-    const badDate = validateSupplyPrice({
-      supplierId: "",
+    const invalidDate = validateSupply({
+      name: "Tecido bolso",
+      kind: "materia_prima",
+      unit: "metro",
+      quantity: "1",
       acquiredOn: "2026-02-30",
-      quantity: "2",
-      purchaseUnit: "metro",
       amount: "100",
       freight: "",
       notes: "",
     });
 
-    expect(badDate.ok).toBe(false);
+    expect(invalidDate.ok).toBe(false);
 
-    if (!badDate.ok) {
-      expect(badDate.errors.acquiredOn).toBeDefined();
-    }
-  });
-
-  it("keeps freight optional and rejects negative", () => {
-    const withoutFreight = validateSupplyPrice({
-      supplierId: "",
-      acquiredOn: "2026-10-28",
-      quantity: "2",
-      purchaseUnit: "metro",
-      amount: "100",
-      freight: "",
-      notes: "",
-    });
-
-    expect(withoutFreight.ok).toBe(true);
-
-    if (withoutFreight.ok) {
-      expect(withoutFreight.data.freightCents).toBe(0);
+    if (!invalidDate.ok) {
+      expect(invalidDate.errors.acquiredOn).toBeDefined();
     }
 
-    const badFreight = validateSupplyPrice({
-      supplierId: "",
-      acquiredOn: "2026-10-28",
-      quantity: "2",
-      purchaseUnit: "metro",
+    const invalidFreight = validateSupply({
+      name: "Tecido bolso",
+      kind: "materia_prima",
+      unit: "metro",
+      quantity: "1",
+      acquiredOn: "",
       amount: "100",
       freight: "-5",
       notes: "",
     });
 
-    expect(badFreight.ok).toBe(false);
+    expect(invalidFreight.ok).toBe(false);
 
-    if (!badFreight.ok) {
-      expect(badFreight.errors.freight).toBeDefined();
+    if (!invalidFreight.ok) {
+      expect(invalidFreight.errors.freight).toBeDefined();
     }
   });
 
-  it("requires a known purchase unit", () => {
-    const result = validateSupplyPrice({
-      supplierId: "",
-      acquiredOn: "2026-10-28",
-      quantity: "2",
-      purchaseUnit: "jarda",
+  it("requires a valid name", () => {
+    const result = validateSupply({
+      name: "a",
+      kind: "materia_prima",
+      unit: "metro",
+      quantity: "1",
+      acquiredOn: "",
       amount: "100",
       freight: "",
       notes: "",
@@ -225,7 +157,7 @@ describe("validateSupplyPrice", () => {
     expect(result.ok).toBe(false);
 
     if (!result.ok) {
-      expect(result.errors.purchaseUnit).toBeDefined();
+      expect(result.errors.name).toBeDefined();
     }
   });
 });

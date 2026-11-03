@@ -1,6 +1,5 @@
 /**
- * Tipos e rótulos dos insumos e das aquisições.
- * Enums vivem no banco (ver migration 20261102110000).
+ * Tipos e rótulos dos insumos. Enums vivem no banco.
  */
 
 export type SupplyKind = "materia_prima" | "revenda" | "impressao_3d" | "embalagem" | "outro";
@@ -21,6 +20,11 @@ export type Supply = {
   name: string;
   kind: SupplyKind;
   unit: SupplyUnit;
+  quantity: number | null;
+  acquiredOn: string | null;
+  amountCents: number | null;
+  freightCents: number | null;
+  currentUnitCostCents: number | null;
   isActive: boolean;
   notes: string;
 };
@@ -29,46 +33,14 @@ export type SupplyInput = {
   name: string;
   kind: SupplyKind;
   unit: SupplyUnit;
-  notes: string;
-};
-
-export type SupplyPrice = {
-  id: string;
-  supplyId: string;
-  supplierId: string | null;
-  acquiredOn: string;
   quantity: number;
-  purchaseUnit: SupplyUnit;
-  amountCents: number;
-  freightCents: number;
-  unitCostCents: number;
-  notes: string;
-};
-
-export type SupplyPriceInput = {
-  supplierId: string | null;
   acquiredOn: string;
-  quantity: number;
-  purchaseUnit: SupplyUnit;
   amountCents: number;
   freightCents: number;
   notes: string;
 };
 
-export type SupplyWithCost = {
-  supply: Supply;
-  /** Custo por unidade da aquisição mais recente, sem frete zerado. */
-  currentUnitCostCents: number | null;
-  /** Data (ISO curto) da aquisição mais recente, quando existe. */
-  lastAcquiredOn: string | null;
-  /** Quantidade de aquisições registradas. */
-  acquisitionCount: number;
-};
-
-export type SupplyWithPrices = {
-  supply: Supply;
-  prices: SupplyPrice[];
-};
+export type SupplyWithCost = Supply;
 
 export const SUPPLY_KIND_LABELS: Record<SupplyKind, string> = {
   materia_prima: "Matéria-prima",
@@ -109,24 +81,3 @@ export const SUPPLY_UNITS: SupplyUnit[] = [
   "caixa",
   "outro",
 ];
-
-export const SUPPLY_PURCHASE_UNITS: SupplyUnit[] = [
-  "quilograma",
-  "grama",
-  "litro",
-  "unidade",
-  "outro",
-];
-
-export const SUPPLY_PURCHASE_UNIT_LABELS: Record<SupplyUnit, string> = {
-  ...SUPPLY_UNIT_LABELS,
-  quilograma: "kg",
-  grama: "gm",
-  litro: "L",
-  unidade: "unidade",
-  outro: "outro",
-  metro: "Metro",
-  mililitro: "Mililitro",
-  pacote: "Pacote",
-  caixa: "Caixa",
-};

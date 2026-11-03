@@ -20,6 +20,7 @@ SQL versionado do banco. Aplicar sempre na ordem do nome do arquivo.
 | `20261102200000_add_purchase_unit_to_supply_prices.sql` | Unidade original de cada compra de insumo |
 | `20261102210000_document_purchase_unit_cost_basis.sql` | Documenta a unidade de referência do custo unitário da compra |
 | `20261102220000_create_supply_with_initial_price.sql` | Criação transacional de insumo e primeira compra |
+| `20261102230000_replace_supply_price_history_with_current_cost.sql` | Migra o custo atual compatível para `supplies` e remove o histórico de aquisições |
 
 ## Como aplicar
 
@@ -29,6 +30,8 @@ SQL versionado do banco. Aplicar sempre na ordem do nome do arquivo.
 2. Execute o conteúdo das migrations da tabela acima, uma por vez e na ordem.
 3. Confira em **Table Editor** se `profiles`, `suppliers`, `supplies`,
    `products` e `product_components` existem.
+4. Após a última migration, confira em `supplies` as colunas de custo atual
+   (`quantity`, `acquired_on`, `amount_cents`, `freight_cents` e `unit_cost_cents`).
 
 ### Opção 2 — Supabase CLI / conexão direta
 

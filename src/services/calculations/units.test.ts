@@ -34,4 +34,14 @@ describe("convertStandardQuantity", () => {
     expect(convertStandardQuantity(2, "quilograma", "litro")).toBeNull();
     expect(convertStandardQuantity(0, "quilograma", "grama")).toBeNull();
   });
+
+  it("base maior: litro recebe ml (menor convertido para maior)", () => {
+    expect(convertStandardQuantity(500, "mililitro", "litro")).toBe(0.5);
+    expect(convertStandardQuantity(5, "litro", "litro")).toBe(5);
+  });
+
+  it("base maior: grama recebe kg (maior convertido para menor)", () => {
+    expect(convertStandardQuantity(2, "quilograma", "grama")).toBe(2000);
+    expect(convertStandardQuantity(1, "grama", "grama")).toBe(1);
+  });
 });

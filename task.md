@@ -187,7 +187,7 @@ Usuários	profiles, roles
 Empresa	company_settings, tax_settings
 Canais	sales_channels, channel_fees
 Pagamentos	payment_methods, payment_fees
-Insumos	supplies, supply_prices
+Insumos	supplies
 Fornecedores	suppliers
 Produtos	products, product_components
 Produção	production_batches, production_consumption
@@ -201,7 +201,8 @@ Algumas regras de modelagem:
 - Relacionamentos com chaves estrangeiras.
 - Exclusão lógica quando houver histórico relacionado.
 - Datas de criação e atualização.
-- Histórico de preços de aquisição.
+- Somente os dados atuais de quantidade, data, valor, frete e custo por unidade;
+  compras anteriores não são mantidas.
 - Snapshot de custos nas simulações e vendas.
 - RLS em todas as tabelas privadas.
 - Restrições para impedir quantidades e valores inválidos.
@@ -347,12 +348,10 @@ Insumos
 - Nome.
 - Categoria.
 - Unidade de medida.
-- Quantidade comprada.
-- Valor de aquisição.
-- Frete.
-- Fornecedor.
-- Histórico de preços.
-- Conversões de unidades.
+- Quantidade da compra atual na unidade do insumo.
+- Valor de aquisição atual.
+- Frete da compra atual.
+- Custo atual por unidade do insumo.
 - Estoque mínimo futuramente.
 Produtos
 Suportar:
@@ -401,7 +400,6 @@ Relatórios
 - Produtos com menor margem.
 - Custos por categoria.
 - Comparação entre canais.
-- Evolução de preços de insumos.
 - Rentabilidade estimada.
 - Desempenho de vendas, quando o módulo de vendas for implementado.
 7. Motor financeiro

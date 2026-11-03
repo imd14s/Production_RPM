@@ -1,14 +1,13 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import Link from "next/link";
 import { toggleSupplyAction } from "@/app/actions/supplies";
 import { Badge } from "@/components/ui/Badge/Badge";
 import { Button } from "@/components/ui/Button/Button";
 import { PendingButton } from "@/components/ui/PendingButton/PendingButton";
 import { SupplyForm } from "@/features/supplies/SupplyForm";
 import type { SupplyWithCost } from "@/features/supplies/types";
-import { SUPPLY_KIND_LABELS } from "@/features/supplies/types";
+import { SUPPLY_KIND_LABELS, SUPPLY_UNIT_LABELS } from "@/features/supplies/types";
 import { formatCents } from "@/lib/money";
 import styles from "./SuppliesPanel.module.css";
 
@@ -34,7 +33,7 @@ export function SuppliesPanel({ items }: SuppliesPanelProps) {
     setFormVersion((version) => version + 1);
   }, []);
 
-  const editing = items.find((item) => item.supply.id === editingId) ?? null;
+  const editing = items.find((item) => item.id === editingId) ?? null;
 
   return (
     <div className={styles.panel}>
@@ -58,29 +57,16 @@ export function SuppliesPanel({ items }: SuppliesPanelProps) {
                 </tr>
               </thead>
               <tbody>
-                {items.map(({ supply, currentUnitCostCents, lastAcquiredOn, acquisitionCount }) => (
+                {items.map((supply) => (
                   <tr key={supply.id} className={supply.isActive ? "" : styles.inactive}>
                     <td data-label="Insumo">{supply.name}</td>
                     <td data-label="Categoria">{SUPPLY_KIND_LABELS[supply.kind]}</td>
-                    <td data-label="Unidade">
-                      <Link
-                        href={`/insumos/${supply.id}`}
-                        className={styles.pricesLink}
-                      >
-                        {lastAcquiredOn
-                          ? `${acquisitionCount} compra${acquisitionCount === 1 ? "" : "s"}`
-                          : "Sem compras"}
-                      </Link>
-                    </td>
+                    <td data-label="Unidade">{SUPPLY_UNIT_LABELS[supply.unit]}</td>
                     <td data-label="Custo por unidade">
-                      {currentUnitCostCents !== null ? (
-                        formatCents(currentUnitCostCents)
-                      ) : acquisitionCount > 0 ? (
-                        <span className={styles.missing}>
-                          Unidade incompatível com o cadastro
-                        </span>
+                      {supply.currentUnitCostCents !== null ? (
+                        formatCents(supply.currentUnitCostCents)
                       ) : (
-                        <span className={styles.missing}>Registre a 1ª compra</span>
+                        <span className={styles.missing}>Sem custo cadastrado</span>
                       )}
                     </td>
                     <td data-label="Situação">
@@ -137,8 +123,8 @@ export function SuppliesPanel({ items }: SuppliesPanelProps) {
         }
       >
         <SupplyForm
-          key={editing ? editing.supply.id : `novo-${formVersion}`}
-          supply={editing?.supply ?? null}
+          key={editing ? editing.id : `novo-${formVersion}`}
+          supply={editing}
           onCancel={resetForm}
           onSaved={resetForm}
         />

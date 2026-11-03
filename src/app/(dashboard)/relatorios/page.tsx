@@ -29,9 +29,9 @@ export default async function ReportsPage() {
     <ReportsPanel
       products={catalog.products.map((product) => ({ id: product.id, name: product.name }))}
       supplies={supplies.map((supply) => ({
-        id: supply.supply.id,
-        name: supply.supply.name,
-        kind: supply.supply.kind,
+        id: supply.id,
+        name: supply.name,
+        kind: supply.kind,
         currentUnitCostCents: supply.currentUnitCostCents,
       }))}
       simulations={simulations}
