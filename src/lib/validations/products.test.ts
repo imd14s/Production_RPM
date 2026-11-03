@@ -21,6 +21,10 @@ describe("validateProduct", () => {
         name: "Blusa artesanal",
         kind: "fabricado",
         laborMinutes: 45,
+        energyCostCents: null,
+        machineCostCents: null,
+        finishingCostCents: null,
+        failureRatePercent: null,
         notes: "Algodão",
         components: [
           { targetType: "supply", supplyId: FIRST_SUPPLY, quantity: 0.75 },

@@ -1,3 +1,4 @@
+import { parseAmountToCents } from "@/lib/money";
 import { parseQuantityInput } from "@/lib/quantity";
 import { readText } from "@/lib/validations/settings";
 import type {
@@ -25,8 +26,16 @@ export function validateProduct(
   const kindText = readText(inputData, "kind");
   const notes = readText(inputData, "notes");
   const laborText = readText(inputData, "laborMinutes");
+  const energyText = readText(inputData, "energyCost");
+  const machineText = readText(inputData, "machineCost");
+  const finishingText = readText(inputData, "finishingCost");
+  const failureRateText = readText(inputData, "failureRate");
   const kind = kindText as ProductKind;
   const laborMinutes = laborText === "" ? null : Number(laborText);
+  const energyCostCents = energyText === "" ? null : parseAmountToCents(energyText);
+  const machineCostCents = machineText === "" ? null : parseAmountToCents(machineText);
+  const finishingCostCents = finishingText === "" ? null : parseAmountToCents(finishingText);
+  const failureRatePercent = failureRateText === "" ? null : Number(failureRateText.replace(",", "."));
   const rawComponents = inputData.components;
   const components =
     rawComponents === undefined || typeof rawComponents === "string"
@@ -49,6 +58,28 @@ export function validateProduct(
       laborMinutes > 2880)
   ) {
     errors.laborMinutes = "Informe um tempo inteiro entre 0 e 2.880 minutos.";
+  }
+
+  if (energyText !== "" && energyCostCents === null) {
+    errors.energyCost = "Informe um valor válido.";
+  }
+
+  if (machineText !== "" && machineCostCents === null) {
+    errors.machineCost = "Informe um valor válido.";
+  }
+
+  if (finishingText !== "" && finishingCostCents === null) {
+    errors.finishingCost = "Informe um valor válido.";
+  }
+
+  if (
+    failureRateText !== "" &&
+    (!Number.isFinite(failureRatePercent) ||
+      failureRatePercent === null ||
+      failureRatePercent < 0 ||
+      failureRatePercent > 100)
+  ) {
+    errors.failureRate = "Informe um percentual entre 0 e 100.";
   }
 
   if (notes.length > 500) {
@@ -75,6 +106,10 @@ export function validateProduct(
       name,
       kind,
       laborMinutes,
+      energyCostCents,
+      machineCostCents,
+      finishingCostCents,
+      failureRatePercent,
       notes,
       components: components.value,
     },
