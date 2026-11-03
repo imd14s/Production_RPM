@@ -115,18 +115,29 @@ tabela informativa exibida na página inicial para administradores:
 | Linha | Conteúdo |
 |---|---|
 | Produto | Nome e custo atual de fabricação |
-| Por canal × modalidade | Margem usada e preço sugerido |
+| Por plataforma (varejo) | Margem usada e preço sugerido |
+| Atacado (venda direta) | Única linha de atacado por produto, sem comissão de plataforma |
 
-Regras:
+Regras (decisão do responsável, 2026-11-03):
 
-- Canais considerados: todos os **canais ativos** (`sales_channels`).
-- Impostos considerados: todos os **impostos ativos** (`tax_settings`).
+- **Plataformas vendem apenas varejo** — uma linha por **canal ativo**
+  (`sales_channels`), sempre com modalidade varejo.
+- O **atacado não acontece nas plataformas**: é venda direta ao comerciante e
+  aparece como **uma única linha "Atacado (venda direta)"** por produto, **sem
+  taxas de canal** — o recebimento é combinado com o comprador (ex.: Pix direto
+  ou crediário) e não altera o preço base da matriz.
+- Impostos ativos (`tax_settings`) entram em todas as linhas, inclusive no
+  atacado direto.
 - O meio de pagamento **não** entra na matriz base — a verificação fina com
   taxas de pagamento acontece na simulação de `/precificacao`.
-- Prioridade de margem: **última simulação (produto + canal + modalidade) >
-  margem padrão da empresa > contingência (30% varejo / 20% atacado)**.
+- Prioridade de margem **nas plataformas**: última simulação de **varejo**
+  (produto + canal) > margem padrão da empresa > contingência (30% varejo).
+- A linha de atacado usa **apenas a margem padrão de atacado** da empresa
+  (contingência 20%); simulações de atacado não alteram essa linha.
 - Custo de fabricação incompleto (insumo sem preço) exibe a célula sem preço e
   a etiqueta "Custo incompleto"; nunca bloqueia os outros produtos.
+- Visual: a linha de atacado direto é separada das plataformas por fileira
+  destacada (`PricingMatrix.module.css`).
 
 ## Impacto automático de mudança de insumo
 
@@ -153,6 +164,10 @@ custo atual do produto com o custo do **último snapshot salvo**:
   continuam sem esses custos.
 - **2026-11-03:** módulos de produção e estoque removidos; o sistema se assume
   como planilha de cálculo de preço.
+- **2026-11-03:** a matriz passa a refletir a regra de negócio do ateliê —
+  plataformas vendem **só varejo**; atacado é **venda direta** (uma linha por
+  produto, sem comissão de plataforma, margem padrão, recebimento combinado
+  com o comprador — Pix ou crediário). A coluna "Modalidade" saiu da tabela.
 
 ## Pendências
 

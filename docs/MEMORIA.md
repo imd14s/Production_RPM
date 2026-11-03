@@ -741,6 +741,42 @@ etiqueta; canais, meios, despesas e impostos restantes conferidos um a um.
   indústria em 2026, INSS 5% do mínimo R$ 1.621,00 + ICMS R$ 1,00) entra como
   **despesa operacional** para rateio — a taxa percentual "ICMS" foi desativada.
 
+## [Decisão] - Plataformas só vendem varejo; atacado é venda direta na matriz (2026-11-03)
+
+**Problema Identificado:** a matriz da home gerava uma linha por
+**canal × modalidade**, mostrando "Mercado Livre — Atacado", "TikTok Shop —
+Atacado" etc. O responsável esclareceu que o atacado **não acontece nas
+plataformas** — é venda direta ao comerciante, então repetir atacado por
+plataforma representava vendas que não existem.
+
+**Alternativas:** modelar o atacado como canal próprio no banco (poluiria o
+cadastro de canais com um canal "falso", tipo de enum inexistente) ou tratá-lo
+como regra da matriz no motor (linhas de varejo por canal + uma linha única
+"atacado direto" sem taxas de canal). Escolhida a segunda: a regra é de
+apresentação/negócio, o cadastro de canais continua fiel aos canais reais.
+
+**Correção:** `pricingMatrix.ts` gera uma linha de varejo por canal ativo e uma
+única linha `Atacado (venda direta)` com `channelFees` vazio; impostos ativos
+permanecem em todas as linhas; a margem do atacado usa **apenas a margem
+padrão** da empresa (contingência 20%) — simulações de atacado não alteram a
+linha. Componente perdeu a coluna "Modalidade" e ganhou separação visual da
+linha de atacado direto; 10 testes da matriz reescritos para o contrato novo.
+
+**Validação:** suite `pricingMatrix.test.ts` verde (10 testes), typecheck e
+lint limpos, motor de preço por canal intocado (simulações continuam suportando
+varejo e atacado).
+
+**Lições:**
+- "Atacado por plataforma" incorporava o canal no lugar errado: a plataforma é
+  o canal do **varejo**; o atacado acontece fora das plataformas, direto ao
+  comerciante.
+- Margem do atacado direto vem de negociação com o comprador; o registro fino
+  continua nas simulações, mas a matriz base usa só o padrão configurado.
+- Nas plataformas, o preço entre canais difere apenas pelas taxas de cada
+  plataforma (comissão + tarifa por unidade).
+
+---
+
 ## [Decisão] - Valores base de mercado gravados para o cálculo real (2026-11-03)
 
 **Problema Identificado:** a matriz da home e as simulações exigiam taxas reais
@@ -748,7 +784,7 @@ de canal, meio de pagamento e tributos; o banco tinha apenas placeholders
 (Mercado Livre 8%, ICMS 3%, maquininha 5%).
 
 **Alternativas:** deixar o responsável cadastrar manualmente tudo pela interface
-(lena, sujeito a erro) ou gravar os valores pesquisados via migration de dados
+(lento, sujeito a erro) ou gravar os valores pesquisados via migration de dados
 (erro corrigível e registrada). Escolhida a migration
 `20261103080000_seed_market_base_fees.sql` (idempotente, sem exclusão física —
 linhas substituídas ficam inativas com nota).
