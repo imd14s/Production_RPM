@@ -18,6 +18,9 @@ const COMPANY_INPUT = {
   city: "São Paulo",
   state: "SP",
   zipCode: "01001000",
+  monthlyOutputUnits: null,
+  defaultRetailMargin: null,
+  defaultWholesaleMargin: null,
 };
 
 describe("buildCompanyPayload", () => {
@@ -43,6 +46,9 @@ describe("buildCompanyPayload", () => {
       city: "São Paulo",
       state: "SP",
       zip_code: "01001000",
+      monthly_output_units: null,
+      default_retail_margin: null,
+      default_wholesale_margin: null,
       updated_by: "user-1",
     });
   });

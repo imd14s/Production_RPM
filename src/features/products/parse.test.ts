@@ -6,6 +6,10 @@ const PRODUCT: Product = {
   name: "Blusa",
   kind: "fabricado",
   laborMinutes: 45,
+  energyCostCents: null,
+  machineCostCents: null,
+  finishingCostCents: null,
+  failureRatePercent: null,
   isActive: true,
   notes: "",
 };

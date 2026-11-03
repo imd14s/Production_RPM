@@ -7,6 +7,10 @@ export type Product = {
   name: string;
   kind: ProductKind;
   laborMinutes: number | null;
+  energyCostCents: number | null;
+  machineCostCents: number | null;
+  finishingCostCents: number | null;
+  failureRatePercent: number | null;
   isActive: boolean;
   notes: string;
 };
@@ -51,6 +55,10 @@ export type ProductInput = {
   name: string;
   kind: ProductKind;
   laborMinutes: number | null;
+  energyCostCents: number | null;
+  machineCostCents: number | null;
+  finishingCostCents: number | null;
+  failureRatePercent: number | null;
   notes: string;
   components: ProductComponentInput[];
 };

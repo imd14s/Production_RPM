@@ -7,6 +7,10 @@ describe("buildProductPayload", () => {
       name: "Kit Festa",
       kind: "kit",
       laborMinutes: null,
+      energyCostCents: null,
+      machineCostCents: null,
+      finishingCostCents: null,
+      failureRatePercent: null,
       notes: "",
       components: [
         {
@@ -22,6 +26,10 @@ describe("buildProductPayload", () => {
       p_name: "Kit Festa",
       p_kind: "kit",
       p_labor_minutes: null,
+      p_energy_cost_cents: null,
+      p_machine_cost_cents: null,
+      p_finishing_cost_cents: null,
+      p_failure_rate_percent: null,
       p_notes: null,
       p_components: [
         {
@@ -38,6 +46,10 @@ describe("buildProductPayload", () => {
       name: "Blusa",
       kind: "fabricado",
       laborMinutes: 45,
+      energyCostCents: null,
+      machineCostCents: null,
+      finishingCostCents: null,
+      failureRatePercent: null,
       notes: "Algodão",
       components: [
         {
@@ -55,6 +67,10 @@ describe("buildProductPayload", () => {
       p_name: "Blusa",
       p_kind: "fabricado",
       p_labor_minutes: 45,
+      p_energy_cost_cents: null,
+      p_machine_cost_cents: null,
+      p_finishing_cost_cents: null,
+      p_failure_rate_percent: null,
       p_notes: "Algodão",
       p_components: [
         {

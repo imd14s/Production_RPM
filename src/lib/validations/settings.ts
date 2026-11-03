@@ -94,6 +94,9 @@ export function validateCompanySettings(
   const city = readText(raw, "city");
   const state = readText(raw, "state").toUpperCase();
   const zipCode = onlyDigits(readText(raw, "zipCode"));
+  const monthlyOutputUnitsText = readText(raw, "monthlyOutputUnits");
+  const defaultRetailMarginText = readText(raw, "defaultRetailMargin");
+  const defaultWholesaleMarginText = readText(raw, "defaultWholesaleMargin");
 
   if (legalName.length < 2 || legalName.length > 160) {
     errors.legalName = "Informe a razão social (2 a 160 caracteres).";
@@ -166,6 +169,36 @@ export function validateCompanySettings(
     errors.zipCode = "CEP deve ter 8 dígitos.";
   }
 
+  let monthlyOutputUnits: number | null = null;
+  if (monthlyOutputUnitsText) {
+    const parsed = Number(monthlyOutputUnitsText.replace(",", "."));
+    if (!Number.isInteger(parsed) || parsed <= 0) {
+      errors.monthlyOutputUnits = "Volume mensal deve ser um número inteiro maior que zero.";
+    } else {
+      monthlyOutputUnits = parsed;
+    }
+  }
+
+  let defaultRetailMargin: number | null = null;
+  if (defaultRetailMarginText) {
+    const parsed = Number(defaultRetailMarginText.replace(",", "."));
+    if (!Number.isFinite(parsed) || parsed < 0 || parsed > 100) {
+      errors.defaultRetailMargin = "Margem padrão de varejo deve estar entre 0 e 100.";
+    } else {
+      defaultRetailMargin = parsed;
+    }
+  }
+
+  let defaultWholesaleMargin: number | null = null;
+  if (defaultWholesaleMarginText) {
+    const parsed = Number(defaultWholesaleMarginText.replace(",", "."));
+    if (!Number.isFinite(parsed) || parsed < 0 || parsed > 100) {
+      errors.defaultWholesaleMargin = "Margem padrão de atacado deve estar entre 0 e 100.";
+    } else {
+      defaultWholesaleMargin = parsed;
+    }
+  }
+
   if (Object.keys(errors).length > 0) {
     return { ok: false, errors };
   }
@@ -190,6 +223,9 @@ export function validateCompanySettings(
       city,
       state,
       zipCode,
+      monthlyOutputUnits,
+      defaultRetailMargin,
+      defaultWholesaleMargin,
     },
   };
 }

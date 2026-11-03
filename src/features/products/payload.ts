@@ -16,6 +16,10 @@ export function buildProductPayload(
     p_name: input.name,
     p_kind: input.kind,
     p_labor_minutes: input.laborMinutes,
+    p_energy_cost_cents: input.energyCostCents,
+    p_machine_cost_cents: input.machineCostCents,
+    p_finishing_cost_cents: input.finishingCostCents,
+    p_failure_rate_percent: input.failureRatePercent,
     p_notes: input.notes || null,
     p_components: input.components.map((component) => ({
       supplyId: component.targetType === "supply" ? component.supplyId : null,

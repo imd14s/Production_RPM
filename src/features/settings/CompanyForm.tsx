@@ -230,6 +230,40 @@ export function CompanyForm({ company }: CompanyFormProps) {
         </div>
       </fieldset>
 
+      <fieldset className={styles.group}>
+        <legend className={styles.legend}>Precificação e rateio</legend>
+
+        <div className={styles.grid}>
+          <TextField
+            label="Volume mensal estimado (unidades)"
+            name="monthlyOutputUnits"
+            type="number"
+            inputMode="numeric"
+            defaultValue={company?.monthlyOutputUnits != null ? String(company.monthlyOutputUnits) : ""}
+            error={state.errors.monthlyOutputUnits}
+            hint="Usado para ratear despesas operacionais por unidade."
+          />
+
+          <TextField
+            label="Margem padrão varejo (%)"
+            name="defaultRetailMargin"
+            inputMode="decimal"
+            defaultValue={company?.defaultRetailMargin != null ? String(company.defaultRetailMargin) : ""}
+            error={state.errors.defaultRetailMargin}
+            hint="Usada na matriz automática quando não houver simulação."
+          />
+
+          <TextField
+            label="Margem padrão atacado (%)"
+            name="defaultWholesaleMargin"
+            inputMode="decimal"
+            defaultValue={company?.defaultWholesaleMargin != null ? String(company.defaultWholesaleMargin) : ""}
+            error={state.errors.defaultWholesaleMargin}
+            hint="Usada na matriz automática quando não houver simulação."
+          />
+        </div>
+      </fieldset>
+
       <div className={styles.actions}>
         <Button type="submit" disabled={isPending}>
           {isPending ? "Salvando..." : "Salvar dados"}

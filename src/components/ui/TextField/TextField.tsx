@@ -10,7 +10,7 @@ type TextFieldProps = {
   error?: string;
   hint?: string;
   placeholder?: string;
-  type?: "text" | "email" | "tel" | "date";
+  type?: "text" | "email" | "tel" | "date" | "number";
   inputMode?: "text" | "numeric" | "decimal" | "email" | "tel";
   autoComplete?: string;
   maxLength?: number;

@@ -67,7 +67,20 @@ export function parseCompanyRow(row: unknown): CompanySettings | null {
     city: readString(candidate.city),
     state: readString(candidate.state),
     zipCode: readString(candidate.zip_code),
+    monthlyOutputUnits: readNumber(candidate.monthly_output_units),
+    defaultRetailMargin: readNumber(candidate.default_retail_margin),
+    defaultWholesaleMargin: readNumber(candidate.default_wholesale_margin),
   };
+}
+
+function readNumber(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+  if (typeof value === "string" && value.trim() !== "" && Number.isFinite(Number(value))) {
+    return Number(value);
+  }
+  return null;
 }
 
 /**

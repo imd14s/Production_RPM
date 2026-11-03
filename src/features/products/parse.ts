@@ -35,6 +35,10 @@ export function parseProductRow(databaseRow: unknown): Product | null {
   const name = typeof candidate.name === "string" ? candidate.name.trim() : "";
   const kind = candidate.kind;
   const laborMinutes = candidate.labor_minutes;
+  const energyCostCents = candidate.energy_cost_cents ?? null;
+  const machineCostCents = candidate.machine_cost_cents ?? null;
+  const finishingCostCents = candidate.finishing_cost_cents ?? null;
+  const failureRatePercent = candidate.failure_rate_percent ?? null;
   const isActive = candidate.is_active;
   const notes = candidate.notes;
 
@@ -50,6 +54,23 @@ export function parseProductRow(databaseRow: unknown): Product | null {
         !Number.isInteger(laborMinutes) ||
         laborMinutes < 0 ||
         laborMinutes > 2880)) ||
+    (energyCostCents !== null &&
+      (typeof energyCostCents !== "number" ||
+        !Number.isSafeInteger(energyCostCents) ||
+        energyCostCents < 0)) ||
+    (machineCostCents !== null &&
+      (typeof machineCostCents !== "number" ||
+        !Number.isSafeInteger(machineCostCents) ||
+        machineCostCents < 0)) ||
+    (finishingCostCents !== null &&
+      (typeof finishingCostCents !== "number" ||
+        !Number.isSafeInteger(finishingCostCents) ||
+        finishingCostCents < 0)) ||
+    (failureRatePercent !== null &&
+      (typeof failureRatePercent !== "number" ||
+        !Number.isFinite(failureRatePercent) ||
+        failureRatePercent < 0 ||
+        failureRatePercent > 100)) ||
     (notes !== null && typeof notes !== "string")
   ) {
     return null;
@@ -60,6 +81,10 @@ export function parseProductRow(databaseRow: unknown): Product | null {
     name,
     kind: kind as ProductKind,
     laborMinutes: typeof laborMinutes === "number" ? laborMinutes : null,
+    energyCostCents: typeof energyCostCents === "number" ? energyCostCents : null,
+    machineCostCents: typeof machineCostCents === "number" ? machineCostCents : null,
+    finishingCostCents: typeof finishingCostCents === "number" ? finishingCostCents : null,
+    failureRatePercent: typeof failureRatePercent === "number" ? failureRatePercent : null,
     isActive,
     notes: typeof notes === "string" ? notes : "",
   };

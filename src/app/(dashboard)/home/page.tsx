@@ -1,9 +1,16 @@
 import type { Metadata } from "next";
 import { Badge } from "@/components/ui/Badge/Badge";
 import { Card } from "@/components/ui/Card/Card";
+import { PricingMatrix } from "@/features/pricing/PricingMatrix";
 import { getSessionContext } from "@/lib/auth/session";
 import { formatLongDate, getFirstName, getGreeting, getHourInTimeZone } from "@/lib/date";
 import { buildNavigation, countAvailableModules } from "@/lib/navigation";
+import { buildPricingMatrix } from "@/services/calculations/pricingMatrix";
+import { analyzePriceImpact } from "@/services/calculations/priceImpact";
+import { listChannelsWithFees } from "@/services/supabase/pricing";
+import { getCompanySettings, listTaxSettings } from "@/services/supabase/settings";
+import { listProductCatalog } from "@/services/supabase/products";
+import { getProductCostBreakdown, listCostSnapshotsByProduct, listPricingSimulationsByProduct } from "@/services/supabase/pricing";
 import { describeRole } from "@/types/auth";
 import styles from "./home.module.css";
 
@@ -11,15 +18,8 @@ export const metadata: Metadata = {
   title: "Início — Ateliê Filhos de Aruanda",
 };
 
-// A página lê a sessão por requisição: rota bloqueante, sem navegação instantânea.
 export const instant = false;
 
-/**
- * Página inicial da área restrita.
- * Mostra apenas dados reais da sessão e o que já está disponível no sistema.
- *
- * @returns saudação, dados do perfil e situação dos módulos
- */
 export default async function HomePage() {
   const session = await getSessionContext();
   const profile = session?.profile ?? null;
@@ -27,6 +27,86 @@ export default async function HomePage() {
   const now = new Date();
   const navigation = buildNavigation(role);
   const totalModules = navigation.available.length + navigation.planned.length;
+
+  let matrixRows: ReturnType<typeof buildPricingMatrix> = [];
+  let impactedProductIds: string[] = [];
+
+  if (role === "administrador") {
+    const [catalog, channels, taxes, company] = await Promise.all([
+      listProductCatalog(),
+      listChannelsWithFees(),
+      listTaxSettings(),
+      getCompanySettings(),
+    ]);
+
+    const productsWithCostData = await Promise.all(
+      catalog.products.map(async (product) => {
+        const cost = await getProductCostBreakdown(product.id);
+        return {
+          product,
+          cost,
+        };
+      }),
+    );
+
+    const productsWithCost = productsWithCostData.map(({ product, cost }) => ({
+      id: product.id,
+      name: product.name,
+      costCents: cost.totalCents,
+      missing: cost.missing,
+    }));
+
+    const simulationsByProduct = await Promise.all(
+      catalog.products.map(async (product) => ({
+        productId: product.id,
+        simulations: await listPricingSimulationsByProduct(product.id),
+      })),
+    );
+
+    const simulations = simulationsByProduct.flatMap((entry) =>
+      entry.simulations.map((simulation) => ({
+        productId: simulation.productId,
+        channelId: simulation.channelId,
+        modality: simulation.modality,
+        marginPercent: simulation.marginPercent,
+        createdAt: simulation.createdAt,
+      })),
+    );
+
+    matrixRows = buildPricingMatrix({
+      products: productsWithCost,
+      channels: channels.map((channel) => ({
+        id: channel.channel.id,
+        name: channel.channel.name,
+        fees: channel.fees.map((fee) => ({
+          kind: fee.kind,
+          rate: fee.rate,
+          amountCents: fee.amountCents,
+          isActive: fee.isActive,
+        })),
+      })),
+      taxes: taxes.map((tax) => ({
+        kind: tax.kind,
+        rate: tax.rate,
+        amountCents: tax.amountCents,
+        isActive: tax.isActive,
+      })),
+      simulations,
+      defaultRetailMarginPercent: company?.defaultRetailMargin ?? null,
+      defaultWholesaleMarginPercent: company?.defaultWholesaleMargin ?? null,
+    });
+
+    const impacted = await Promise.all(
+      productsWithCostData.map(async ({ product, cost }) => {
+        const snapshots = await listCostSnapshotsByProduct(product.id);
+        const baseline = snapshots.length > 0 ? snapshots[0].costCents : null;
+        const impact = analyzePriceImpact(cost.totalCents, baseline);
+        return impact.impacted ? product.id : null;
+      }),
+    );
+
+    impactedProductIds = impacted.filter((id): id is string => id !== null);
+  }
 
   return (
     <div className={styles.page}>
@@ -91,6 +171,10 @@ export default async function HomePage() {
           ) : null}
         </Card>
       </div>
+
+      {role === "administrador" ? (
+        <PricingMatrix rows={matrixRows} impactedProductIds={impactedProductIds} />
+      ) : null}
 
       <p className={styles.footerNote}>
         Precisa de acesso a outro módulo? Fale com o administrador do sistema.

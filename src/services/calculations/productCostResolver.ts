@@ -5,7 +5,7 @@
  * Não acessa banco: recebe os dados já carregados.
  */
 
-import { calculateMaterialCost } from "./productCost";
+import { calculateLaborCostCents, calculateMaterialCost } from "./productCost";
 
 export type CompositionEdge = {
   targetType: "supply" | "product";
@@ -17,6 +17,10 @@ export type CompositionEdge = {
 export type ProductNode = {
   id: string;
   laborMinutes: number | null;
+  energyCostCents: number | null;
+  machineCostCents: number | null;
+  finishingCostCents: number | null;
+  failureRatePercent: number | null;
   components: CompositionEdge[];
 };
 
@@ -47,6 +51,8 @@ export function resolveProductCost(
   productsById: Map<string, ProductNode>,
   suppliesById: Map<string, SupplyNode>,
   memo: Map<string, ResolvedProductCost> = new Map(),
+  laborCostPerMinuteCents: number | null = null,
+  overheadPerUnitCents: number = 0,
 ): ResolvedProductCost {
   const cached = memo.get(productId);
 
@@ -82,7 +88,14 @@ export function resolveProductCost(
     }
 
     if (component.targetType === "product" && component.productId) {
-      const subCost = resolveProductCost(component.productId, productsById, suppliesById, memo);
+      const subCost = resolveProductCost(
+        component.productId,
+        productsById,
+        suppliesById,
+        memo,
+        laborCostPerMinuteCents,
+        overheadPerUnitCents,
+      );
 
       if (subCost.totalCents === null) {
         entries.push({
@@ -109,17 +122,48 @@ export function resolveProductCost(
     })),
   );
 
-  // O custo de mão de obra depende da configuração de salário (Etapa 4);
-  // aqui preservamos o tempo, mas o valor é resolvido pelo chamador.
-  const laborCents = 0;
+  let materialCents = materialResult.totalCents;
+
+  if (
+    materialCents !== null &&
+    product.failureRatePercent !== null &&
+    product.failureRatePercent > 0
+  ) {
+    materialCents = Math.round(materialCents * (1 + product.failureRatePercent / 100));
+
+    if (!Number.isSafeInteger(materialCents)) {
+      materialCents = null;
+    }
+  }
+
+  const laborCents =
+    product.laborMinutes !== null && laborCostPerMinuteCents !== null
+      ? calculateLaborCostCents(product.laborMinutes, laborCostPerMinuteCents)
+      : 0;
+
+  let directCosts = 0;
+
+  for (const cost of [
+    product.energyCostCents,
+    product.machineCostCents,
+    product.finishingCostCents,
+  ]) {
+    if (cost !== null) {
+      directCosts += cost;
+    }
+  }
+
+  if (!Number.isSafeInteger(directCosts)) {
+    directCosts = 0;
+  }
 
   const totalCents =
-    materialResult.totalCents === null
+    materialCents === null || laborCents === null
       ? null
-      : materialResult.totalCents + (laborCents ?? 0);
+      : materialCents + laborCents + directCosts + overheadPerUnitCents;
 
   const result: ResolvedProductCost = {
-    materialCents: materialResult.totalCents,
+    materialCents,
     laborCents,
     totalCents,
     missing: materialResult.missing,

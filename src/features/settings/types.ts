@@ -32,6 +32,9 @@ export type CompanySettings = {
   city: string;
   state: string;
   zipCode: string;
+  monthlyOutputUnits: number | null;
+  defaultRetailMargin: number | null;
+  defaultWholesaleMargin: number | null;
 };
 
 export type TaxSettingInput = {

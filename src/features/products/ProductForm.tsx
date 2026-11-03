@@ -244,6 +244,50 @@ export function ProductForm({
         maxLength={4}
       />
 
+      <TextField
+        label="Energia por unidade (R$)"
+        name="energyCost"
+        defaultValue={
+          product?.energyCostCents == null ? "" : (product.energyCostCents / 100).toFixed(2).replace(".", ",")
+        }
+        error={state.errors.energyCost}
+        hint="Opcional. Custos de impressão 3D."
+        inputMode="decimal"
+      />
+
+      <TextField
+        label="Máquina por unidade (R$)"
+        name="machineCost"
+        defaultValue={
+          product?.machineCostCents == null ? "" : (product.machineCostCents / 100).toFixed(2).replace(".", ",")
+        }
+        error={state.errors.machineCost}
+        hint="Opcional. Depreciação por unidade."
+        inputMode="decimal"
+      />
+
+      <TextField
+        label="Acabamento por unidade (R$)"
+        name="finishingCost"
+        defaultValue={
+          product?.finishingCostCents == null ? "" : (product.finishingCostCents / 100).toFixed(2).replace(".", ",")
+        }
+        error={state.errors.finishingCost}
+        hint="Opcional."
+        inputMode="decimal"
+      />
+
+      <TextField
+        label="Taxa de falha (%)"
+        name="failureRate"
+        defaultValue={
+          product?.failureRatePercent == null ? "" : String(product.failureRatePercent)
+        }
+        error={state.errors.failureRate}
+        hint="Opcional. Percentual de perda na impressão 3D."
+        inputMode="decimal"
+      />
+
       <fieldset className={styles.composition}>
         <legend className={styles.legend}>Ficha técnica</legend>
         <p className={styles.hint}>

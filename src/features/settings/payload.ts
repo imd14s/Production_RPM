@@ -31,6 +31,9 @@ export function buildCompanyPayload(
     city: input.city || null,
     state: input.state || null,
     zip_code: input.zipCode || null,
+    monthly_output_units: input.monthlyOutputUnits,
+    default_retail_margin: input.defaultRetailMargin,
+    default_wholesale_margin: input.defaultWholesaleMargin,
     updated_by: userId,
   };
 }
