@@ -33,6 +33,69 @@ describe("validateProduct", () => {
     });
   });
 
+  it("normalizes 3d cost fields when provided", () => {
+    const result = validateProduct({
+      name: "Suporte 3D",
+      kind: "impressao_3d",
+      energyCost: "0,50",
+      machineCost: "1.200,00",
+      finishingCost: "2,00",
+      failureRate: "15",
+      components: "",
+    });
+
+    expect(result.ok).toBe(true);
+
+    if (result.ok) {
+      expect(result.data.energyCostCents).toBe(50);
+      expect(result.data.machineCostCents).toBe(120000);
+      expect(result.data.finishingCostCents).toBe(200);
+      expect(result.data.failureRatePercent).toBe(15);
+    }
+  });
+
+  it("keeps 3d cost fields empty when not informed", () => {
+    const result = validateProduct({
+      name: "Blusa",
+      kind: "fabricado",
+      energyCost: "",
+      machineCost: "",
+      finishingCost: "",
+      failureRate: "",
+      components: "",
+    });
+
+    expect(result.ok).toBe(true);
+
+    if (result.ok) {
+      expect(result.data.energyCostCents).toBeNull();
+      expect(result.data.machineCostCents).toBeNull();
+      expect(result.data.finishingCostCents).toBeNull();
+      expect(result.data.failureRatePercent).toBeNull();
+    }
+  });
+
+  it("rejects invalid 3d cost fields", () => {
+    const result = validateProduct({
+      name: "Suporte 3D",
+      kind: "impressao_3d",
+      energyCost: "abc",
+      machineCost: "abc",
+      finishingCost: "abc",
+      failureRate: "150",
+      components: "",
+    });
+
+    expect(result.ok).toBe(false);
+
+    if (!result.ok) {
+      expect(result.errors.energyCost).toBeDefined();
+      expect(result.errors.machineCost).toBeDefined();
+      expect(result.errors.finishingCost).toBeDefined();
+      expect(result.errors.failureRate).toBeDefined();
+    }
+  });
+
   it("accepts a kit composed of a product", () => {
     const result = validateProduct({
       name: "Combo",

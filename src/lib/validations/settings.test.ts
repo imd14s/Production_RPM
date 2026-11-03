@@ -130,6 +130,52 @@ describe("validateCompanySettings", () => {
 
     expect(result.ok).toBe(true);
   });
+
+  it("normalizes optional pricing fields when provided", () => {
+    const result = validateCompanySettings({
+      ...VALID_COMPANY,
+      monthlyOutputUnits: " 500 ",
+      defaultRetailMargin: "30,5",
+      defaultWholesaleMargin: "20",
+    });
+
+    expect(result.ok).toBe(true);
+
+    if (result.ok) {
+      expect(result.data.monthlyOutputUnits).toBe(500);
+      expect(result.data.defaultRetailMargin).toBe(30.5);
+      expect(result.data.defaultWholesaleMargin).toBe(20);
+    }
+  });
+
+  it("keeps optional pricing fields empty when not informed", () => {
+    const result = validateCompanySettings(VALID_COMPANY);
+
+    expect(result.ok).toBe(true);
+
+    if (result.ok) {
+      expect(result.data.monthlyOutputUnits).toBeNull();
+      expect(result.data.defaultRetailMargin).toBeNull();
+      expect(result.data.defaultWholesaleMargin).toBeNull();
+    }
+  });
+
+  it("rejects invalid pricing fields", () => {
+    const result = validateCompanySettings({
+      ...VALID_COMPANY,
+      monthlyOutputUnits: "0",
+      defaultRetailMargin: "101",
+      defaultWholesaleMargin: "-5",
+    });
+
+    expect(result.ok).toBe(false);
+
+    if (!result.ok) {
+      expect(result.errors.monthlyOutputUnits).toBeDefined();
+      expect(result.errors.defaultRetailMargin).toBeDefined();
+      expect(result.errors.defaultWholesaleMargin).toBeDefined();
+    }
+  });
 });
 
 describe("validateTaxSettings", () => {
