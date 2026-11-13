@@ -2,17 +2,30 @@
 
 import { Modal } from "@/components/ui/Modal/Modal";
 import { formatCents } from "@/lib/money";
+import { formatPercentLabel } from "@/lib/percent";
 import type { SupplyUnit } from "@/features/supplies/types";
 import { SUPPLY_UNIT_LABELS } from "@/features/supplies/types";
 import type {
   ProductCostDetail,
   ProductCostDetailLine,
 } from "@/services/calculations/productCostDetail";
+import type {
+  MatrixChannel,
+  MatrixRow,
+  MatrixTax,
+} from "@/services/calculations/pricingMatrix";
+import { ChannelMarginEditor } from "./ChannelMarginEditor";
 import styles from "./ProductCostModal.module.css";
 
 type ProductCostModalProps = {
   /** Detalhamento do custo do produto. */
   detail: ProductCostDetail;
+  /** Linha da matriz com os preços sugeridos do produto. */
+  row: MatrixRow;
+  /** Canais de venda com suas taxas. */
+  channels: MatrixChannel[];
+  /** Impostos ativos aplicados nos preços. */
+  taxes: MatrixTax[];
   /** Executado quando o usuário fecha o popup. */
   onClose: () => void;
 };
@@ -54,22 +67,31 @@ function formatLineQuantity(line: ProductCostDetailLine): string {
 }
 
 /**
- * Popup com o detalhamento do custo de um produto: o valor de cada insumo já
- * dividido pelo que foi usado, os demais custos de fabricação e o total.
+ * Popup com o detalhamento do produto: o valor de cada insumo já dividido pelo
+ * que foi usado, os demais custos de fabricação e a sugestão de preço de cada
+ * canal, com a margem de lucro editável.
  *
- * @param props detalhamento do custo e ação de fechamento
+ * @param props detalhamento do custo, linha da matriz, canais e impostos
  * @returns diálogo com o detalhamento
  */
-export function ProductCostModal({ detail, onClose }: ProductCostModalProps) {
+export function ProductCostModal({
+  detail,
+  row,
+  channels,
+  taxes,
+  onClose,
+}: ProductCostModalProps) {
   const componentLines = detail.lines.filter(
     (line) => line.kind === "insumo" || line.kind === "subproduto",
   );
   const otherLines = detail.lines.filter(
     (line) => line.kind !== "insumo" && line.kind !== "subproduto",
   );
+  const retailCells = row.cells.filter((cell) => cell.modality === "varejo");
+  const wholesaleCell = row.cells.find((cell) => cell.modality === "atacado");
 
   return (
-    <Modal title={`Custo do produto — ${detail.productName}`} onClose={onClose}>
+    <Modal title={`Custo e preço — ${detail.productName}`} onClose={onClose}>
       <p className={styles.hint}>
         Valores por 1 unidade do produto. O custo de cada insumo já considera
         apenas a quantidade usada nesta peça.
@@ -98,7 +120,9 @@ export function ProductCostModal({ detail, onClose }: ProductCostModalProps) {
                 <td>{line.label}</td>
                 <td>{formatLineQuantity(line)}</td>
                 <td className={styles.cost}>
-                  {line.costCents === null ? "sem custo" : formatCents(line.costCents)}
+                  {line.costCents === null
+                    ? "sem custo"
+                    : formatCents(line.costCents)}
                 </td>
               </tr>
             ))}
@@ -142,6 +166,57 @@ export function ProductCostModal({ detail, onClose }: ProductCostModalProps) {
           {detail.totalCents === null ? "—" : formatCents(detail.totalCents)}
         </span>
       </div>
+
+      <h3 className={styles.sectionTitle}>Sugestão de preço por canal</h3>
+      <p className={styles.hint}>
+        Altere a margem de lucro de cada canal. O preço sugerido é recalculado
+        enquanto você digita e passa a valer para a tabela da home depois de
+        salvar.
+      </p>
+
+      {retailCells.length === 0 ? (
+        <p className={styles.empty}>Nenhum canal de venda cadastrado.</p>
+      ) : null}
+
+      {retailCells.map((cell) => {
+        const channel = channels.find((item) => item.id === cell.channelId);
+
+        if (!channel) {
+          return null;
+        }
+
+        return (
+          <div key={cell.channelId} className={styles.channelBlock}>
+            <h4 className={styles.channelName}>{cell.channelName}</h4>
+            <ChannelMarginEditor
+              productId={row.productId}
+              channel={channel}
+              taxes={taxes}
+              costCents={row.costCents}
+              marginPercent={cell.marginPercent}
+              priceCents={cell.priceCents}
+              reason={cell.reason}
+            />
+          </div>
+        );
+      })}
+
+      {wholesaleCell ? (
+        <div className={styles.channelBlock}>
+          <h4 className={styles.channelName}>{wholesaleCell.channelName}</h4>
+          <div className={styles.wholesaleRow}>
+            <span>
+              Margem {formatPercentLabel(wholesaleCell.marginPercent * 100)} (das
+              configurações da empresa)
+            </span>
+            <span className={styles.wholesalePrice}>
+              {wholesaleCell.priceCents === null
+                ? (wholesaleCell.reason ?? "—")
+                : formatCents(wholesaleCell.priceCents)}
+            </span>
+          </div>
+        </div>
+      ) : null}
     </Modal>
   );
 }

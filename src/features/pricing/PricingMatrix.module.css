@@ -42,6 +42,14 @@
   white-space: nowrap;
 }
 
+.clickableRow {
+  cursor: pointer;
+}
+
+.clickableRow:hover {
+  background: var(--color-surface-muted);
+}
+
 .productName {
   display: block;
   margin-bottom: var(--space-1);

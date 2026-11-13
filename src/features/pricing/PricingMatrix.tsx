@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/Card/Card";
 import { formatCents } from "@/lib/money";
 import { formatPercentLabel } from "@/lib/percent";
 import type { MatrixPriceCell, MatrixRow } from "@/services/calculations/pricingMatrix";
+import type { MatrixChannel, MatrixTax } from "@/services/calculations/pricingMatrix";
 import type { ProductCostDetail } from "@/services/calculations/productCostDetail";
 import { ProductCostModal } from "./ProductCostModal";
 import styles from "./PricingMatrix.module.css";
@@ -15,6 +16,10 @@ type PricingMatrixProps = {
   impactedProductIds: string[];
   /** Detalhamento de custo de cada produto, indexado pelo identificador. */
   details: Record<string, ProductCostDetail>;
+  /** Canais de venda com suas taxas, usados na prévia de preço do popup. */
+  channels: MatrixChannel[];
+  /** Impostos ativos aplicados nos preços. */
+  taxes: MatrixTax[];
 };
 
 /**
@@ -60,18 +65,23 @@ function formatMarginLabel(marginFraction: number): string {
  * Tabela informativa: cada linha é um produto; as colunas mostram o custo de
  * fabricação e o preço sugerido em cada plataforma (varejo) e no atacado direto.
  *
- * Clicar no nome do produto abre o detalhamento do custo, com o valor de cada
- * insumo já dividido pela quantidade usada nesta peça.
+ * A linha inteira é clicável e abre o detalhamento do produto, com o valor de
+ * cada insumo já dividido pela quantidade usada e a margem de lucro de cada
+ * canal.
  *
  * @param rows linhas da matriz
  * @param impactedProductIds produtos com custo alterado desde o último snapshot
  * @param details detalhamento de custo por produto
+ * @param channels canais de venda com taxas
+ * @param taxes impostos ativos
  * @returns tabela de precificação
  */
 export function PricingMatrix({
   rows,
   impactedProductIds,
   details,
+  channels,
+  taxes,
 }: PricingMatrixProps) {
   const [selectedProductId, setSelectedProductId] = useState<string | null>(
     null,
@@ -86,6 +96,7 @@ export function PricingMatrix({
   }
 
   const priceColumns = extractPriceColumns(rows);
+  const selectedRow = rows.find((row) => row.productId === selectedProductId);
   const selectedDetail =
     selectedProductId === null ? undefined : details[selectedProductId];
 
@@ -122,7 +133,11 @@ export function PricingMatrix({
           </thead>
           <tbody>
             {rows.map((row) => (
-              <tr key={row.productId}>
+              <tr
+                key={row.productId}
+                className={styles.clickableRow}
+                onClick={() => setSelectedProductId(row.productId)}
+              >
                 <td data-label="Produto">
                   <button
                     type="button"
@@ -166,9 +181,12 @@ export function PricingMatrix({
         </table>
       </div>
 
-      {selectedDetail ? (
+      {selectedDetail && selectedRow ? (
         <ProductCostModal
           detail={selectedDetail}
+          row={selectedRow}
+          channels={channels}
+          taxes={taxes}
           onClose={() => setSelectedProductId(null)}
         />
       ) : null}

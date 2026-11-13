@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 import { PricingMatrix } from "@/features/pricing/PricingMatrix";
 import { getSessionContext } from "@/lib/auth/session";
 import { buildPricingMatrix } from "@/services/calculations/pricingMatrix";
+import type {
+  MatrixChannel,
+  MatrixTax,
+} from "@/services/calculations/pricingMatrix";
 import type { ProductCostDetail } from "@/services/calculations/productCostDetail";
 import { analyzePriceImpact } from "@/services/calculations/priceImpact";
 import {
@@ -26,6 +30,8 @@ export default async function HomePage() {
 
   let matrixRows: ReturnType<typeof buildPricingMatrix> = [];
   let impactedProductIds: string[] = [];
+  let matrixChannels: MatrixChannel[] = [];
+  let matrixTaxes: MatrixTax[] = [];
   const details: Record<string, ProductCostDetail> = {};
 
   if (role === "administrador") {
@@ -78,24 +84,28 @@ export default async function HomePage() {
       })),
     );
 
+    matrixChannels = channels.map((channel) => ({
+      id: channel.channel.id,
+      name: channel.channel.name,
+      fees: channel.fees.map((fee) => ({
+        kind: fee.kind,
+        rate: fee.rate,
+        amountCents: fee.amountCents,
+        isActive: fee.isActive,
+      })),
+    }));
+
+    matrixTaxes = taxes.map((tax) => ({
+      kind: tax.kind,
+      rate: tax.rate,
+      amountCents: tax.amountCents,
+      isActive: tax.isActive,
+    }));
+
     matrixRows = buildPricingMatrix({
       products: productsWithCost,
-      channels: channels.map((channel) => ({
-        id: channel.channel.id,
-        name: channel.channel.name,
-        fees: channel.fees.map((fee) => ({
-          kind: fee.kind,
-          rate: fee.rate,
-          amountCents: fee.amountCents,
-          isActive: fee.isActive,
-        })),
-      })),
-      taxes: taxes.map((tax) => ({
-        kind: tax.kind,
-        rate: tax.rate,
-        amountCents: tax.amountCents,
-        isActive: tax.isActive,
-      })),
+      channels: matrixChannels,
+      taxes: matrixTaxes,
       simulations,
       defaultRetailMarginPercent: company?.defaultRetailMargin ?? null,
       defaultWholesaleMarginPercent: company?.defaultWholesaleMargin ?? null,
@@ -120,6 +130,8 @@ export default async function HomePage() {
           rows={matrixRows}
           impactedProductIds={impactedProductIds}
           details={details}
+          channels={matrixChannels}
+          taxes={matrixTaxes}
         />
       ) : null}
 
