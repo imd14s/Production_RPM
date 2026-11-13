@@ -10,7 +10,7 @@ import type {
   TaxSettingInput,
 } from "@/features/settings/types";
 import { createClient } from "@/services/supabase/server";
-import { mapDeleteError } from "@/services/supabase/deleteErrors";
+import { assertRowDeleted, mapDeleteError } from "@/services/supabase/deleteErrors";
 
 /**
  * Lê a configuração da empresa (linha única).
@@ -130,14 +130,17 @@ export async function setTaxSettingActive(id: string, isActive: boolean): Promis
 
 /**
  * Exclui fisicamente um imposto configurável.
+ * Falha quando nenhuma linha foi removida (RLS sem permissão ou registro ausente).
  *
  * @param id identificador do imposto
  */
 export async function deleteTaxSetting(id: string): Promise<void> {
   const supabase = await createClient();
-  const { error } = await supabase.from("tax_settings").delete().eq("id", id);
+  const { data, error } = await supabase.from("tax_settings").delete().eq("id", id).select("id");
 
   if (error) {
-    throw new Error(mapDeleteError(error, "imposto"));
+    throw new Error(mapDeleteError(error, "o imposto"));
   }
+
+  assertRowDeleted(data, "o imposto");
 }

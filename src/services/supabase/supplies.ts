@@ -7,7 +7,7 @@ import type {
   SupplyWithCost,
 } from "@/features/supplies/types";
 import { createClient } from "@/services/supabase/server";
-import { mapDeleteError } from "@/services/supabase/deleteErrors";
+import { assertRowDeleted, mapDeleteError } from "@/services/supabase/deleteErrors";
 
 export type { SupplyWithCost };
 
@@ -91,14 +91,17 @@ export async function setSupplyActive(id: string, isActive: boolean): Promise<vo
 /**
  * Exclui fisicamente um insumo (com conversões em cascata).
  * Falha com 23503 quando o insumo aparece em composições de produto.
+ * Falha quando nenhuma linha foi removida (RLS sem permissão ou registro ausente).
  *
  * @param id identificador do insumo
  */
 export async function deleteSupply(id: string): Promise<void> {
   const supabase = await createClient();
-  const { error } = await supabase.from("supplies").delete().eq("id", id);
+  const { data, error } = await supabase.from("supplies").delete().eq("id", id).select("id");
 
   if (error) {
-    throw new Error(mapDeleteError(error, "insumo"));
+    throw new Error(mapDeleteError(error, "o insumo"));
   }
+
+  assertRowDeleted(data, "o insumo");
 }

@@ -15,7 +15,7 @@ import type {
   ChannelWithFees,
 } from "@/features/channels/types";
 import { createClient } from "@/services/supabase/server";
-import { mapDeleteError } from "@/services/supabase/deleteErrors";
+import { assertRowDeleted, mapDeleteError } from "@/services/supabase/deleteErrors";
 
 export type { ChannelWithFees };
 
@@ -194,28 +194,38 @@ export async function setChannelFeeActive(id: string, isActive: boolean): Promis
 /**
  * Exclui fisicamente um canal de venda (com as taxas em cascata).
  * Falha com 23503 quando há simulações de precificação vinculadas.
+ * Falha quando nenhuma linha foi removida (RLS sem permissão ou registro ausente).
  *
  * @param id identificador do canal
  */
 export async function deleteChannel(id: string): Promise<void> {
   const supabase = await createClient();
-  const { error } = await supabase.from("sales_channels").delete().eq("id", id);
+  const { data, error } = await supabase
+    .from("sales_channels")
+    .delete()
+    .eq("id", id)
+    .select("id");
 
   if (error) {
-    throw new Error(mapDeleteError(error, "canal de venda"));
+    throw new Error(mapDeleteError(error, "o canal de venda"));
   }
+
+  assertRowDeleted(data, "o canal de venda");
 }
 
 /**
  * Exclui fisicamente uma taxa de canal.
+ * Falha quando nenhuma linha foi removida (RLS sem permissão ou registro ausente).
  *
  * @param id identificador da taxa
  */
 export async function deleteChannelFee(id: string): Promise<void> {
   const supabase = await createClient();
-  const { error } = await supabase.from("channel_fees").delete().eq("id", id);
+  const { data, error } = await supabase.from("channel_fees").delete().eq("id", id).select("id");
 
   if (error) {
-    throw new Error(mapDeleteError(error, "taxa do canal"));
+    throw new Error(mapDeleteError(error, "a taxa do canal"));
   }
+
+  assertRowDeleted(data, "a taxa do canal");
 }

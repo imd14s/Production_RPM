@@ -11,7 +11,7 @@ import type {
 } from "@/features/products/types";
 import { parseSupplyRow } from "@/features/supplies/parse";
 import { createClient } from "@/services/supabase/server";
-import { mapDeleteError } from "@/services/supabase/deleteErrors";
+import { assertRowDeleted, mapDeleteError } from "@/services/supabase/deleteErrors";
 
 /**
  * Carrega produtos, composições e insumos disponíveis para edição.
@@ -218,14 +218,21 @@ export async function setProductActive(
 /**
  * Exclui fisicamente um produto (com a ficha técnica própria em cascata).
  * Falha com 23503 quando há snapshots, simulações ou kits que o referenciam.
+ * Falha quando nenhuma linha foi removida (RLS sem permissão ou registro ausente).
  *
  * @param productId identificador do produto
  */
 export async function deleteProduct(productId: string): Promise<void> {
   const supabase = await createClient();
-  const { error } = await supabase.from("products").delete().eq("id", productId);
+  const { data, error } = await supabase
+    .from("products")
+    .delete()
+    .eq("id", productId)
+    .select("id");
 
   if (error) {
-    throw new Error(mapDeleteError(error, "produto"));
+    throw new Error(mapDeleteError(error, "o produto"));
   }
+
+  assertRowDeleted(data, "o produto");
 }

@@ -15,7 +15,7 @@ import type {
   PaymentMethodWithFees,
 } from "@/features/payments/types";
 import { createClient } from "@/services/supabase/server";
-import { mapDeleteError } from "@/services/supabase/deleteErrors";
+import { assertRowDeleted, mapDeleteError } from "@/services/supabase/deleteErrors";
 
 export type { PaymentMethodWithFees };
 
@@ -194,28 +194,38 @@ export async function setPaymentFeeActive(id: string, isActive: boolean): Promis
 /**
  * Exclui fisicamente um meio de pagamento (com as taxas em cascata).
  * Falha com 23503 quando há simulações de precificação vinculadas.
+ * Falha quando nenhuma linha foi removida (RLS sem permissão ou registro ausente).
  *
  * @param id identificador do meio
  */
 export async function deletePaymentMethod(id: string): Promise<void> {
   const supabase = await createClient();
-  const { error } = await supabase.from("payment_methods").delete().eq("id", id);
+  const { data, error } = await supabase
+    .from("payment_methods")
+    .delete()
+    .eq("id", id)
+    .select("id");
 
   if (error) {
-    throw new Error(mapDeleteError(error, "meio de pagamento"));
+    throw new Error(mapDeleteError(error, "o meio de pagamento"));
   }
+
+  assertRowDeleted(data, "o meio de pagamento");
 }
 
 /**
  * Exclui fisicamente uma taxa de meio de pagamento.
+ * Falha quando nenhuma linha foi removida (RLS sem permissão ou registro ausente).
  *
  * @param id identificador da taxa
  */
 export async function deletePaymentFee(id: string): Promise<void> {
   const supabase = await createClient();
-  const { error } = await supabase.from("payment_fees").delete().eq("id", id);
+  const { data, error } = await supabase.from("payment_fees").delete().eq("id", id).select("id");
 
   if (error) {
-    throw new Error(mapDeleteError(error, "taxa do meio de pagamento"));
+    throw new Error(mapDeleteError(error, "a taxa do meio de pagamento"));
   }
+
+  assertRowDeleted(data, "a taxa do meio de pagamento");
 }

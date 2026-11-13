@@ -11,7 +11,7 @@ import type {
   OperatingExpenseInput,
 } from "@/features/costs/types";
 import { createClient } from "@/services/supabase/server";
-import { mapDeleteError } from "@/services/supabase/deleteErrors";
+import { assertRowDeleted, mapDeleteError } from "@/services/supabase/deleteErrors";
 
 /**
  * Carrega as despesas fixas, ativas primeiro.
@@ -158,28 +158,38 @@ export async function setLaborCostActive(id: string, isActive: boolean): Promise
 
 /**
  * Exclui fisicamente uma despesa fixa.
+ * Falha quando nenhuma linha foi removida (RLS sem permissão ou registro ausente).
  *
  * @param id identificador da despesa
  */
 export async function deleteOperatingExpense(id: string): Promise<void> {
   const supabase = await createClient();
-  const { error } = await supabase.from("operating_expenses").delete().eq("id", id);
+  const { data, error } = await supabase
+    .from("operating_expenses")
+    .delete()
+    .eq("id", id)
+    .select("id");
 
   if (error) {
-    throw new Error(mapDeleteError(error, "despesa fixa"));
+    throw new Error(mapDeleteError(error, "a despesa fixa"));
   }
+
+  assertRowDeleted(data, "a despesa fixa");
 }
 
 /**
  * Exclui fisicamente um custo de mão de obra.
+ * Falha quando nenhuma linha foi removida (RLS sem permissão ou registro ausente).
  *
  * @param id identificador do custo
  */
 export async function deleteLaborCost(id: string): Promise<void> {
   const supabase = await createClient();
-  const { error } = await supabase.from("labor_costs").delete().eq("id", id);
+  const { data, error } = await supabase.from("labor_costs").delete().eq("id", id).select("id");
 
   if (error) {
-    throw new Error(mapDeleteError(error, "custo de mão de obra"));
+    throw new Error(mapDeleteError(error, "o custo de mão de obra"));
   }
+
+  assertRowDeleted(data, "o custo de mão de obra");
 }

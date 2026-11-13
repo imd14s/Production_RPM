@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, type FormEvent } from "react";
+import { useActionState, useEffect, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import { Alert } from "@/components/ui/Alert/Alert";
 import { PendingButton } from "@/components/ui/PendingButton/PendingButton";
 import {
@@ -26,7 +27,8 @@ type DeleteRowButtonProps = {
 
 /**
  * Botão de exclusão física com confirmação e retorno de erro na própria linha.
- * Usa Server Action de exclusão e atualiza a lista via `revalidatePath`.
+ * Usa Server Action de exclusão e atualiza a lista via `revalidatePath` no
+ * servidor e `router.refresh` no cliente.
  *
  * @param action ação de exclusão no servidor
  * @param id identificador do registro
@@ -44,7 +46,17 @@ export function DeleteRowButton({
   extraFields,
   children = "Excluir",
 }: DeleteRowButtonProps) {
+  const router = useRouter();
   const [state, formAction] = useActionState(action, EMPTY_SETTINGS_STATE);
+
+  /**
+   * Atualiza a lista depois de uma exclusão concluída com sucesso.
+   */
+  useEffect(() => {
+    if (state.status === "success") {
+      router.refresh();
+    }
+  }, [state.status, router]);
 
   /**
    * Pede confirmação antes de enviar a exclusão ao servidor.
@@ -79,6 +91,10 @@ export function DeleteRowButton({
 
       {state.status === "error" && state.message ? (
         <Alert tone="error">{state.message}</Alert>
+      ) : null}
+
+      {state.status === "success" && state.message ? (
+        <Alert tone="success">{state.message}</Alert>
       ) : null}
     </span>
   );

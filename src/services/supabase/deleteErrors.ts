@@ -22,3 +22,22 @@ export function mapDeleteError(error: DeleteErrorLike, entityLabel: string): str
   return `Não foi possível excluir ${entityLabel}. (código ${error.code ?? "desconhecido"})`;
 }
 
+/**
+ * Garante que a exclusão realmente removeu uma linha do banco.
+ *
+ * O Supabase devolve HTTP 200 e `data` vazio quando a linha não é retornada —
+ * situação causada por RLS sem política de DELETE, por registro já removido ou
+ * por ausência de permissão. Sem esta verificação a aplicação informaria
+ * sucesso mesmo sem excluir nada.
+ *
+ * @param deletedRows linhas devolvidas pela exclusão (`.delete().select("id")`)
+ * @param entityLabel tipo do registro em pt-BR com artigo (ex.: "o produto")
+ * @throws Error quando nenhuma linha foi excluída
+ */
+export function assertRowDeleted(deletedRows: unknown, entityLabel: string): void {
+  if (!Array.isArray(deletedRows) || deletedRows.length === 0) {
+    throw new Error(
+      `Não foi possível excluir ${entityLabel}: registro não encontrado ou sem permissão para excluir.`,
+    );
+  }
+}
