@@ -45,8 +45,25 @@
 .productName {
   display: block;
   margin-bottom: var(--space-1);
+  padding: 0;
+  border: 0;
+  background: none;
   color: var(--color-text);
+  font-family: inherit;
+  font-size: inherit;
   font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.productName:hover {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+
+.productName:focus-visible {
+  outline: 2px solid var(--color-secondary);
+  outline-offset: 2px;
 }
 
 .badges {

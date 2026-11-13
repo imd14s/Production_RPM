@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { PricingMatrix } from "@/features/pricing/PricingMatrix";
 import { getSessionContext } from "@/lib/auth/session";
 import { buildPricingMatrix } from "@/services/calculations/pricingMatrix";
+import type { ProductCostDetail } from "@/services/calculations/productCostDetail";
 import { analyzePriceImpact } from "@/services/calculations/priceImpact";
 import {
   getProductCostBreakdown,
@@ -25,6 +26,7 @@ export default async function HomePage() {
 
   let matrixRows: ReturnType<typeof buildPricingMatrix> = [];
   let impactedProductIds: string[] = [];
+  const details: Record<string, ProductCostDetail> = {};
 
   if (role === "administrador") {
     const [catalog, channels, taxes, company] = await Promise.all([
@@ -54,6 +56,10 @@ export default async function HomePage() {
       costCents: cost.totalCents,
       missing: cost.missing,
     }));
+
+    for (const { product, cost } of productsWithCostData) {
+      details[product.id] = cost.detail;
+    }
 
     const simulationsByProduct = await Promise.all(
       activeProducts.map(async (product) => ({
@@ -110,7 +116,11 @@ export default async function HomePage() {
   return (
     <div className={styles.page}>
       {role === "administrador" ? (
-        <PricingMatrix rows={matrixRows} impactedProductIds={impactedProductIds} />
+        <PricingMatrix
+          rows={matrixRows}
+          impactedProductIds={impactedProductIds}
+          details={details}
+        />
       ) : null}
 
       <p className={styles.footerNote}>

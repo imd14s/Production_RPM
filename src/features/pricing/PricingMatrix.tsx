@@ -1,15 +1,20 @@
 "use client";
 
+import { useState } from "react";
 import { Badge } from "@/components/ui/Badge/Badge";
 import { Card } from "@/components/ui/Card/Card";
 import { formatCents } from "@/lib/money";
 import { formatPercentLabel } from "@/lib/percent";
 import type { MatrixPriceCell, MatrixRow } from "@/services/calculations/pricingMatrix";
+import type { ProductCostDetail } from "@/services/calculations/productCostDetail";
+import { ProductCostModal } from "./ProductCostModal";
 import styles from "./PricingMatrix.module.css";
 
 type PricingMatrixProps = {
   rows: MatrixRow[];
   impactedProductIds: string[];
+  /** Detalhamento de custo de cada produto, indexado pelo identificador. */
+  details: Record<string, ProductCostDetail>;
 };
 
 /**
@@ -55,11 +60,23 @@ function formatMarginLabel(marginFraction: number): string {
  * Tabela informativa: cada linha é um produto; as colunas mostram o custo de
  * fabricação e o preço sugerido em cada plataforma (varejo) e no atacado direto.
  *
+ * Clicar no nome do produto abre o detalhamento do custo, com o valor de cada
+ * insumo já dividido pela quantidade usada nesta peça.
+ *
  * @param rows linhas da matriz
  * @param impactedProductIds produtos com custo alterado desde o último snapshot
+ * @param details detalhamento de custo por produto
  * @returns tabela de precificação
  */
-export function PricingMatrix({ rows, impactedProductIds }: PricingMatrixProps) {
+export function PricingMatrix({
+  rows,
+  impactedProductIds,
+  details,
+}: PricingMatrixProps) {
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(
+    null,
+  );
+
   if (rows.length === 0) {
     return (
       <Card title="Preços por produto e plataforma">
@@ -69,6 +86,8 @@ export function PricingMatrix({ rows, impactedProductIds }: PricingMatrixProps) 
   }
 
   const priceColumns = extractPriceColumns(rows);
+  const selectedDetail =
+    selectedProductId === null ? undefined : details[selectedProductId];
 
   return (
     <Card title="Preços por produto e plataforma">
@@ -105,7 +124,13 @@ export function PricingMatrix({ rows, impactedProductIds }: PricingMatrixProps) 
             {rows.map((row) => (
               <tr key={row.productId}>
                 <td data-label="Produto">
-                  <span className={styles.productName}>{row.productName}</span>
+                  <button
+                    type="button"
+                    className={styles.productName}
+                    onClick={() => setSelectedProductId(row.productId)}
+                  >
+                    {row.productName}
+                  </button>
                   {impactedProductIds.includes(row.productId) ||
                   row.missing.length > 0 ? (
                     <span className={styles.badges}>
@@ -140,6 +165,13 @@ export function PricingMatrix({ rows, impactedProductIds }: PricingMatrixProps) 
           </tbody>
         </table>
       </div>
+
+      {selectedDetail ? (
+        <ProductCostModal
+          detail={selectedDetail}
+          onClose={() => setSelectedProductId(null)}
+        />
+      ) : null}
     </Card>
   );
 }
