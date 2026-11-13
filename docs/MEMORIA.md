@@ -884,10 +884,49 @@ confirmação, mantendo toggle. Escolhida a **(b)**.
 insumos de fornecedor) bloqueiam exclusão no banco — histórico financeiro não é
 apagado em cascata.
 
-**Validação:** `./pre-push.sh` (typecheck, lint, jest). Migração a aplicar no
-Supabase.
+**Validação:** `./pre-push.sh` (typecheck, lint, jest). Migration aplicada no
+Supabase em 2026-11-13 (ver entrada de bug abaixo).
 
 **Lição:** exclusão física de **configuração** é segura quando o histórico
 financeiro mora em tabelas separadas com RESTRICT; o erro `23503` é o contrato
 — a UI só precisa traduzi-lo.
 
+---
+
+## [Bug] - Exclusão silenciosa: RLS sem policy de DELETE (2026-11-13)
+
+**Problema identificado:** o botão "Excluir" confirmava a exclusão, mas a linha
+continuava na lista e **nenhum erro era exibido** — em produtos, insumos,
+fornecedores, impostos, canais, taxas, meios de pagamento, despesas e mão de obra.
+
+**Causa raiz:** a migration `20261111090000_allow_admin_delete_domain_rows.sql`
+(policies `*_delete_admin` + `grant delete`) estava implementada e versionada, mas
+**não aplicada no Supabase**. Verificado em `pg_policies`: existia apenas
+`product_components_delete_admin`. Sem policy de DELETE, o Postgres aplica o RLS
+e o PostgREST responde **HTTP 200, `error: null`, zero linhas** — o service só
+olhava `error`, a action devolvia `status: "success"` e o `DeleteRowButton`
+renderizava alerta apenas para `error`. Três fatores se somaram: migration
+pendente, services sem `.select()` (sem como detectar "0 linhas") e ausência de
+feedback de sucesso.
+
+**Correção:**
+- migration aplicada no Supabase (12 policies `*_delete_admin` verificadas);
+- os 10 `deleteX` passaram a usar `.delete().eq(...).select("id")` e a validar o
+  resultado com `assertRowDeleted` — exclusão sem linha é erro explícito;
+- `mapDeleteError` recebeu rótulo completo com artigo ("o produto", "a despesa
+  fixa") para mensagens em pt-BR corretas;
+- `DeleteRowButton` passou a exibir o estado de sucesso e a chamar
+  `router.refresh()` após a exclusão.
+
+**Validação:** sessão real de administrador criada via API de autenticação do
+Supabase e chamada REST idêntica à da aplicação — DELETE existente remove 1
+linha, DELETE sem permissão remove 0, DELETE de id inexistente devolve HTTP 200
+com `[]` (caso agora convertido em erro). `npm run typecheck`, `npm run lint`,
+`npm test` (296 testes) e `./pre-push.sh` verdes.
+
+**Lição:** **RLS sem policy não é erro — é silêncio.** Qualquer escrita que possa
+ser filtrada por política precisa ler as linhas afetadas (`.select()`) e tratar
+"zero linhas" como falha; confiar apenas em `error` faz a aplicação afirmar
+sucesso sobre uma operação que não ocorreu. E, em projeto com agente
+autônomo, **migration versionada não é migration aplicada**: a verificação tem
+de ser feita no banco (`pg_policies`), não no repositório.

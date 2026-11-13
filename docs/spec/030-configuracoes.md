@@ -66,9 +66,13 @@ configuration_history   ── alimentada por gatilho nas tabelas acima
 | `labor_costs` | autenticado | administrador | administrador |
 | `configuration_history` | administrador | gatilho apenas | ninguém |
 
-DELETE admin concedido em `20261111090000_allow_admin_delete_domain_rows.sql`.
+DELETE admin concedido em `20261111090000_allow_admin_delete_domain_rows.sql`
+(migration aplicada no Supabase em 2026-11-13).
 FKs RESTRICT (simulações de precificação) bloqueiam exclusão com histórico;
 a aplicação traduz `23503` em mensagem amigável.
+Exclusão sem linha retornada (RLS sem `DELETE`, registro ausente ou sem
+permissão) é tratada como erro explícito — o banco devolve HTTP 200 com lista
+vazia, o que não pode ser lido como sucesso.
 
 ### Regras do banco (constraints)
 

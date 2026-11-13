@@ -1,7 +1,7 @@
 # Task — CRUD completo com exclusão física (lixeira)
 
 **Data:** 2026-11-11
-**Status:** Implementada — validação verde; migration a aplicar no Supabase
+**Status:** Implementada e validada — migration aplicada no Supabase (2026-11-13)
 **Pedido do responsável:** adicionar lixeira para excluir registros e garantir CRUD completo (adição, edição, remoção) em todo tipo de cadastro configurável.
 
 ## Contexto
@@ -29,4 +29,6 @@ Até agora o sistema usava apenas **exclusão lógica** (`is_active`) — decis�
 ## Validação
 
 - `./pre-push.sh` (typecheck, lint, jest)
-- Migração aplicada ao Supabase (pendência do responsável)
+- Migração aplicada ao Supabase em 2026-11-13 (12 policies `*_delete_admin`
+  verificadas em `pg_policies`) e validada com sessão real de administrador:
+  DELETE existente → 1 linha removida; DELETE sem permissão → 0 linhas.
