@@ -57,19 +57,28 @@ aplicado por `buildNavigation`, coberto por teste.
 
 ### Comportamento responsivo
 
-- Acima de 900px: menu fixo de 256px e conteúdo ao lado.
-- Até 900px: menu deslizante fora da tela, aberto por um botão de menu no canto
-  superior esquerdo, com sobreposição que fecha ao clique e ao navegar.
-- O botão declara `aria-expanded` e `aria-controls`; o link ativo recebe
-  `aria-current="page"`.
+- Menu sempre em **gaveta** (drawer) controlada pelo botão hambúrguer fixo no
+  canto superior esquerdo, em **qualquer largura** de tela (decisão do
+  responsável, 2026-11-11): o conteúdo ocupa a largura disponível sem coluna
+  fixa de menu.
+- O painel desliza de fora da tela, com sobreposição que fecha ao clique, ao
+  navegar e à tecla `Escape`.
+- O botão declara `aria-expanded` e `aria-controls`; a gaveta fechada usa
+  `aria-hidden`; o link ativo recebe `aria-current="page"`.
 
 ## Tela inicial
 
 `/home` é a **planilha de preços do ateliê** (decisão do responsável, 2026-11-03):
 
-1. **Matriz de preços por plataforma** — para administradores, com os produtos
-   ativos, custo atual de fabricação, sugestões de preço e marcação "Revisar
-   preço" quando o custo mudou desde o último snapshot.
+1. **Tabela de preços por produto e plataforma** — para administradores, uma
+   única tabela com uma **linha por produto ativo**: nome, custo atual de
+   fabricação e uma **coluna por plataforma** (varejo) mais a coluna de
+   atacado direto, cada célula com preço sugerido e margem aplicada (no
+   máximo 2 casas decimais). Etiquetas "Revisar preço" e "Custo incompleto"
+   na coluna do produto; a coluna de atacado é destacada. A tabela ocupa
+   **80% da largura do conteúdo** no desktop (mínimo 720px, com rolagem
+   horizontal se necessário) e vira cartões com rótulo por célula
+   (`data-label`) em telas estreitas.
 2. Nota de rodapé indicando onde pedir acesso quando faltar algum módulo.
 
 A saudação com data por extenso ("Bom dia, eversond14s") os cartões **Seu

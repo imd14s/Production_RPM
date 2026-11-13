@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/Badge/Badge";
 import { buildNavigation, isActiveRoute } from "@/lib/navigation";
 import type { UserRole } from "@/types/auth";
@@ -13,8 +13,8 @@ type SidebarProps = {
 };
 
 /**
- * Menu lateral com os módulos disponíveis e a lista de módulos planejados.
- * Em telas pequenas vira um painel deslizante controlado pelo botão de menu.
+ * Menu lateral com os módulos disponíveis, em formato de gaveta controlada
+ * pelo botão de menu hambúrguer (todas as larguras de tela).
  *
  * @param role perfil do usuário, usado para filtrar itens restritos
  * @returns navegação lateral
@@ -23,6 +23,27 @@ export function Sidebar({ role }: SidebarProps) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const navigation = buildNavigation(role);
+  const [lastPathname, setLastPathname] = useState(pathname);
+
+  if (pathname !== lastPathname) {
+    setLastPathname(pathname);
+    setIsOpen(false);
+  }
+
+  useEffect(() => {
+    if (!isOpen) {
+      return undefined;
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsOpen(false);
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen]);
 
   /**
    * Fecha o menu móvel após navegar.
@@ -57,7 +78,8 @@ export function Sidebar({ role }: SidebarProps) {
 
       <aside
         id="app-sidebar"
-        className={`${styles.sidebar} ${isOpen ? styles.open : ""}`}
+        className={isOpen ? `${styles.sidebar} ${styles.open}` : styles.sidebar}
+        aria-hidden={isOpen ? "false" : "true"}
       >
         <div className={styles.brand}>
           <span className={styles.brandMark}>A</span>

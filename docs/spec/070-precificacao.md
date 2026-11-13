@@ -110,13 +110,19 @@ erDiagram
 ## Matriz de preços por plataforma (home)
 
 `buildPricingMatrix` (em `src/services/calculations/pricingMatrix.ts`) monta a
-tabela informativa exibida na página inicial para administradores:
+tabela informativa exibida na página inicial para administradores. A home
+exibe **uma linha por produto** e **uma coluna por preço**:
 
-| Linha | Conteúdo |
+| Coluna | Conteúdo |
 |---|---|
-| Produto | Nome e custo atual de fabricação |
-| Por plataforma (varejo) | Margem usada e preço sugerido |
-| Atacado (venda direta) | Única linha de atacado por produto, sem comissão de plataforma |
+| Produto | Nome, etiquetas "Revisar preço" e "Custo incompleto" |
+| Custo de fabricação | Custo atual total do produto |
+| Por plataforma (varejo) | Uma coluna por canal ativo: preço sugerido + margem (2 casas) |
+| Atacado (venda direta) | Última coluna, destacada; sem comissão de plataforma |
+
+A tabela ocupa 80% da largura do conteúdo no desktop (mínimo 720px); a
+margem é exibida com arredondamento para 2 casas decimais (sem ruído de
+ponto flutuante nem casas excessivas do `numeric(9,6)`).
 
 Regras (decisão do responsável, 2026-11-03):
 
@@ -136,8 +142,9 @@ Regras (decisão do responsável, 2026-11-03):
   (contingência 20%); simulações de atacado não alteram essa linha.
 - Custo de fabricação incompleto (insumo sem preço) exibe a célula sem preço e
   a etiqueta "Custo incompleto"; nunca bloqueia os outros produtos.
-- Visual: a linha de atacado direto é separada das plataformas por fileira
-  destacada (`PricingMatrix.module.css`).
+- Visual: a coluna de atacado direto é destacada das plataformas
+  (`PricingMatrix.module.css`); em telas estreitas a tabela reflow para
+  cartões com `data-label`.
 
 ## Impacto automático de mudança de insumo
 
@@ -168,6 +175,10 @@ custo atual do produto com o custo do **último snapshot salvo**:
   plataformas vendem **só varejo**; atacado é **venda direta** (uma linha por
   produto, sem comissão de plataforma, margem padrão, recebimento combinado
   com o comprador — Pix ou crediário). A coluna "Modalidade" saiu da tabela.
+- **2026-11-11:** a apresentação da home passa de um bloco por produto com
+  tabela interna para **uma única tabela produto × plataforma** (colunas de
+  preço por canal + custo de fabricação + atacado destacado). O motor
+  `buildPricingMatrix` não mudou.
 
 ## Pendências
 
