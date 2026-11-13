@@ -148,6 +148,6 @@ export function convertToBaseUnit(
  * @param quantity quantidade a arredondar
  * @returns quantidade com no máximo três casas decimais
  */
-function roundQuantity(quantity: number): number {
+export function roundQuantity(quantity: number): number {
   return Number(quantity.toFixed(QUANTITY_DECIMALS));
 }

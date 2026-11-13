@@ -40,12 +40,22 @@ export type SupplyNode = {
   currentUnitCostCents: number | null;
 };
 
+export type ResolvedComponentCost = {
+  /** Tipo do alvo da linha de composição. */
+  targetType: "supply" | "product";
+  /** Identificador do insumo ou produto usado. */
+  targetId: string;
+  label: string;
+  quantity: number;
+  unitCostCents: number | null;
+};
+
 export type ResolvedProductCost = {
   materialCents: number | null;
   laborCents: number | null;
   totalCents: number | null;
   missing: string[];
-  components: Array<{ label: string; quantity: number; unitCostCents: number | null }>;
+  components: ResolvedComponentCost[];
 };
 
 /**
@@ -89,12 +99,14 @@ export function resolveProductCost(
     return result;
   }
 
-  const entries: Array<{ label: string; quantity: number; unitCostCents: number | null }> = [];
+  const entries: ResolvedComponentCost[] = [];
 
   for (const component of product.components) {
     if (component.targetType === "supply" && component.supplyId) {
       const supply = suppliesById.get(component.supplyId);
       entries.push({
+        targetType: "supply",
+        targetId: component.supplyId,
         label: supply?.id ?? component.supplyId,
         quantity: component.quantity,
         unitCostCents: supply?.currentUnitCostCents ?? null,
@@ -115,6 +127,8 @@ export function resolveProductCost(
       );
 
       entries.push({
+        targetType: "product",
+        targetId: component.productId,
         label: component.productId,
         quantity: component.quantity,
         unitCostCents: subCost.totalCents,
