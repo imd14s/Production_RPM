@@ -1,0 +1,84 @@
+# Migrations
+
+SQL versionado do banco. Aplicar sempre na ordem do nome do arquivo.
+
+## Migrations
+
+| Arquivo | Conteúdo |
+|---------|----------|
+| `20261101170000_create_profiles.sql` | `profiles`, `user_role`, gatilho de criação, `is_admin()` e RLS |
+| `20261102100000_create_suppliers.sql` | Fornecedores, auditoria, exclusão lógica e RLS |
+| `20261102110000_create_supplies.sql` | Insumos, histórico de aquisições, snapshots de custo e RLS |
+| `20261102120000_create_products.sql` | Produtos, modalidades, componentes, auditoria e RLS |
+| `20261102130000_product_composition_integrity.sql` | Integridade de kits, proteção contra ciclos e gravação transacional de fichas |
+| `20261102140000_create_supply_unit_conversions.sql` | Conversões de unidade por insumo, RLS e auditoria |
+| `20261102150000_create_cost_snapshots.sql` | Snapshots imutáveis de custo de produto |
+| `20261102160000_create_pricing_simulations.sql` | Simulações de precificação por canal e modalidade |
+| `20261102170000_create_production_batches.sql` | Lotes de produção |
+| `20261102180000_create_production_consumption.sql` | Consumo de materiais por lote |
+| `20261102190000_create_inventory_movements.sql` | Movimentações de estoque |
+| `20261102200000_add_purchase_unit_to_supply_prices.sql` | Unidade original de cada compra de insumo |
+| `20261102210000_document_purchase_unit_cost_basis.sql` | Documenta a unidade de referência do custo unitário da compra |
+| `20261102220000_create_supply_with_initial_price.sql` | Criação transacional de insumo e primeira compra |
+| `20261102230000_replace_supply_price_history_with_current_cost.sql` | Migra o custo atual compatível para `supplies` e remove o histórico de aquisições |
+| `20261103070000_drop_production_and_inventory.sql` | Remove as tabelas de produção e estoque |
+| `20261103071000_add_cost_settings_to_company.sql` | Volume mensal estimado e margens padrão em `company_settings` |
+| `20261103072000_add_printing_costs_to_products.sql` | Custos auxiliares de impressão 3D em `products` |
+| `20261103073000_extend_product_costs.sql` | RPC de produto atualizada para gravar os custos auxiliares |
+| `20261103080000_seed_market_base_fees.sql` | Valores base de mercado (11/2026): comissão e tarifa do ML, TikTok Shop, canais novos, Point desmembrado, DAS-MEI como despesa |
+| `20261111090000_allow_admin_delete_domain_rows.sql` | Exclusão física (lixeira): policies de DELETE e `grant delete` para administrador em canais, taxas, meios, impostos, despesas, mão de obra, fornecedores, insumos, conversões e produtos |
+| `20261113100000_allow_cascade_delete_domain_dependencies.sql` | Exclusão em cascata: ficha técnica, custo registrado e simulações de precificação seguem o registro excluído |
+| `20261113110000_add_units_per_package_to_supplies.sql` | Equivalência de caixa/pacote do insumo: `supplies.units_per_package` (quantas unidades base cabem em uma caixa ou pacote) |
+
+## Como aplicar
+
+### Opção 1 — SQL Editor do painel (sem instalar nada)
+
+1. Abra o projeto no painel do Supabase → **SQL Editor**.
+2. Execute o conteúdo das migrations da tabela acima, uma por vez e na ordem.
+3. Confira em **Table Editor** se `profiles`, `suppliers`, `supplies`,
+   `products` e `product_components` existem.
+4. Após a última migration, confira em `supplies` as colunas de custo atual
+   (`quantity`, `acquired_on`, `amount_cents`, `freight_cents` e `unit_cost_cents`);
+   em `company_settings` as colunas de rateio
+   (`monthly_output_units`, `default_retail_margin`, `default_wholesale_margin`);
+   e em `products` as colunas de impressão 3D
+   (`energy_cost_cents`, `machine_cost_cents`, `finishing_cost_cents`
+   e `failure_rate_percent`).
+5. Após aplicar qualquer migration que mude funções ou colunas, notifique o
+   PostgREST para recarregar o schema:
+   ```sql
+   notify pgrst, 'reload schema';
+   ```
+
+### Opção 2 — Supabase CLI / conexão direta
+
+Este projeto fica na região **ca-central-1**. A conexão direta
+(`db.<ref>.supabase.co`) resolve apenas em IPv6 e falha em redes IPv4. Use o
+**Session Pooler**:
+
+```bash
+npx supabase db push --db-url "postgresql://postgres.fohqznrdiyudnquynkdt:SENHA@aws-1-ca-central-1.pooler.supabase.com:5432/postgres"
+```
+
+O host e a porta podem ser confirmados em **Dashboard → Connect → Direct →
+Session pooler**.
+
+## Depois de aplicar
+
+Promova o primeiro usuário a administrador no **Table Editor → profiles**,
+alterando `role` para `administrador`. Ou, no SQL Editor:
+
+```sql
+update public.profiles
+set role = 'administrador', updated_at = now()
+where id = (select id from auth.users where email = 'SEU-EMAIL');
+```
+
+## Regras
+
+- Nunca altere uma migration já aplicada: crie uma nova com data posterior.
+- Toda tabela nova nasce com `alter table ... enable row level security` e políticas.
+- A aplicação não escreve em `profiles`; gestão de usuários é feita no painel.
+- A migration de produtos deve ser aplicada depois das migrations de fornecedores e
+  insumos, pois `product_components` referencia ambas as tabelas.

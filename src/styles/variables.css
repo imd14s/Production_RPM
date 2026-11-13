@@ -1,23 +1,31 @@
 /**
  * Tokens globais do sistema.
+ * Identidade "Aruanda Gestão — Natural & Moderno" (ver `visual.md`).
  * Somente variáveis: cores, espaçamentos, raios, sombras e tipografia.
- * Nenhum seletor de componente deve viver aqui.
  */
 
 :root {
-  /* Cores base */
-  --color-background: #f7f7f8;
-  --color-surface: #ffffff;
-  --color-border: #e4e4e7;
-  --color-text: #18181b;
-  --color-text-muted: #6b7280;
+  /* Identidade */
+  --color-primary: #174d43;
+  --color-primary-hover: #103d35;
+  --color-secondary: #39866b;
+  --color-accent: #d5a044;
 
-  /* Cores de ação e estado */
-  --color-primary: #6d28d9;
-  --color-primary-hover: #5b21b6;
-  --color-success: #15803d;
-  --color-warning: #b45309;
-  --color-danger: #b91c1c;
+  /* Superfícies */
+  --color-background: #f4f6f2;
+  --color-surface: #ffffff;
+  --color-surface-muted: #eaf1eb;
+  --color-border: #dde5de;
+
+  /* Textos */
+  --color-text: #25352f;
+  --color-text-muted: #68766f;
+
+  /* Estados */
+  --color-success: #267653;
+  --color-warning: #b7791f;
+  --color-danger: #c44d4d;
+  --color-info: #3979a8;
 
   /* Espaçamentos */
   --space-1: 4px;
@@ -31,12 +39,12 @@
   /* Raios */
   --radius-sm: 6px;
   --radius-md: 10px;
-  --radius-lg: 16px;
+  --radius-lg: 14px;
   --radius-pill: 999px;
 
   /* Sombras */
-  --shadow-sm: 0 1px 2px rgb(0 0 0 / 6%);
-  --shadow-md: 0 8px 24px rgb(0 0 0 / 8%);
+  --shadow-sm: 0 1px 2px rgb(37 53 47 / 6%);
+  --shadow-md: 0 8px 24px rgb(37 53 47 / 8%);
 
   /* Tipografia */
   --font-sans: var(--font-geist-sans), Arial, Helvetica, sans-serif;
@@ -47,22 +55,14 @@
   --font-size-md: 16px;
   --font-size-lg: 20px;
   --font-size-xl: 28px;
-  --font-size-2xl: 40px;
+  --font-size-2xl: 30px;
+
+  /* Indicadores financeiros */
+  --font-size-metric: 28px;
 
   /* Camadas */
   --z-modal: 1000;
   --z-toast: 1100;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-background: #0a0a0b;
-    --color-surface: #141417;
-    --color-border: #2a2a30;
-    --color-text: #ededf0;
-    --color-text-muted: #9ca3af;
-
-    --color-primary: #a78bfa;
-    --color-primary-hover: #c4b5fd;
-  }
-}
+/* Modo escuro fica para etapa posterior (ver `visual.md`, seção 5). */

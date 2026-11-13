@@ -9,8 +9,9 @@
 ## 1. Contexto do projeto
 
 Sistema **interno** de gestão, custos e precificação do Ateliê Filhos de Aruanda.
-Aplicação privada, sem cadastro público, com login obrigatório e usuários criados pelo
-administrador (perfis **administrador** e **operador**).
+Aplicação privada, sem cadastro público, com login obrigatório. Os usuários são criados,
+ativados e perfilados **no painel do Supabase**, pelo responsável do projeto; a aplicação
+não cria, convida nem gerencia usuários (perfis **administrador** e **operador**).
 
 | Camada | Tecnologia |
 |--------|------------|
@@ -132,7 +133,11 @@ src/
 
 - Operações comuns: Supabase JS direto, protegido por **RLS**.
 - Operações privilegiadas: **Server Actions / Route Handlers** no servidor.
-- Nunca exponha `service_role` no navegador; nunca desative RLS.
+- A aplicação usa apenas a chave publicável (`sb_publishable_…`); não existe
+  `service_role` no código. Criar, desativar, redefinir senha e definir perfil de usuário
+  é feito no painel do Supabase.
+- Nunca exponha chaves secretas no navegador; nunca desative RLS.
+- Não crie telas de cadastro, convite, troca de senha ou gestão de usuários.
 - A interface não é mecanismo de segurança: autorização é verificada no servidor **e**
   no banco.
 - Toda tabela privada tem política RLS; toda ação privilegiada valida o perfil.
@@ -253,6 +258,7 @@ schema + migrations + RLS (banco)
 | 10 | Nenhuma tela fictícia, botão sem função ou dado simulado apresentado como real |
 | 11 | Concluir, testar e documentar uma etapa antes de iniciar a seguinte |
 | 12 | Testes são **somente unitários de lógica**; sem E2E, integração ou teste de componente sem autorização |
+| 13 | Gestão de usuários é feita no painel do Supabase; a aplicação não cria, convida nem altera credenciais |
 
 ---
 
