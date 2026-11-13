@@ -5,6 +5,14 @@ const STANDARD_UNIT_CONVERSIONS: Record<string, Record<string, number>> = {
   mililitro: { litro: 0.001 },
 };
 
+const PACKAGING_UNITS = ["caixa", "pacote"];
+
+/** Unidades que representam uma peça countable dentro de uma embalagem. */
+const PIECE_UNIT = "unidade";
+
+/** Casas decimais mantidas nas quantidades do sistema. */
+const QUANTITY_DECIMALS = 3;
+
 /**
  * Conversão de quantidades entre unidades de medida.
  *
@@ -61,4 +69,85 @@ export function convertStandardQuantity(
   const factor = STANDARD_UNIT_CONVERSIONS[fromUnit]?.[toUnit];
 
   return factor === undefined ? null : convertQuantity(quantity, factor);
+}
+
+/**
+ * Lista as unidades alternativas aceitas para um insumo com a unidade base
+ * informada.
+ *
+ * Quilograma e grama, litro e mililitro são equivalentes métricos e sempre
+ * disponíveis. Caixa e pacote admitem "unidade" quando o responsável informou
+ * quantas peças cabem na embalagem.
+ *
+ * @param baseUnit unidade base do insumo
+ * @param unitsPerPackage quantas unidades cabem na caixa ou pacote, ou null
+ * @returns lista de unidades alternativas
+ */
+export function listConvertibleUnits(
+  baseUnit: string,
+  unitsPerPackage: number | null,
+): string[] {
+  const metricAlternatives = Object.keys(
+    STANDARD_UNIT_CONVERSIONS[baseUnit] ?? {},
+  );
+
+  if (
+    PACKAGING_UNITS.includes(baseUnit) &&
+    unitsPerPackage !== null &&
+    Number.isFinite(unitsPerPackage) &&
+    unitsPerPackage > 0
+  ) {
+    return [...metricAlternatives, PIECE_UNIT];
+  }
+
+  return metricAlternatives;
+}
+
+/**
+ * Converte uma quantidade informada na ficha técnica para a unidade base do
+ * insumo, que é a unidade em que o custo foi registrado.
+ *
+ * @param quantity quantidade na unidade informada
+ * @param fromUnit unidade informada na ficha técnica
+ * @param baseUnit unidade base do insumo
+ * @param unitsPerPackage quantas unidades cabem na caixa ou pacote, ou null
+ * @returns quantidade na unidade base, ou null quando as unidades não combinam
+ */
+export function convertToBaseUnit(
+  quantity: number,
+  fromUnit: string,
+  baseUnit: string,
+  unitsPerPackage: number | null,
+): number | null {
+  if (!Number.isFinite(quantity) || quantity <= 0) {
+    return null;
+  }
+
+  if (fromUnit === baseUnit) {
+    return roundQuantity(quantity);
+  }
+
+  if (PACKAGING_UNITS.includes(baseUnit) && fromUnit === PIECE_UNIT) {
+    if (
+      unitsPerPackage === null ||
+      !Number.isFinite(unitsPerPackage) ||
+      unitsPerPackage <= 0
+    ) {
+      return null;
+    }
+
+    return roundQuantity(quantity / unitsPerPackage);
+  }
+
+  return convertStandardQuantity(quantity, fromUnit, baseUnit);
+}
+
+/**
+ * Arredonda uma quantidade para as casas decimais do sistema.
+ *
+ * @param quantity quantidade a arredondar
+ * @returns quantidade com no máximo três casas decimais
+ */
+function roundQuantity(quantity: number): number {
+  return Number(quantity.toFixed(QUANTITY_DECIMALS));
 }

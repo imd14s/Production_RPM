@@ -25,6 +25,7 @@ describe("parseSupplyRow", () => {
       name: "Tecido bolso",
       kind: "materia_prima",
       unit: "metro",
+      unitsPerPackage: null,
       quantity: 12.5,
       acquiredOn: "2026-10-28",
       amountCents: 24900,
@@ -33,6 +34,41 @@ describe("parseSupplyRow", () => {
       isActive: true,
       notes: "",
     });
+  });
+
+  it("reads the units per package of a packaging supply", () => {
+    expect(
+      parseSupplyRow({
+        ...SUPPLY_ROW,
+        unit: "caixa",
+        units_per_package: "12",
+      }),
+    ).toEqual(
+      expect.objectContaining({
+        unit: "caixa",
+        unitsPerPackage: 12,
+      }),
+    );
+  });
+
+  it("rejects units per package on a supply that is not a packaging unit", () => {
+    expect(
+      parseSupplyRow({
+        ...SUPPLY_ROW,
+        unit: "metro",
+        units_per_package: "12",
+      }),
+    ).toBeNull();
+  });
+
+  it("rejects a non positive units per package", () => {
+    expect(
+      parseSupplyRow({
+        ...SUPPLY_ROW,
+        unit: "caixa",
+        units_per_package: "0",
+      }),
+    ).toBeNull();
   });
 
   it("allows an existing supply without a migratable cost", () => {
@@ -87,6 +123,7 @@ describe("buildSupplyPayload", () => {
         name: "Tecido bolso",
         kind: "materia_prima",
         unit: "metro",
+        unitsPerPackage: null,
         quantity: 12.5,
         acquiredOn: "2026-10-28",
         amountCents: 24900,
@@ -97,6 +134,7 @@ describe("buildSupplyPayload", () => {
       name: "Tecido bolso",
       kind: "materia_prima",
       unit: "metro",
+      units_per_package: null,
       quantity: 12.5,
       acquired_on: "2026-10-28",
       amount_cents: 24900,

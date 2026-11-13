@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { saveSupplyAction } from "@/app/actions/supplies";
 import { FormAlert } from "@/components/feedback/FormAlert/FormAlert";
 import { Button } from "@/components/ui/Button/Button";
@@ -10,10 +10,11 @@ import { TextAreaField } from "@/components/ui/TextAreaField/TextAreaField";
 import { TextField } from "@/components/ui/TextField/TextField";
 import { EMPTY_SETTINGS_STATE } from "@/features/settings/formState";
 import { formatCentsInput } from "@/lib/money";
-import type { Supply } from "@/features/supplies/types";
+import type { Supply, SupplyUnit } from "@/features/supplies/types";
 import {
   SUPPLY_KINDS,
   SUPPLY_KIND_LABELS,
+  SUPPLY_PACKAGING_UNITS,
   SUPPLY_UNITS,
   SUPPLY_UNIT_LABELS,
 } from "@/features/supplies/types";
@@ -48,7 +49,9 @@ export function SupplyForm({ supply, onCancel, onSaved }: SupplyFormProps) {
     saveSupplyAction,
     EMPTY_SETTINGS_STATE,
   );
+  const [unit, setUnit] = useState<SupplyUnit>(supply?.unit ?? "unidade");
   const isEditing = supply !== null;
+  const isPackaging = SUPPLY_PACKAGING_UNITS.includes(unit);
 
   useEffect(() => {
     if (state.status === "success") {
@@ -92,8 +95,27 @@ export function SupplyForm({ supply, onCancel, onSaved }: SupplyFormProps) {
         defaultValue={supply?.unit ?? "unidade"}
         error={state.errors.unit}
         hint="A quantidade e o custo serão registrados nesta unidade."
+        onChange={(event) => setUnit(event.target.value as SupplyUnit)}
         required
       />
+
+      {isPackaging ? (
+        <TextField
+          label="Unidades por caixa/pacote"
+          name="unitsPerPackage"
+          inputMode="decimal"
+          defaultValue={
+            supply?.unitsPerPackage === null || supply?.unitsPerPackage === undefined
+              ? ""
+              : new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 6 }).format(
+                  supply.unitsPerPackage,
+                )
+          }
+          error={state.errors.unitsPerPackage}
+          placeholder="12"
+          hint="Quantas unidades cabem em uma caixa ou pacote. Permite escrever a ficha técnica em “unidades” — o sistema converte para a caixa."
+        />
+      ) : null}
 
       <TextField
         label="Quantidade"

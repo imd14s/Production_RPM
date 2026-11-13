@@ -51,6 +51,7 @@ export function buildSupplyPayload(input: SupplyInput): Record<string, unknown> 
     name: input.name,
     kind: input.kind,
     unit: input.unit,
+    units_per_package: input.unitsPerPackage,
     quantity: input.quantity,
     acquired_on: input.acquiredOn,
     amount_cents: input.amountCents,

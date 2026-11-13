@@ -19,6 +19,7 @@ describe("validateSupply", () => {
         name: "Cera Coco",
         kind: "materia_prima",
         unit: "litro",
+        unitsPerPackage: null,
         quantity: 5,
         acquiredOn: "2026-11-02",
         amountCents: 2500,
@@ -26,6 +27,66 @@ describe("validateSupply", () => {
         notes: "",
       },
     });
+  });
+
+  it("accepts the units per package of a packaging supply", () => {
+    const result = validateSupply({
+      name: "Papel de presente",
+      kind: "embalagem",
+      unit: "caixa",
+      unitsPerPackage: "12",
+      quantity: "1",
+      acquiredOn: "2026-11-02",
+      amount: "25,00",
+      freight: "",
+      notes: "",
+    });
+
+    expect(result).toEqual({
+      ok: true,
+      data: expect.objectContaining({
+        unit: "caixa",
+        unitsPerPackage: 12,
+      }),
+    });
+  });
+
+  it("rejects units per package when the supply is not a packaging unit", () => {
+    const result = validateSupply({
+      name: "Cera Coco",
+      kind: "materia_prima",
+      unit: "litro",
+      unitsPerPackage: "12",
+      quantity: "5",
+      acquiredOn: "2026-11-02",
+      amount: "25,00",
+      freight: "",
+      notes: "",
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      errors: {
+        unitsPerPackage:
+          "Equivalência de unidades só existe para caixa e pacote.",
+      },
+    });
+  });
+
+  it("rejects a non positive units per package", () => {
+    const result = validateSupply({
+      name: "Papel de presente",
+      kind: "embalagem",
+      unit: "caixa",
+      unitsPerPackage: "0",
+      quantity: "1",
+      acquiredOn: "2026-11-02",
+      amount: "25,00",
+      freight: "",
+      notes: "",
+    });
+
+    expect(result.ok).toBe(false);
   });
 
   it("defaults an empty acquisition date to today", () => {

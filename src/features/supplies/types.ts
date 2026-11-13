@@ -20,6 +20,7 @@ export type Supply = {
   name: string;
   kind: SupplyKind;
   unit: SupplyUnit;
+  unitsPerPackage: number | null;
   quantity: number | null;
   acquiredOn: string | null;
   amountCents: number | null;
@@ -33,6 +34,7 @@ export type SupplyInput = {
   name: string;
   kind: SupplyKind;
   unit: SupplyUnit;
+  unitsPerPackage: number | null;
   quantity: number;
   acquiredOn: string;
   amountCents: number;
@@ -81,3 +83,8 @@ export const SUPPLY_UNITS: SupplyUnit[] = [
   "caixa",
   "outro",
 ];
+
+/**
+ * Unidades de embalagem: admitem a equivalência "quantas unidades cabem".
+ */
+export const SUPPLY_PACKAGING_UNITS: SupplyUnit[] = ["caixa", "pacote"];

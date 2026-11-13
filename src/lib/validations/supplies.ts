@@ -6,7 +6,7 @@ import type {
   SupplyKind,
   SupplyUnit,
 } from "@/features/supplies/types";
-import { SUPPLY_KINDS, SUPPLY_UNITS } from "@/features/supplies/types";
+import { SUPPLY_KINDS, SUPPLY_PACKAGING_UNITS, SUPPLY_UNITS } from "@/features/supplies/types";
 
 export type ValidationResult<T> =
   | { ok: true; data: T }
@@ -69,6 +69,8 @@ export function validateSupply(raw: Record<string, unknown>): ValidationResult<S
   const quantity = parseQuantityInput(readText(raw, "quantity"));
   const amountCents = parseAmountToCents(readText(raw, "amount"));
   const freightText = readText(raw, "freight");
+  const unitsPerPackageText = readText(raw, "unitsPerPackage");
+  let unitsPerPackage: number | null = null;
   let freightCents = 0;
 
   if (name.length < 2 || name.length > 120) {
@@ -81,6 +83,24 @@ export function validateSupply(raw: Record<string, unknown>): ValidationResult<S
 
   if (!SUPPLY_UNITS.includes(unit)) {
     errors.unit = "Escolha a unidade de medida.";
+  }
+
+  if (unitsPerPackageText) {
+    const parsed = Number(unitsPerPackageText.replace(",", "."));
+
+    if (
+      !Number.isFinite(parsed) ||
+      parsed <= 0 ||
+      parsed > 1_000_000 ||
+      Number(parsed.toFixed(6)) !== parsed
+    ) {
+      errors.unitsPerPackage = "Informe quantas unidades cabem na embalagem.";
+    } else if (!SUPPLY_PACKAGING_UNITS.includes(unit)) {
+      errors.unitsPerPackage =
+        "Equivalência de unidades só existe para caixa e pacote.";
+    } else {
+      unitsPerPackage = parsed;
+    }
   }
 
   if (notes.length > 500) {
@@ -124,6 +144,7 @@ export function validateSupply(raw: Record<string, unknown>): ValidationResult<S
       name,
       kind,
       unit,
+      unitsPerPackage,
       quantity,
       acquiredOn,
       amountCents,

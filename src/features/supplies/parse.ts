@@ -3,7 +3,11 @@ import type {
   SupplyKind,
   SupplyUnit,
 } from "@/features/supplies/types";
-import { SUPPLY_KINDS, SUPPLY_UNITS } from "@/features/supplies/types";
+import {
+  SUPPLY_KINDS,
+  SUPPLY_PACKAGING_UNITS,
+  SUPPLY_UNITS,
+} from "@/features/supplies/types";
 
 /**
  * Lê um campo textual de uma linha do banco.
@@ -49,6 +53,7 @@ export function parseSupplyRow(row: unknown): Supply | null {
   const name = readString(candidate.name).trim();
   const kind = candidate.kind;
   const unit = candidate.unit;
+  const unitsPerPackage = readNumber(candidate.units_per_package);
   const isActive = candidate.isActive ?? candidate.is_active;
   const quantity = readNumber(candidate.quantity);
   const acquiredOnValue = candidate.acquired_on;
@@ -66,6 +71,14 @@ export function parseSupplyRow(row: unknown): Supply | null {
   }
 
   if (typeof unit !== "string" || !SUPPLY_UNITS.includes(unit as SupplyUnit)) {
+    return null;
+  }
+
+  if (
+    unitsPerPackage !== null &&
+    (unitsPerPackage <= 0 ||
+      !SUPPLY_PACKAGING_UNITS.includes(unit as SupplyUnit))
+  ) {
     return null;
   }
 
@@ -104,6 +117,7 @@ export function parseSupplyRow(row: unknown): Supply | null {
     name,
     kind: kind as SupplyKind,
     unit: unit as SupplyUnit,
+    unitsPerPackage,
     quantity: hasCompleteCost ? quantity : null,
     acquiredOn: hasCompleteCost ? acquiredOn : null,
     amountCents: hasCompleteCost ? amountCents : null,
