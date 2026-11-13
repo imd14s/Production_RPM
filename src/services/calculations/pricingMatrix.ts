@@ -14,6 +14,7 @@
 
 import { calculateChannelPriceCents } from "./channelPricing";
 import type { Fee } from "./pricing";
+import { sumFixedFeesCents, sumVariablePercent } from "./pricing";
 
 /** Rótulo da linha de venda direta (atacado), fora das plataformas. */
 export const WHOLESALE_DIRECT_NAME = "Atacado (venda direta)";
@@ -85,7 +86,7 @@ export type PricingMatrixInput = {
  * @param amountCents valor fixo em centavos ou nulo
  * @returns taxa no formato do motor
  */
-function toFee(
+export function toFee(
   kind: "percentual" | "fixo",
   rate: string | number | null,
   amountCents: number | null,
@@ -94,6 +95,68 @@ function toFee(
     kind,
     rate: rate !== null ? Number(rate) / 100 : null,
     amountCents,
+  };
+}
+
+export type ChannelPricePreview = {
+  /** Preço sugerido em centavos, ou null quando não é possível calcular. */
+  priceCents: number | null;
+  /** Motivo da indisponibilidade do preço, quando houver. */
+  reason: string | null;
+  /** Soma das taxas variáveis (comissões do canal + impostos), em decimal. */
+  variablePercent: number;
+  /** Soma das taxas fixas do canal e dos impostos, em centavos. */
+  fixedFeesCents: number;
+};
+
+/**
+ * Calcula o preço sugerido de um produto em um canal, com as taxas do canal e
+ * os impostos ativos. É a mesma conta feita pela matriz da home, exposta para
+ * o popup de detalhe do produto (prévia ao vivo da nova margem).
+ *
+ * @param input custo do produto, canal, impostos e margem
+ * @returns preço, motivo da falha e o resumo das taxas aplicadas
+ */
+export function previewChannelPriceCents(input: {
+  costCents: number | null;
+  channel: MatrixChannel;
+  taxes: MatrixTax[];
+  marginPercent: number;
+}): ChannelPricePreview {
+  const taxFees: Fee[] = input.taxes
+    .filter((tax) => tax.isActive)
+    .map((tax) => toFee(tax.kind, tax.rate, tax.amountCents));
+
+  const channelFees: Fee[] = input.channel.fees
+    .filter((fee) => fee.isActive)
+    .map((fee) => toFee(fee.kind, fee.rate, fee.amountCents));
+
+  const allFees: Fee[] = [...channelFees, ...taxFees];
+  const fixedFeesCents = sumFixedFeesCents(allFees);
+  const variablePercent = sumVariablePercent(allFees);
+
+  if (input.costCents === null) {
+    return {
+      priceCents: null,
+      reason: "Custo incompleto",
+      variablePercent,
+      fixedFeesCents,
+    };
+  }
+
+  const result = calculateChannelPriceCents({
+    costCents: input.costCents,
+    channelFees,
+    paymentFees: [],
+    taxFees,
+    marginPercent: input.marginPercent,
+  });
+
+  return {
+    priceCents: result.ok ? result.priceCents : null,
+    reason: result.ok ? null : result.reason,
+    variablePercent,
+    fixedFeesCents,
   };
 }
 
@@ -150,10 +213,6 @@ function defaultWholesaleMargin(wholesale: number | null): number {
  * @returns linhas da matriz
  */
 export function buildPricingMatrix(input: PricingMatrixInput): MatrixRow[] {
-  const taxFees: Fee[] = input.taxes
-    .filter((tax) => tax.isActive)
-    .map((tax) => toFee(tax.kind, tax.rate, tax.amountCents));
-
   const wholesaleMarginPercent = defaultWholesaleMargin(
     input.defaultWholesaleMarginPercent,
   );
@@ -162,10 +221,6 @@ export function buildPricingMatrix(input: PricingMatrixInput): MatrixRow[] {
     const cells: MatrixPriceCell[] = [];
 
     for (const channel of input.channels) {
-      const channelFees: Fee[] = channel.fees
-        .filter((fee) => fee.isActive)
-        .map((fee) => toFee(fee.kind, fee.rate, fee.amountCents));
-
       const simulation = latestRetailSimulation(
         input.simulations,
         product.id,
@@ -177,23 +232,10 @@ export function buildPricingMatrix(input: PricingMatrixInput): MatrixRow[] {
           ? simulation.marginPercent
           : defaultRetailMargin(input.defaultRetailMarginPercent);
 
-      if (product.costCents === null) {
-        cells.push({
-          channelId: channel.id,
-          channelName: channel.name,
-          modality: "varejo",
-          marginPercent,
-          priceCents: null,
-          reason: "Custo incompleto",
-        });
-        continue;
-      }
-
-      const result = calculateChannelPriceCents({
+      const preview = previewChannelPriceCents({
         costCents: product.costCents,
-        channelFees,
-        paymentFees: [],
-        taxFees,
+        channel,
+        taxes: input.taxes,
         marginPercent,
       });
 
@@ -202,41 +244,29 @@ export function buildPricingMatrix(input: PricingMatrixInput): MatrixRow[] {
         channelName: channel.name,
         modality: "varejo",
         marginPercent,
-        priceCents: result.ok ? result.priceCents : null,
-        reason: result.ok ? null : result.reason,
+        priceCents: preview.priceCents,
+        reason: preview.reason,
       });
     }
 
     // Atacado: venda direta fora das plataformas — sem comissão de canal.
     // O recebimento (Pix direto ou crediário) é combinado com o comprador e
     // sem custo; o preço base usa apenas custo + impostos ativos + margem.
-    if (product.costCents === null) {
-      cells.push({
-        channelId: null,
-        channelName: WHOLESALE_DIRECT_NAME,
-        modality: "atacado",
-        marginPercent: wholesaleMarginPercent,
-        priceCents: null,
-        reason: "Custo incompleto",
-      });
-    } else {
-      const wholesaleResult = calculateChannelPriceCents({
-        costCents: product.costCents,
-        channelFees: [],
-        paymentFees: [],
-        taxFees,
-        marginPercent: wholesaleMarginPercent,
-      });
+    const wholesalePreview = previewChannelPriceCents({
+      costCents: product.costCents,
+      channel: { id: "", name: WHOLESALE_DIRECT_NAME, fees: [] },
+      taxes: input.taxes,
+      marginPercent: wholesaleMarginPercent,
+    });
 
-      cells.push({
-        channelId: null,
-        channelName: WHOLESALE_DIRECT_NAME,
-        modality: "atacado",
-        marginPercent: wholesaleMarginPercent,
-        priceCents: wholesaleResult.ok ? wholesaleResult.priceCents : null,
-        reason: wholesaleResult.ok ? null : wholesaleResult.reason,
-      });
-    }
+    cells.push({
+      channelId: null,
+      channelName: WHOLESALE_DIRECT_NAME,
+      modality: "atacado",
+      marginPercent: wholesaleMarginPercent,
+      priceCents: wholesalePreview.priceCents,
+      reason: wholesalePreview.reason,
+    });
 
     return {
       productId: product.id,

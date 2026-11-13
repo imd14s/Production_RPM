@@ -1,4 +1,8 @@
-import { buildPricingMatrix, WHOLESALE_DIRECT_NAME } from "./pricingMatrix";
+import {
+  buildPricingMatrix,
+  previewChannelPriceCents,
+  WHOLESALE_DIRECT_NAME,
+} from "./pricingMatrix";
 
 describe("buildPricingMatrix", () => {
   type MatrixChannelFees = Array<{
@@ -239,5 +243,77 @@ describe("buildPricingMatrix", () => {
     expect(rows[0].costCents).toBeNull();
     expect(rows[0].cells.every((cell) => cell.priceCents === null)).toBe(true);
     expect(rows[0].cells.every((cell) => cell.reason === "Custo incompleto")).toBe(true);
+  });
+});
+
+describe("previewChannelPriceCents", () => {
+  const marketplace = {
+    id: "ch-1",
+    name: "Mercado Livre",
+    fees: [
+      { kind: "percentual" as const, rate: "15", amountCents: null, isActive: true },
+      { kind: "fixo" as const, rate: null, amountCents: 200, isActive: true },
+    ],
+  };
+
+  it("calculates the price with the channel fees and the active taxes", () => {
+    const preview = previewChannelPriceCents({
+      costCents: 10000,
+      channel: marketplace,
+      taxes: [
+        { kind: "percentual", rate: "10", amountCents: null, isActive: true },
+      ],
+      marginPercent: 0.3,
+    });
+
+    // (10000 + 200) / (1 - 0.25 - 0.30) = 10200 / 0.45 = 22667
+    expect(preview.priceCents).toBe(22667);
+    expect(preview.variablePercent).toBeCloseTo(0.25, 6);
+    expect(preview.fixedFeesCents).toBe(200);
+    expect(preview.reason).toBeNull();
+  });
+
+  it("ignores inactive fees and taxes", () => {
+    const preview = previewChannelPriceCents({
+      costCents: 10000,
+      channel: {
+        ...marketplace,
+        fees: [
+          { kind: "percentual", rate: "15", amountCents: null, isActive: false },
+        ],
+      },
+      taxes: [
+        { kind: "percentual", rate: "10", amountCents: null, isActive: false },
+      ],
+      marginPercent: 0.3,
+    });
+
+    expect(preview.priceCents).toBe(14286);
+    expect(preview.variablePercent).toBe(0);
+    expect(preview.fixedFeesCents).toBe(0);
+  });
+
+  it("reports incomplete cost without calculating the price", () => {
+    const preview = previewChannelPriceCents({
+      costCents: null,
+      channel: marketplace,
+      taxes: [],
+      marginPercent: 0.3,
+    });
+
+    expect(preview.priceCents).toBeNull();
+    expect(preview.reason).toBe("Custo incompleto");
+  });
+
+  it("reports an invalid denominator", () => {
+    const preview = previewChannelPriceCents({
+      costCents: 10000,
+      channel: marketplace,
+      taxes: [],
+      marginPercent: 1,
+    });
+
+    expect(preview.priceCents).toBeNull();
+    expect(preview.reason).toBeTruthy();
   });
 });
