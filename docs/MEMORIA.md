@@ -1084,3 +1084,62 @@ legível e a tela obrigar o usuário a converter de cabeça. Também: **adiar
 componente genérico por falta de consumidor é certo — mas o adiamento tem
 data de revisão**, e o consumidor apareceu quando o popup de custo entrou.
 
+---
+
+## [Decisão] - Margem de lucro por canal ajustada no popup do produto (2026-11-13)
+
+**Problema Identificado:** a home mostrava o preço sugerido por canal, mas a
+margem em uso vinha de uma simulação antiga ou da margem padrão da empresa —
+sem caminho para ajustá-la sem sair da home. O responsável pediu: popup com os
+demais custos e a sugestão de preço, com um campo para alterar a margem de
+lucro de cada canal, e a linha inteira do produto clicável.
+
+**Causa Raiz:** o preço já era calculado por canal (`buildPricingMatrix`), mas
+a margem era apenas **lida** de `pricing_simulations` — não existia nenhuma
+ação que a gravasse a partir da home. O cálculo da matriz também estava
+espalhado: cada canal refazia a soma das taxas dentro do laço.
+
+**Correção:**
+- `previewChannelPriceCents` (`services/calculations/pricingMatrix.ts`): cálculo
+  único de preço por canal, devolvendo também o resumo das taxas (percentual
+  somado e taxas fixas). A matriz passou a usar essa função — antes ela tinha
+  o cálculo duplicado;
+- `saveProductChannelMarginAction` (`app/actions/pricing.ts`): grava a margem
+  como **nova simulação de preço (varejo)** do canal, com o custo congelado em
+  snapshot — exatamente o caminho de `/precificacao`. Sem tabela nova;
+- `ChannelMarginEditor` (`features/pricing`): campo de margem com prévia do
+  preço **enquanto o responsável digita**, usando o mesmo motor da matriz;
+- `ProductCostModal`: seção "Sugestão de preço por canal", com margem, preço
+  e taxas de cada canal; o atacado (venda direta) aparece só para consulta,
+  porque a margem dele vem das configurações da empresa e
+  `pricing_simulations.channel_id` é obrigatório;
+- `PricingMatrix`: a linha inteira passou a ser clicável (o nome continua
+  sendo `<button>` para teclado).
+
+**Consequência aceita:** cada ajuste de margem cria uma linha nova em
+`pricing_simulations` (tabela append-only) e um snapshot de custo. É o mesmo
+comportamento da tela de precificação: o histórico guarda as decisões de
+preço. Como o snapshot registra o custo atual, a etiqueta "Revisar preço" é
+reavaliada no momento do ajuste — o preço acabou de ser recalculado com o
+custo vigente.
+
+**Validação:** `npm run typecheck`, `npm run lint`, `npm test` (339 testes) e
+`./pre-push.sh` verdes. Teste real no servidor: produto com custo de R$ 20,00
+no canal "Loja física" — margem inicial 30%; ao salvar 45%, a simulação foi
+gravada (`margin_percent = 0,45`, `price_cents = 5000`) e a home passou a
+mostrar a margem 0,45 e o preço 5000, o mesmo valor devolvido pela Server
+Action. Margem de 150% recusada com "Informe uma margem de lucro entre 0 e
+100%.".
+
+**Lição:** **"quando a tela mostra um número, ela deve oferecer o caminho para
+corrigir o número."** A matriz exibia a margem de cada canal como resultado de
+regra alheia (simulação antiga, padrão da empresa, contingência) — sem edição,
+o responsável não tinha governança sobre o próprio preço. E a correção foi
+**reaproveitar a estrutura existente** (`pricing_simulations`) em vez de criar
+uma tabela nova: a decisão de preço já tinha histórico e lugar; só faltava a
+porta de entrada. Duas telas que calculam o mesmo preço precisam do **mesmo
+motor** — por isso a prévia do popup e a matriz compartilham
+`previewChannelPriceCents`, e o número mostrado ao digitar é o mesmo que vai
+para a tabela.
+
+

@@ -178,6 +178,23 @@ tecla `Escape`, pelo clique na sobreposição e pelo botão de fechar; o foco
 entra no painel ao abrir e volta ao elemento de origem ao fechar; a rolagem
 do body fica travada enquanto o popup está aberto.
 
+### Margem de lucro por canal no popup
+
+O popup também mostra a **sugestão de preço de cada canal** e permite
+alterar a **margem de lucro** do canal (decisão do responsável, 2026-11-13):
+
+| Item | Regra |
+|---|---|
+| Margem em uso | Última simulação de varejo do canal; sem simulação, margem padrão da empresa (contingência 30%) |
+| Prévia do preço | Recalculada enquanto o responsável digita, com `previewChannelPriceCents` — o mesmo motor da matriz |
+| Gravação | `saveProductChannelMarginAction` grava nova simulação de preço (varejo) do canal, com o custo congelado em snapshot — mesmo caminho de `/precificacao` |
+| Validade | Margem entre 0% e 100%; fora disso, recusada com mensagem de negócio |
+| Taxes exibidas | Comissões do canal + impostos ativos (percentual somado) e taxas fixas |
+| Atacado (venda direta) | Apenas consulta: a margem vem das configurações da empresa e `pricing_simulations.channel_id` é obrigatório |
+
+A linha inteira da tabela da home é clicável e abre o popup do produto; o nome
+do produto permanece um `<button>` para navegação por teclado.
+
 ## Impacto automático de mudança de insumo
 
 `analyzePriceImpact` (em `src/services/calculations/priceImpact.ts`) compara o

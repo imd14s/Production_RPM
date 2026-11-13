@@ -79,7 +79,9 @@ aplicado por `buildNavigation`, coberto por teste.
    na coluna do produto; a coluna de atacado é destacada. A tabela ocupa
    **80% da largura do conteúdo** no desktop (mínimo 720px, com rolagem
    horizontal se necessário) e vira cartões com rótulo por célula
-   (`data-label`) em telas estreitas.
+   (`data-label`) em telas estreitas. **A linha inteira é clicável** e abre o
+   popup de detalhe do produto (custos por insumo e margem por canal); o nome
+   do produto continua sendo um `<button>` para navegação por teclado.
 2. Nota de rodapé indicando onde pedir acesso quando faltar algum módulo.
 
 A saudação com data por extenso ("Bom dia, eversond14s") os cartões **Seu
