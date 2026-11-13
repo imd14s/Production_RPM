@@ -98,6 +98,7 @@ export async function listProductCatalog(): Promise<ProductCatalog> {
       id: supply.id,
       name: supply.name,
       unit: supply.unit,
+      unitsPerPackage: supply.unitsPerPackage,
       isActive: supply.isActive,
     })),
   };

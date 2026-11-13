@@ -47,6 +47,7 @@ export type ProductCatalog = {
     id: string;
     name: string;
     unit: SupplyUnit;
+    unitsPerPackage: number | null;
     isActive: boolean;
   }[];
 };

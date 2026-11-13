@@ -5,12 +5,14 @@ import { getAdminSession } from "@/app/actions/settings";
 import type { SettingsFormState } from "@/features/settings/formState";
 import { createsCompositionCycle } from "@/features/products/cycle";
 import { isUuid, validateProduct } from "@/lib/validations/products";
+import type { SupplyUnitContexts } from "@/lib/validations/products";
 import {
   deleteProduct,
   listProductCompositionEdges,
   saveProduct,
   setProductActive,
 } from "@/services/supabase/products";
+import { listSupplyUnitContexts } from "@/services/supabase/supplies";
 
 const FORBIDDEN_MESSAGE = "Apenas administradores podem alterar os produtos.";
 
@@ -43,13 +45,42 @@ export async function saveProductAction(
     };
   }
 
-  const validation = validateProduct(Object.fromEntries(formData));
+  let validation: ReturnType<typeof validateProduct>;
+  let supplyContexts: SupplyUnitContexts;
+
+  try {
+    supplyContexts = await listSupplyUnitContexts();
+    validation = validateProduct(Object.fromEntries(formData), supplyContexts);
+  } catch (error) {
+    return {
+      status: "error",
+      message:
+        error instanceof Error
+          ? error.message
+          : "Não foi possível validar a ficha técnica.",
+      errors: {},
+    };
+  }
 
   if (!validation.ok) {
     return {
       status: "error",
       message: "Confira os campos destacados.",
       errors: validation.errors,
+    };
+  }
+
+  const missingSupply = validation.data.components.find(
+    (component) =>
+      component.targetType === "supply" &&
+      !supplyContexts.has(component.supplyId),
+  );
+
+  if (missingSupply) {
+    return {
+      status: "error",
+      message: "Um insumo da ficha técnica não existe mais.",
+      errors: { components: "Revise os insumos da composição." },
     };
   }
 

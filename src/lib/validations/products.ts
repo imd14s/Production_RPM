@@ -1,25 +1,44 @@
 import { parseAmountToCents } from "@/lib/money";
 import { parseQuantityInput } from "@/lib/quantity";
 import { readText } from "@/lib/validations/settings";
+import { convertToBaseUnit } from "@/services/calculations/units";
 import type {
   ProductComponentInput,
   ProductInput,
   ProductKind,
 } from "@/features/products/types";
 import { PRODUCT_KINDS } from "@/features/products/types";
+import type { SupplyUnit } from "@/features/supplies/types";
 
 export type ProductValidationResult =
   | { ok: true; data: ProductInput }
   | { ok: false; errors: Record<string, string> };
 
 /**
+ * Unidade base de um insumo e a equivalência de sua embalagem.
+ */
+export type SupplyUnitContext = {
+  /** Unidade em que a compra e o custo do insumo foram registrados. */
+  unit: SupplyUnit;
+  /** Quantas unidades cabem na caixa ou pacote, quando informado. */
+  unitsPerPackage: number | null;
+};
+
+/**
+ * Contexto de unidades dos insumos, indexado pelo identificador.
+ */
+export type SupplyUnitContexts = Map<string, SupplyUnitContext>;
+
+/**
  * Valida e normaliza os dados de um produto e da sua composição.
  *
  * @param inputData campos não confiáveis do formulário
+ * @param supplyContexts unidade base de cada insumo, para converter a quantidade
  * @returns dados prontos para gravação ou mensagens por campo
  */
 export function validateProduct(
   inputData: Record<string, unknown>,
+  supplyContexts: SupplyUnitContexts = new Map(),
 ): ProductValidationResult {
   const errors: Record<string, string> = {};
   const name = readText(inputData, "name");
@@ -39,7 +58,10 @@ export function validateProduct(
   const rawComponents = inputData.components;
   const components =
     rawComponents === undefined || typeof rawComponents === "string"
-      ? parseComponents(typeof rawComponents === "string" ? rawComponents : "")
+      ? parseComponents(
+          typeof rawComponents === "string" ? rawComponents : "",
+          supplyContexts,
+        )
       : { ok: false as const, message: "A composição enviada é inválida." };
 
   if (name.length < 2 || name.length > 120) {
@@ -119,11 +141,17 @@ export function validateProduct(
 /**
  * Converte a composição JSON do formulário em componentes tipados.
  *
+ * A quantidade pode ser informada em unidade equivalente à base do insumo
+ * (grama para quilograma, unidade para caixa); aqui ela é convertida para a
+ * unidade base, que é a única gravada.
+ *
  * @param value JSON serializado pelo formulário
+ * @param supplyContexts unidade base de cada insumo
  * @returns componentes validados ou mensagem de erro
  */
 function parseComponents(
   value: string,
+  supplyContexts: SupplyUnitContexts,
 ):
   | { ok: true; value: ProductComponentInput[] }
   | { ok: false; message: string } {
@@ -154,6 +182,7 @@ function parseComponents(
     const targetType = candidate.targetType;
     const supplyId = candidate.supplyId;
     const productId = candidate.productId;
+    const unitText = candidate.unit;
     const quantityText =
       typeof candidate.quantity === "number" || typeof candidate.quantity === "string"
         ? String(candidate.quantity)
@@ -172,7 +201,31 @@ function parseComponents(
         return { ok: false, message: "Revise os insumos da composição." };
       }
 
-      components.push({ targetType, supplyId, quantity });
+      const context = supplyContexts.get(supplyId);
+
+      if (!context) {
+        // Sem o contexto da unidade, a quantidade é mantida como foi digitada.
+        // Quem chama com o contexto (a ação do servidor) garante a conversão.
+        components.push({ targetType, supplyId, quantity });
+        continue;
+      }
+
+      const unit = typeof unitText === "string" ? (unitText as SupplyUnit) : context.unit;
+      const baseQuantity = convertToBaseUnit(
+        quantity,
+        unit,
+        context.unit,
+        context.unitsPerPackage,
+      );
+
+      if (baseQuantity === null) {
+        return {
+          ok: false,
+          message: "Revise a unidade da quantidade: ela não corresponde ao insumo.",
+        };
+      }
+
+      components.push({ targetType, supplyId, quantity: baseQuantity });
       continue;
     }
 

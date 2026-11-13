@@ -185,4 +185,100 @@ describe("validateProduct", () => {
       errors: { components: "Revise os insumos da composição." },
     });
   });
+
+  describe("conversão de unidade na ficha técnica", () => {
+    const contexts = new Map([
+      [
+        FIRST_SUPPLY,
+        { unit: "quilograma" as const, unitsPerPackage: null },
+      ],
+    ]);
+
+    it("converte a quantidade informada para a unidade base do insumo", () => {
+      const result = validateProduct(
+        {
+          name: "Vela",
+          kind: "fabricado",
+          components: JSON.stringify([
+            {
+              targetType: "supply",
+              supplyId: FIRST_SUPPLY,
+              productId: null,
+              quantity: "300",
+              unit: "grama",
+            },
+          ]),
+        },
+        contexts,
+      );
+
+      expect(result).toEqual({
+        ok: true,
+        data: expect.objectContaining({
+          components: [
+            { targetType: "supply", supplyId: FIRST_SUPPLY, quantity: 0.3 },
+          ],
+        }),
+      });
+    });
+
+    it("converte unidades de peça para a caixa do insumo", () => {
+      const boxContexts = new Map([
+        [FIRST_SUPPLY, { unit: "caixa" as const, unitsPerPackage: 12 }],
+      ]);
+
+      const result = validateProduct(
+        {
+          name: "Presente",
+          kind: "fabricado",
+          components: JSON.stringify([
+            {
+              targetType: "supply",
+              supplyId: FIRST_SUPPLY,
+              productId: null,
+              quantity: "6",
+              unit: "unidade",
+            },
+          ]),
+        },
+        boxContexts,
+      );
+
+      expect(result).toEqual({
+        ok: true,
+        data: expect.objectContaining({
+          components: [
+            { targetType: "supply", supplyId: FIRST_SUPPLY, quantity: 0.5 },
+          ],
+        }),
+      });
+    });
+
+    it("recusa uma unidade que não corresponde ao insumo", () => {
+      const result = validateProduct(
+        {
+          name: "Vela",
+          kind: "fabricado",
+          components: JSON.stringify([
+            {
+              targetType: "supply",
+              supplyId: FIRST_SUPPLY,
+              productId: null,
+              quantity: "2",
+              unit: "litro",
+            },
+          ]),
+        },
+        contexts,
+      );
+
+      expect(result).toEqual({
+        ok: false,
+        errors: {
+          components:
+            "Revise a unidade da quantidade: ela não corresponde ao insumo.",
+        },
+      });
+    });
+  });
 });

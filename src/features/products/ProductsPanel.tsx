@@ -57,7 +57,7 @@ export function ProductsPanel({ catalog, warnings }: ProductsPanelProps) {
                 <tr>
                   <th scope="col">Produto</th>
                   <th scope="col">Modalidade</th>
-                  <th scope="col">Composição</th>
+                  <th scope="col">Composição por unidade</th>
                   <th scope="col">Situação</th>
                   <th scope="col">Ações</th>
                 </tr>
@@ -118,7 +118,7 @@ function ProductRow({ product, onEdit, warnings }: ProductRowProps) {
         ) : null}
       </td>
       <td data-label="Modalidade">{PRODUCT_KIND_LABELS[product.kind]}</td>
-      <td data-label="Composição">
+      <td data-label="Composição por unidade">
         {product.components.length > 0 ? (
           <ul className={styles.componentList}>
             {product.components.map((component) => (

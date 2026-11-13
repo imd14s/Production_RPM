@@ -4,10 +4,15 @@ import { buildSupplyPayload } from "@/features/supplies/payload";
 import type {
   Supply,
   SupplyInput,
+  SupplyUnit,
   SupplyWithCost,
 } from "@/features/supplies/types";
 import { createClient } from "@/services/supabase/server";
 import { assertRowDeleted, mapDeleteError } from "@/services/supabase/deleteErrors";
+import type {
+  SupplyUnitContext,
+  SupplyUnitContexts,
+} from "@/lib/validations/products";
 
 export type { SupplyWithCost };
 
@@ -86,6 +91,66 @@ export async function setSupplyActive(id: string, isActive: boolean): Promise<vo
       `Não foi possível alterar a situação do insumo. (código ${error.code ?? "desconhecido"})`,
     );
   }
+}
+
+/**
+ * Carrega a unidade base e a equivalência de embalagem de todos os insumos.
+ * Usado para converter a quantidade da ficha técnica para a unidade base.
+ *
+ * @returns contexto de unidades indexado pelo identificador do insumo
+ */
+export async function listSupplyUnitContexts(): Promise<SupplyUnitContexts> {
+  await connection();
+  const supabase = await createClient();
+
+  const result = await supabase.from("supplies").select("id, unit, units_per_package");
+
+  if (result.error) {
+    throw new Error(
+      `Não foi possível carregar os insumos. (código ${result.error.code ?? "desconhecido"})`,
+    );
+  }
+
+  const contexts = new Map<string, SupplyUnitContext>();
+
+  for (const row of result.data ?? []) {
+    const candidate = row as Record<string, unknown>;
+    const id = candidate.id;
+    const unit = candidate.unit;
+
+    if (typeof id !== "string" || typeof unit !== "string") {
+      continue;
+    }
+
+    const unitsPerPackage = readUnitsPerPackage(candidate.units_per_package);
+
+    contexts.set(id, {
+      unit: unit as SupplyUnit,
+      unitsPerPackage,
+    });
+  }
+
+  return contexts;
+}
+
+/**
+ * Lê a equivalência de embalagem vinda do banco.
+ *
+ * @param value valor bruto da coluna `units_per_package`
+ * @returns número positivo ou null quando não informado
+ */
+function readUnitsPerPackage(value: unknown): number | null {
+  if (typeof value === "number") {
+    return Number.isFinite(value) && value > 0 ? value : null;
+  }
+
+  if (typeof value === "string" && value.trim() !== "") {
+    const parsed = Number(value);
+
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+  }
+
+  return null;
 }
 
 /**

@@ -8,13 +8,16 @@ import { LoadingOverlay } from "@/components/ui/LoadingOverlay/LoadingOverlay";
 import { TextAreaField } from "@/components/ui/TextAreaField/TextAreaField";
 import { TextField } from "@/components/ui/TextField/TextField";
 import { EMPTY_SETTINGS_STATE } from "@/features/settings/formState";
+import { parseQuantityInput } from "@/lib/quantity";
 import type {
   ProductCatalog,
   ProductKind,
   ProductWithComponents,
 } from "@/features/products/types";
 import { PRODUCT_KINDS, PRODUCT_KIND_LABELS } from "@/features/products/types";
+import type { SupplyUnit } from "@/features/supplies/types";
 import { SUPPLY_UNIT_LABELS } from "@/features/supplies/types";
+import { convertToBaseUnit, listConvertibleUnits } from "@/services/calculations/units";
 import styles from "./ProductForm.module.css";
 
 type ProductFormProps = {
@@ -29,6 +32,7 @@ type ProductComponentDraft = {
   targetType: "supply" | "product";
   targetId: string;
   quantity: string;
+  unit: SupplyUnit;
 };
 
 /**
@@ -59,6 +63,7 @@ export function ProductForm({
           targetType: component.targetType,
           targetId: component.targetId,
           quantity: String(component.quantity),
+          unit: component.unit,
         }))
       : [],
   );
@@ -88,7 +93,12 @@ export function ProductForm({
 
     setComponents((current) => [
       ...current,
-      { targetType, targetId, quantity: "1" },
+      {
+        targetType,
+        targetId,
+        quantity: "1",
+        unit: targetType === "supply" ? supplies[0]?.unit ?? "unidade" : "unidade",
+      },
     ]);
   }
 
@@ -129,8 +139,26 @@ export function ProductForm({
               ...component,
               targetType,
               targetId,
+              unit:
+                targetType === "supply"
+                  ? supplyById.get(targetId)?.unit ?? "unidade"
+                  : "unidade",
             }
           : component,
+      ),
+    );
+  }
+
+  /**
+   * Atualiza a unidade escolhida para a quantidade de uma linha.
+   *
+   * @param index posição da linha de composição
+   * @param unit unidade escolhida
+   */
+  function updateUnit(index: number, unit: SupplyUnit) {
+    setComponents((current) =>
+      current.map((component, componentIndex) =>
+        componentIndex === index ? { ...component, unit } : component,
       ),
     );
   }
@@ -180,6 +208,7 @@ export function ProductForm({
       supplyId: component.targetType === "supply" ? component.targetId : null,
       productId: component.targetType === "product" ? component.targetId : null,
       quantity: component.quantity,
+      unit: component.unit,
     })),
   );
 
@@ -291,8 +320,10 @@ export function ProductForm({
       <fieldset className={styles.composition}>
         <legend className={styles.legend}>Ficha técnica</legend>
         <p className={styles.hint}>
-          Informe a quantidade usada por unidade do produto. Conversões de
-          unidade e cálculo de custos são etapas posteriores.
+          Informe quanto de cada componente é usado para produzir 1 unidade do
+          produto. A unidade pode ser diferente da unidade em que o insumo foi
+          comprado — o sistema converte para a unidade em que o insumo foi
+          comprado.
         </p>
 
         {components.map((component, index) => {
@@ -304,6 +335,34 @@ export function ProductForm({
             component.targetId && targetExists
               ? `${component.targetType}:${component.targetId}`
               : "";
+          const supply =
+            component.targetType === "supply"
+              ? supplyById.get(component.targetId)
+              : undefined;
+          const baseUnit = supply?.unit ?? "unidade";
+          const unitOptions = [
+            { value: baseUnit, label: SUPPLY_UNIT_LABELS[baseUnit] },
+            ...listConvertibleUnits(baseUnit, supply?.unitsPerPackage ?? null).map(
+              (unit) => ({
+                value: unit,
+                label: SUPPLY_UNIT_LABELS[unit as SupplyUnit],
+              }),
+            ),
+          ];
+          const parsedQuantity = parseQuantityInput(component.quantity);
+          const baseQuantity =
+            supply && parsedQuantity !== null
+              ? convertToBaseUnit(
+                  parsedQuantity,
+                  component.unit,
+                  baseUnit,
+                  supply.unitsPerPackage,
+                )
+              : null;
+          const equivalentText =
+            baseQuantity !== null && component.unit !== baseUnit
+              ? `equivale a ${formatQuantityValue(baseQuantity)} ${SUPPLY_UNIT_LABELS[baseUnit].toLowerCase()}`
+              : null;
 
           return (
             <div className={styles.componentRow} key={`component-${index}`}>
@@ -354,7 +413,7 @@ export function ProductForm({
                     className={styles.label}
                     htmlFor={`component-quantity-${index}`}
                   >
-                    Quantidade
+                    Quantidade por unidade do produto
                   </label>
                   <input
                     id={`component-quantity-${index}`}
@@ -374,15 +433,36 @@ export function ProductForm({
                     }
                   />
                 </div>
+
+                <div className={styles.field}>
+                  <label
+                    className={styles.label}
+                    htmlFor={`component-unit-${index}`}
+                  >
+                    Unidade
+                  </label>
+                  <select
+                    id={`component-unit-${index}`}
+                    className={styles.select}
+                    value={component.unit}
+                    onChange={(event) =>
+                      updateUnit(index, event.target.value as SupplyUnit)
+                    }
+                    aria-label={`Unidade do componente ${index + 1}`}
+                    disabled={component.targetType === "product"}
+                  >
+                    {unitOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
-              <span className={styles.componentUnit}>
-                {component.targetType === "supply"
-                  ? SUPPLY_UNIT_LABELS[
-                      supplyById.get(component.targetId)?.unit ?? "unidade"
-                    ]
-                  : "unidade"}
-              </span>
+              {equivalentText ? (
+                <p className={styles.componentUnit}>{equivalentText}</p>
+              ) : null}
 
               <Button
                 type="button"
@@ -448,5 +528,17 @@ export function ProductForm({
 
       {isPending ? <LoadingOverlay message="Salvando produto..." /> : null}
     </form>
+  );
+}
+
+/**
+ * Formata uma quantidade com até três casas decimais em pt-BR.
+ *
+ * @param quantity quantidade a formatar
+ * @returns texto com vírgula decimal
+ */
+function formatQuantityValue(quantity: number): string {
+  return new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 3 }).format(
+    quantity,
   );
 }
