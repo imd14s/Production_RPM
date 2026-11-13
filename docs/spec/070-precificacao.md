@@ -146,6 +146,38 @@ Regras (decisão do responsável, 2026-11-03):
   (`PricingMatrix.module.css`); em telas estreitas a tabela reflow para
   cartões com `data-label`.
 
+## Detalhamento do custo do produto (popup da home)
+
+Clicar no **nome do produto** na tabela da home abre um popup com o detalhamento
+do custo de fabricação daquele produto (decisão do responsável, 2026-11-13).
+
+`buildProductCostDetail` (em `src/services/calculations/productCostDetail.ts`)
+monta o detalhamento a partir do custo já resolvido pelo motor:
+
+| Seção | Linhas |
+|---|---|
+| Insumos e componentes | Uma linha por insumo ou subproduto da ficha técnica |
+| Outros custos | Perda de produção, mão de obra, energia, máquina, acabamento e despesas rateadas |
+| Total | "Custo de fabricação", igual ao valor da matriz |
+
+Regras de exibição:
+
+- O custo de cada insumo já vem **dividido pela quantidade usada**: é
+  `quantidade na unidade base × custo por unidade do insumo`.
+- Insumo comprado em caixa ou pacote **com equivalência registrada**
+  (`supplies.units_per_package`) aparece em peças, que é como o responsável
+  pensa: insumo com 2 peças por R$ 10,00 usado em 1 peça → "1 Unidade" e
+  R$ 5,00. Sem equivalência, a quantidade aparece na unidade base do insumo
+  (kg, L, metro, unidade).
+- Insumo sem custo cadastrado aparece com "sem custo"; o popup avisa o que
+  falta e o total fica indisponível.
+- A soma das linhas é igual ao "Custo de fabricação" exibido na matriz.
+
+O popup usa o diálogo genérico `src/components/ui/Modal/Modal.tsx`: fecha pela
+tecla `Escape`, pelo clique na sobreposição e pelo botão de fechar; o foco
+entra no painel ao abrir e volta ao elemento de origem ao fechar; a rolagem
+do body fica travada enquanto o popup está aberto.
+
 ## Impacto automático de mudança de insumo
 
 `analyzePriceImpact` (em `src/services/calculations/priceImpact.ts`) compara o

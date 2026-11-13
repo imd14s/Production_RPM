@@ -1031,3 +1031,56 @@ traduzida para a unidade base **antes** de gravar. E a equivalência de
 embalagem pertence ao **insumo** (é dado do fornecedor/compra), não ao
 produto — por isso o cadastro do insumo guarda "12 unidades por caixa" e o
 produto só escolhe a unidade em que está pensando.
+
+---
+
+## [Decisão] - Popup de custo do produto na home com insumo já dividido (2026-11-13)
+
+**Problema Identificado:** a home mostra o custo de fabricação por produto, mas
+não como esse custo foi montado. O responsável não conseguia conferir se a
+ficha técnica estava correta sem fazer a conta de cabeça — em especial quando
+o insumo é comprado em caixa e o produto usa peças ("2 velas por R$ 10,00,
+usei 1 vela: quanto deu?").
+
+**Causa Raiz:** o motor já calculava o custo de cada linha da ficha técnica
+(`calculateLineCostCents`), mas esse resultado ficava perdido dentro do total:
+`getProductCostBreakdown` devolvia apenas material, mão de obra, rateio e
+total. Não havia, além disso, nenhum componente de diálogo no projeto — o
+modal genérico tinha sido adiado por falta de consumidor.
+
+**Correção:**
+- `src/services/calculations/productCostDetail.ts`: `buildProductCostDetail`
+  monta o detalhamento (linhas de insumo, perda, mão de obra, custos diretos e
+  rateio) a partir do custo já resolvido, sem consulta extra ao banco;
+- `src/services/calculations/productCostResolver.ts`: as linhas de composição
+  passam a trazer `targetType` e `targetId`, para que o detalhamento saiba
+  se a linha é insumo ou subproduto;
+- `src/components/ui/Modal/Modal.tsx`: primeiro diálogo genérico do projeto,
+  com `role="dialog"`, fechamento por `Escape`/sobreposição/botão, foco no
+  painel ao abrir e retorno ao elemento de origem ao fechar;
+- `src/features/pricing/ProductCostModal.tsx`: popup com insumos, demais
+  custos e total;
+- `src/features/pricing/PricingMatrix.tsx`: o nome do produto virou botão que
+  abre o popup.
+
+**Regra de exibição (decisão do responsável):** o custo do insumo aparece
+**já dividido pelo que foi usado**, e a quantidade é mostrada na unidade em
+que o responsável pensa. Insumo com equivalência de caixa/pacote aparece em
+peças (1 vela, R$ 5,00); sem equivalência, na unidade base (0,02 kg,
+R$ 1,20). A soma das linhas é igual ao "Custo de fabricação" da matriz.
+
+**Validação:** `npm run typecheck`, `npm run lint`, `npm test` (335 testes) e
+`./pre-push.sh` verdes. Teste real no servidor com sessão de administrador:
+insumo em caixa com 2 peças por R$ 10,00 e produto que usa 1 peça — o payload
+da home traz `quantity: 1`, `unit: "unidade"` e `costCents: 500` para a linha
+do insumo, e o total do produto (R$ 8,80) confere com a soma das linhas
+(material R$ 5,00 + mão de obra R$ 3,80). Temporários removidos.
+
+**Lição:** **"custo total sem as parcelas não é conferível."** Mostrar só o
+total obriga o responsável a refazer a conta para confiar no número. E a
+**unidade de exibição** é uma decisão de negócio disfarçada de formatação:
+mostrar "0,5 Caixa" em vez de "1 Vela" é a diferença entre a tela ser
+legível e a tela obrigar o usuário a converter de cabeça. Também: **adiar
+componente genérico por falta de consumidor é certo — mas o adiamento tem
+data de revisão**, e o consumidor apareceu quando o popup de custo entrou.
+

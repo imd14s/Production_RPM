@@ -22,7 +22,8 @@ src/
 │   └── ui/
 │       ├── Badge/       etiqueta de estado
 │       ├── Button/      botão padrão
-│       └── Card/        bloco de conteúdo
+│       ├── Card/        bloco de conteúdo
+│       └── Modal/       diálogo sobreposto (popup de detalhe)
 └── lib/
     ├── date.ts          saudação, hora e data por extenso
     └── navigation.ts    catálogo de módulos e regras de visibilidade
@@ -100,11 +101,27 @@ data nem saudação.
 | `Button` |登录 e cabeçalho |
 | `Badge` | matriz de preços, cabeçalho, módulos planejados nas configurações |
 | `Card` | matriz de preços e painéis das configurações |
+| `Modal` | popup de detalhamento do custo do produto (home) |
 | `Sidebar`, `AppHeader`, `AppShell` | área restrita |
 
-**Adiados de propósito:** tabela, modal, formulário genérico e notificações só nascem
-quando a primeira tela real precisar deles (Etapa 4/5). Criar agora produziria código
-morto, contrariando a regra de não montar interface fictícia para aparentar conclusão.
+**Adiados de propósito:** tabela, formulário genérico e notificações só nascem
+quando a primeira tela real precisar deles (Etapa 4/5). Criar agora produziria
+código morto, contrariando a regra de não montar interface fictícia para
+aparentar conclusão.
+
+### Diálogo modal
+
+`src/components/ui/Modal/Modal.tsx` é o primeiro diálogo genérico do projeto
+(nasceu com o popup de custo do produto, na home, em 2026-11-13):
+
+- `role="dialog"`, `aria-modal="true"` e `aria-labelledby` apontando para o
+  título;
+- fecha pela tecla `Escape`, pelo clique na sobreposição e pelo botão de
+  fechar;
+- o foco entra no painel ao abrir e volta ao elemento de origem ao fechar;
+- a rolagem do body fica travada enquanto o diálogo está aberto;
+- a sobreposição usa `--z-modal` e o painel reaproveita os tokens de superfície,
+  borda, raio e sombra do sistema.
 
 ## Testes (unitários de lógica)
 
