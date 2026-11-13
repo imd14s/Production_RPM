@@ -73,6 +73,10 @@ a aplicação traduz `23503` em mensagem amigável.
 Exclusão sem linha retornada (RLS sem `DELETE`, registro ausente ou sem
 permissão) é tratada como erro explícito — o banco devolve HTTP 200 com lista
 vazia, o que não pode ser lido como sucesso.
+A exclusão é **em cascata** (`20261113100000_allow_cascade_delete_domain_dependencies.sql`):
+canal e meio de pagamento levam junto as simulações de precificação que os
+usam; a confirmação da lixeira lista o que será removido. Desativar (exclusão
+lógica) preserva o histórico.
 
 ### Regras do banco (constraints)
 

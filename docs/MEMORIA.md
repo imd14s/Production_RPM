@@ -930,3 +930,45 @@ ser filtrada por política precisa ler as linhas afetadas (`.select()`) e tratar
 sucesso sobre uma operação que não ocorreu. E, em projeto com agente
 autônomo, **migration versionada não é migration aplicada**: a verificação tem
 de ser feita no banco (`pg_policies`), não no repositório.
+
+---
+
+## [Decisão] - Exclusão em cascata com aviso de dependências (2026-11-13)
+
+**Problema identificado:** depois de destravar a lixeira, excluir um insumo
+usado na ficha técnica de um produto era barrado pelo banco (FK
+`product_components_supply_id_fkey` com `ON DELETE NO ACTION`) e a mensagem
+era genérica: "está em uso ou possui registros vinculados" — sem dizer onde.
+
+**Alternativas:** (a) manter o bloqueio e detalhar a mensagem; (b) excluir em
+cascata e avisar o que será removido junto. Escolhida a **(b)**, por decisão do
+responsável: a lixeira deve limpar o registro e o que depende dele, e quem
+precisa preservar histórico usa a desativação lógica.
+
+**Correção:**
+- migration `20261113100000_allow_cascade_delete_domain_dependencies.sql`:
+  `ON DELETE CASCADE` em ficha técnica (insumo e kit), custo registrado
+  (`cost_snapshots`) e simulações de precificação (`pricing_simulations`);
+- serviço `services/supabase/deleteDependencies.ts`: lê as dependências dos
+  registros listados na tela (2–4 consultas por página, sem N+1);
+- textos puros em `lib/deleteWarnings.ts` e `lib/deleteConfirmation.ts`: a
+  confirmação passa a listar "o que também será removido";
+- `DeleteRowButton` recebe as dependências e mostra o aviso antes de excluir;
+- avisos ligados em insumos, produtos, canais e meios de pagamento.
+
+**Consequência aceita:** o custo registrado e as simulações de precificação
+ligados ao registro são apagados junto — a regra de imutabilidade histórica
+vale para **alterar** custo, não para a lixeira; a desativação lógica segue
+disponível como caminho seguro.
+
+**Validação:** sessão real de administrador e exclusão pela interface — insumo
+com composição excluído, composição removida junto e aviso da ficha técnica
+presente no payload do servidor. `npm run typecheck`, `npm run lint`,
+`npm test` (310 testes) e `./pre-push.sh` verdes.
+
+**Lição:** **"em uso" sem dizer onde é um erro de UX, não de banco.** O banco
+responde "não posso" sem contexto; a aplicação precisa traduzir a dependência
+em linguagem de negócio ("a ficha técnica do produto Vela deixa de usar este
+insumo"). E quando a exclusão passa a cascatear, o aviso deixa de ser
+obrigação de erro e vira **parte da confirmação** — o administrador decide
+sabendo o preço da operação.

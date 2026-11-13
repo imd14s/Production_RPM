@@ -45,9 +45,14 @@ erDiagram
     custo de material (`material × (1 + taxa)`).
   Todos opcionais: **entram no custo apenas quando informados**.
 - Desativação lógica por `is_active`; exclusão física (lixeira) disponível ao
-  administrador quando não há snapshots, simulações ou kits referenciando o
-  produto — caso contrário o banco bloqueia (23503) e a UI mostra mensagem
-  amigável. Migration `20261111090000_allow_admin_delete_domain_rows.sql`.
+  administrador. A exclusão é **em cascata**: remove a ficha técnica própria, o
+  custo registrado (`cost_snapshots`), as simulações de precificação e a
+  composição em kits que usam o produto. Migrations
+  `20261111090000_allow_admin_delete_domain_rows.sql` (permissão de DELETE) e
+  `20261113100000_allow_cascade_delete_domain_dependencies.sql` (cascata).
+- A confirmação da lixeira lista o que será removido junto (custos registrados,
+  simulações e kits). Quem precisa preservar o histórico deve usar a
+  **desativação lógica** em vez da exclusão.
 
 ### `product_components`
 

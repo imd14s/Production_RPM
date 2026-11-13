@@ -43,6 +43,10 @@
   `(valor pago + frete) / quantidade`, com arredondamento para centavos.
 - A lista `/insumos` exibe a unidade base e o custo por unidade. Insumos sem
   custo atual são exibidos sem custo, não como erro de conversão.
+- A lixeira exclui o insumo **em cascata**: ele sai das fichas técnicas dos
+  produtos que o usavam (a composição é removida, o produto permanece). A
+  confirmação lista os produtos afetados antes de excluir. Insumo sem uso em
+  ficha técnica é excluído sem outros efeitos.
 - Serviços em `services/supabase/supplies.ts`; gravação administrativa em
   `app/actions/supplies.ts`, protegida por verificação de perfil e RLS.
 - Fornecedores continuam cadastrados em seu módulo próprio; a compra atual de
@@ -74,8 +78,8 @@
   administrativa no servidor e no banco, auditoria e bloqueio de ciclos.
 - Tela `/produtos` permite cadastrar, editar, ativar/desativar e **excluir**
   produtos (lixeira com confirmação); link disponível somente para administradores.
-  Exclusão física bloqueada pelo banco quando há snapshots, simulações ou kits
-  que referenciam o produto (mensagem amigável na linha).
+  A exclusão remove em cascata o custo registrado e as simulações de precificação
+  do produto, e a confirmação lista o que será apagado junto.
 - Sem cálculo de custo ou preço de venda nesta etapa. Detalhes em
   [`060-produtos.md`](./060-produtos.md).
 
