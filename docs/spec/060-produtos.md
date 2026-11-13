@@ -58,7 +58,11 @@ erDiagram
 
 - UUID e produto dono da ficha técnica.
 - Cada linha aponta para **um** insumo ou **um** produto, nunca ambos.
-- Quantidade positiva com até três casas decimais.
+- Quantidade positiva com até três casas decimais, sempre expressa na unidade
+  base do insumo (ou na unidade de peça, para produto componente).
+- A conversão da unidade informada no formulário para a unidade base acontece
+  na aplicação, antes da gravação; o banco continua recebendo apenas a
+  quantidade final.
 - Uma composição pode reutilizar subprodutos; kits só aceitam referências a
   produtos.
 - A aplicação e o banco impedem ciclos diretos ou indiretos. A gravação da
@@ -76,14 +80,36 @@ erDiagram
   referência de kit.
 - Conversões de unidade foram implementadas na subetapa 5.4 (ver spec 040);
   a integração ao cálculo de custo ocorre na Etapa 6.
+- A unidade escolhida na ficha técnica não é gravada: o histórico da composição
+  depende apenas da quantidade final e do custo do insumo, que já é snapshot.
 
 ## Interface
 
 - Rota `/produtos`, restrita ao administrador no servidor e no menu.
-- Lista produtos ativos e inativos, modalidade, composição e situação.
+- Lista produtos ativos e inativos, modalidade, composição por unidade e situação.
 - Permite criar, editar, ativar/desativar e excluir produtos.
-- Formulário compõe cada linha com um insumo ou produto existente e quantidade.
+- Formulário compõe cada linha com um insumo ou produto existente, quantidade e
+  a unidade em que a quantidade foi informada.
 - Não exibe preço nem apresenta cálculo financeiro como resultado desta etapa.
+
+## Unidade da quantidade na ficha técnica
+
+- Cada linha da composição tem um seletor de unidade. Para insumos, as opções
+  são a unidade base do insumo e as unidades compatíveis: as alternativas
+  métricas (grama↔quilograma, mililitro↔litro) e a unidade de peça quando o
+  insumo tem equivalência de caixa ou pacote registrada
+  (`supplies.units_per_package`).
+- A quantidade é convertida para a **unidade base do insumo** no servidor, antes
+  da gravação: `quantidade na unidade informada ÷ fator de conversão`. A
+  conversão usa o motor `services/calculations/units.ts` e arredonda para três
+  casas decimais, como o resto do sistema.
+- O que fica gravado em `product_components.quantity` é sempre a quantidade na
+  unidade base do insumo. Não há migration em `product_components` nem mudança
+  no motor de custo nem nas RPCs de costing.
+- Unidade incompatível com o insumo é recusada com a mensagem "Revise a
+  unidade da quantidade: ela não corresponde ao insumo.".
+- Para produtos componentes (kits e subprodutos), a quantidade é mantida na
+  unidade de peça, sem conversão.
 
 ## Validações
 
@@ -91,5 +117,7 @@ erDiagram
 - Minutos de mão de obra inteiros de 0 a 2880 quando informados.
 - Cada componente tem identificador válido e quantidade positiva, até três
   casas e no máximo 1.000.000 por linha.
+- A unidade informada precisa ser compatível com o insumo; incompatibilidade é
+  recusada antes de gravar a composição.
 - Kit precisa de pelo menos um componente do tipo produto.
 - Produto não pode conter a si próprio, direta ou indiretamente.

@@ -28,6 +28,7 @@ SQL versionado do banco. Aplicar sempre na ordem do nome do arquivo.
 | `20261103080000_seed_market_base_fees.sql` | Valores base de mercado (11/2026): comissão e tarifa do ML, TikTok Shop, canais novos, Point desmembrado, DAS-MEI como despesa |
 | `20261111090000_allow_admin_delete_domain_rows.sql` | Exclusão física (lixeira): policies de DELETE e `grant delete` para administrador em canais, taxas, meios, impostos, despesas, mão de obra, fornecedores, insumos, conversões e produtos |
 | `20261113100000_allow_cascade_delete_domain_dependencies.sql` | Exclusão em cascata: ficha técnica, custo registrado e simulações de precificação seguem o registro excluído |
+| `20261113110000_add_units_per_package_to_supplies.sql` | Equivalência de caixa/pacote do insumo: `supplies.units_per_package` (quantas unidades base cabem em uma caixa ou pacote) |
 
 ## Como aplicar
 

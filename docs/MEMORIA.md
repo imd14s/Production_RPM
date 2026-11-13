@@ -972,3 +972,62 @@ em linguagem de negócio ("a ficha técnica do produto Vela deixa de usar este
 insumo"). E quando a exclusão passa a cascatear, o aviso deixa de ser
 obrigação de erro e vira **parte da confirmação** — o administrador decide
 sabendo o preço da operação.
+
+---
+
+## [Decisão] - Unidade da quantidade na ficha técnica e equivalência de caixa (2026-11-13)
+
+**Problema Identificado:** o administrador informava na ficha técnica a
+quantidade de insumo **na unidade em que ele pensa** (por exemplo, "6 unidades"
+de um insumo que se compra em caixa) e o sistema gravava "6 caixas", inflando o
+custo do produto em 12 vezes. Não havia onde registrar que uma caixa contém 12
+unidades.
+
+**Causa Raiz:** o formulário de produto aceitava apenas a quantidade, sem
+unidade, e `product_components.quantity` é gravada na unidade base do insumo.
+Faltava (a) o seletor de unidade na linha da composição e (b) a equivalência
+de caixa/pacote no cadastro do insumo. A função `convertStandardQuantity`
+existia em `services/calculations/units.ts` desde a subetapa 5.4, mas era
+código morto: nenhuma tela ou action a usava.
+
+**Correção:**
+- migration `20261113110000_add_units_per_package_to_supplies.sql`: coluna
+  `supplies.units_per_package` (`numeric(12,6)`), com checks de valor positivo
+  e de uso apenas em `caixa`/`pacote`;
+- campo "Unidades por caixa/pacote" no formulário de insumo, exibido apenas
+  quando a unidade é caixa ou pacote;
+- `services/calculations/units.ts`: `listConvertibleUnits`,
+  `convertToBaseUnit` e `roundQuantity` (três casas);
+- `lib/validations/products.ts`: `validateProduct` recebe os contextos de
+  unidade dos insumos e converte a quantidade para a unidade base antes de
+  devolver a composição validada;
+- `services/supabase/supplies.ts`: `listSupplyUnitContexts` entrega unidade
+  base e equivalência; `app/actions/products.ts` carrega os contextos, valida e
+  recusa insumo inexistente;
+- `features/products/ProductForm.tsx`: seletor de unidade por linha, rótulo
+  "Quantidade por unidade do produto" e texto de equivalência.
+
+**Alternativas:** (a) gravar a unidade junto da quantidade em
+`product_components` — exigiria migration da tabela, novo formato para as RPCs
+de costing e mudança no motor de custo; (b) converter apenas na exibição —
+continuaria gravando quantidade errada e contaminaria o custo. Escolhida a
+**conversão na entrada**, com a base sempre gravada.
+
+**Consequência aceita:** a unidade escolhida não fica gravada; o histórico da
+composição depende da quantidade final e do custo do insumo, que já é snapshot.
+Supplies em caixa **sem** equivalência registrada continuam válidos: a
+ficha técnica aceita apenas a própria unidade base.
+
+**Validação:** `npm run typecheck`, `npm run lint`, `npm test` (328 testes)
+verdes. Teste real pela interface (Server Actions): insumo em caixa com 12
+unidades por caixa cadastrado, produto gravado com "6 unidades" e
+`product_components.quantity = 0.5` na unidade base; unidade incompatível
+(litro em insumo de caixa) recusada com mensagem de negócio. Migration
+aplicada e conferida no Supabase (`information_schema` e `pg_constraint`).
+
+**Lição:** **"quantidade sem unidade é um bug silencioso de custo.** A unidade
+não é decoração do formulário: ela precisa ser escolhida por quem opera e
+traduzida para a unidade base **antes** de gravar. E a equivalência de
+embalagem pertence ao **insumo** (é dado do fornecedor/compra), não ao
+produto — por isso o cadastro do insumo guarda "12 unidades por caixa" e o
+produto só escolhe a unidade em que está pensando.

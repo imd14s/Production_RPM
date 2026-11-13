@@ -90,6 +90,23 @@
 - Não há formulário para cadastrar fatores de conversão. A tabela legada de
   conversões manuais permanece fora dos fluxos ativos da aplicação.
 
+### Equivalência de caixa e pacote
+
+- Migration `20261113110000_add_units_per_package_to_supplies.sql`: a coluna
+  `supplies.units_per_package` registra quantas unidades base cabem em uma
+  caixa ou pacote. Valores nulos, zero ou negativos são recusados pelo banco;
+  o preenchimento só é aceito quando a unidade do insumo é `caixa` ou `pacote`.
+- O campo aparece no formulário de insumo apenas quando a unidade é caixa ou
+  pacote, com o rótulo **"Unidades por caixa/pacote"**. Ele é opcional: um
+  insumo em caixa sem equivalência registrada continua válido e é usado na
+  ficha técnica apenas na própria unidade.
+- A equivalência é usada na ficha técnica dos produtos: o administrador escolhe
+  a unidade da quantidade (unidade, grama, mililitro, caixa, pacote, entre
+  outras) e a aplicação converte para a unidade base do insumo antes de gravar.
+- O serviço `services/supabase/supplies.ts` expõe `listSupplyUnitContexts`, que
+  entrega à aplicação a unidade base e a equivalência de cada insumo usado nas
+  composições.
+
 ## Pendências
 
 Nenhuma pendência registrada nesta spec. As migrations de cadastro foram
