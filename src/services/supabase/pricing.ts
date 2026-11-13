@@ -98,6 +98,12 @@ import { listProductCatalog } from "@/services/supabase/products";
 import { listSuppliesWithCost } from "@/services/supabase/supplies";
 import { resolveProductCost } from "@/services/calculations/productCostResolver";
 import type { ProductNode, SupplyNode } from "@/services/calculations/productCostResolver";
+import { buildProductCostDetail } from "@/services/calculations/productCostDetail";
+import type {
+  ProductCostDetail,
+  ProductCostDetailProduct,
+  ProductCostDetailSupply,
+} from "@/services/calculations/productCostDetail";
 
 export async function listChannelsWithFees(): Promise<ChannelWithFees[]> {
   await connection();
@@ -118,6 +124,8 @@ export type ProductCostBreakdown = {
   overheadCents: number;
   totalCents: number | null;
   missing: string[];
+  /** Detalhamento por linha, pronto para exibição no popup de custo. */
+  detail: ProductCostDetail;
 };
 
 /**
@@ -203,6 +211,18 @@ export async function getProductCostBreakdown(
     overheadPerUnitCents ?? 0,
   );
 
+  const detail = buildProductCostDetail({
+    product: buildDetailProduct(catalog.products, productId),
+    components: resolved.components,
+    supplies: buildDetailSupplies(suppliesWithCost),
+    products: buildDetailProducts(catalog.products),
+    materialCents: resolved.materialCents,
+    laborCents: resolved.laborCents,
+    overheadCents: overheadPerUnitCents ?? 0,
+    totalCents: resolved.totalCents,
+    missing: resolved.missing,
+  });
+
   return {
     productId,
     materialCents: resolved.materialCents,
@@ -210,5 +230,86 @@ export async function getProductCostBreakdown(
     overheadCents: overheadPerUnitCents ?? 0,
     totalCents: resolved.totalCents,
     missing: resolved.missing,
+    detail,
   };
+}
+
+/**
+ * Monta os dados do produto usados no detalhamento de custo.
+ *
+ * @param products catálogo de produtos
+ * @param productId produto a detalhar
+ * @returns dados do produto para o detalhamento
+ */
+function buildDetailProduct(
+  products: Array<{
+    id: string;
+    name: string;
+    laborMinutes: number | null;
+    energyCostCents: number | null;
+    machineCostCents: number | null;
+    finishingCostCents: number | null;
+    failureRatePercent: number | null;
+  }>,
+  productId: string,
+): ProductCostDetailProduct {
+  const product = products.find((item) => item.id === productId);
+
+  return {
+    id: productId,
+    name: product?.name ?? "Produto",
+    laborMinutes: product?.laborMinutes ?? null,
+    energyCostCents: product?.energyCostCents ?? null,
+    machineCostCents: product?.machineCostCents ?? null,
+    finishingCostCents: product?.finishingCostCents ?? null,
+    failureRatePercent: product?.failureRatePercent ?? null,
+  };
+}
+
+/**
+ * Monta os dados dos insumos usados no detalhamento de custo.
+ *
+ * @param supplies insumos com custo atual
+ * @returns insumos indexados pelo identificador
+ */
+function buildDetailSupplies(
+  supplies: Array<{
+    id: string;
+    name: string;
+    unit: string;
+    unitsPerPackage: number | null;
+    currentUnitCostCents: number | null;
+  }>,
+): Map<string, ProductCostDetailSupply> {
+  const details = new Map<string, ProductCostDetailSupply>();
+
+  for (const supply of supplies) {
+    details.set(supply.id, {
+      id: supply.id,
+      name: supply.name,
+      unit: supply.unit,
+      unitsPerPackage: supply.unitsPerPackage,
+      currentUnitCostCents: supply.currentUnitCostCents,
+    });
+  }
+
+  return details;
+}
+
+/**
+ * Monta os nomes dos produtos usados como componente (kits e subprodutos).
+ *
+ * @param products catálogo de produtos
+ * @returns produtos indexados pelo identificador
+ */
+function buildDetailProducts(
+  products: Array<{ id: string; name: string }>,
+): Map<string, { name: string }> {
+  const details = new Map<string, { name: string }>();
+
+  for (const product of products) {
+    details.set(product.id, { name: product.name });
+  }
+
+  return details;
 }
