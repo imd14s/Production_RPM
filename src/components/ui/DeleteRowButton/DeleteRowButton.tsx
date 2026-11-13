@@ -4,6 +4,7 @@ import { useActionState, useEffect, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Alert } from "@/components/ui/Alert/Alert";
 import { PendingButton } from "@/components/ui/PendingButton/PendingButton";
+import { buildDeleteConfirmation } from "@/lib/deleteConfirmation";
 import {
   EMPTY_SETTINGS_STATE,
   type SettingsFormState,
@@ -21,6 +22,8 @@ type DeleteRowButtonProps = {
   entityName: string;
   /** Campos ocultos extras (ex.: channelId, methodId). */
   extraFields?: Record<string, string>;
+  /** Avisos sobre o que será removido junto com o registro. */
+  warnings?: string[];
   /** Texto do botão. Padrão: "Excluir". */
   children?: string;
 };
@@ -35,6 +38,7 @@ type DeleteRowButtonProps = {
  * @param label nome do registro para a mensagem de confirmação
  * @param entityName tipo do registro em pt-BR
  * @param extraFields campos ocultos adicionais enviados na ação
+ * @param warnings avisos sobre o que será removido junto com o registro
  * @param children rótulo do botão
  * @returns formulário de exclusão com alerta de erro quando houver
  */
@@ -44,6 +48,7 @@ export function DeleteRowButton({
   label,
   entityName,
   extraFields,
+  warnings,
   children = "Excluir",
 }: DeleteRowButtonProps) {
   const router = useRouter();
@@ -65,7 +70,7 @@ export function DeleteRowButton({
    */
   function handleConfirm(event: FormEvent<HTMLFormElement>) {
     const confirmed = window.confirm(
-      `Excluir ${entityName} "${label}" permanentemente? Esta ação não pode ser desfeita.`,
+      buildDeleteConfirmation(entityName, label, warnings),
     );
 
     if (!confirmed) {

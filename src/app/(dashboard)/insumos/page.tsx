@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { SuppliesPanel } from "@/features/supplies/SuppliesPanel";
+import { listSupplyDeleteWarnings } from "@/services/supabase/deleteDependencies";
 import { listSuppliesWithCost } from "@/services/supabase/supplies";
 
 export const metadata: Metadata = {
@@ -16,6 +17,7 @@ export const instant = false;
  */
 export default async function SuppliesPage() {
   const items = await listSuppliesWithCost();
+  const warnings = await listSupplyDeleteWarnings(items.map((item) => item.id));
 
-  return <SuppliesPanel items={items} />;
+  return <SuppliesPanel items={items} warnings={warnings} />;
 }

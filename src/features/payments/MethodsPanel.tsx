@@ -13,19 +13,23 @@ import {
   type PaymentMethodWithFees,
   PAYMENT_METHOD_KIND_LABELS,
 } from "@/features/payments/types";
+import type { DeleteWarnings } from "@/services/supabase/deleteDependencies";
 import styles from "./MethodsPanel.module.css";
 
 type MethodsPanelProps = {
   items: PaymentMethodWithFees[];
+  /** Avisos de dependências por meio, exibidos na confirmação de exclusão. */
+  warnings?: DeleteWarnings;
 };
 
 /**
  * Painel de meios de pagamento: formulário de cadastro/edição e lista com taxas.
  *
  * @param items meios de pagamento com as taxas agrupadas
+ * @param warnings avisos de dependências por meio de pagamento
  * @returns painel com tabela e formulário
  */
-export function MethodsPanel({ items }: MethodsPanelProps) {
+export function MethodsPanel({ items, warnings }: MethodsPanelProps) {
   const router = useRouter();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formVersion, setFormVersion] = useState(0);
@@ -133,6 +137,7 @@ export function MethodsPanel({ items }: MethodsPanelProps) {
                             id={method.id}
                             label={method.name}
                             entityName="meio de pagamento"
+                            warnings={warnings?.[method.id]}
                           />
                         </div>
                       </td>

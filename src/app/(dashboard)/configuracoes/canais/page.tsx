@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ChannelsPanel } from "@/features/channels/ChannelsPanel";
 import { listChannelsWithFees } from "@/services/supabase/channels";
+import { listChannelDeleteWarnings } from "@/services/supabase/deleteDependencies";
 
 export const metadata: Metadata = {
   title: "Configurações — Canais — Ateliê Filhos de Aruanda",
@@ -16,6 +17,9 @@ export const instant = false;
  */
 export default async function ChannelsSettingsPage() {
   const items = await listChannelsWithFees();
+  const warnings = await listChannelDeleteWarnings(
+    items.map((item) => item.channel.id),
+  );
 
-  return <ChannelsPanel items={items} />;
+  return <ChannelsPanel items={items} warnings={warnings} />;
 }

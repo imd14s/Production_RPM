@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { MethodsPanel } from "@/features/payments/MethodsPanel";
+import { listPaymentMethodDeleteWarnings } from "@/services/supabase/deleteDependencies";
 import { listPaymentMethodsWithFees } from "@/services/supabase/payments";
 
 export const metadata: Metadata = {
@@ -16,6 +17,9 @@ export const instant = false;
  */
 export default async function PaymentSettingsPage() {
   const items = await listPaymentMethodsWithFees();
+  const warnings = await listPaymentMethodDeleteWarnings(
+    items.map((item) => item.method.id),
+  );
 
-  return <MethodsPanel items={items} />;
+  return <MethodsPanel items={items} warnings={warnings} />;
 }

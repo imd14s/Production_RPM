@@ -10,19 +10,23 @@ import { DeleteRowButton } from "@/components/ui/DeleteRowButton/DeleteRowButton
 import { PendingButton } from "@/components/ui/PendingButton/PendingButton";
 import { ChannelForm } from "@/features/channels/ChannelForm";
 import { CHANNEL_KIND_LABELS, type ChannelWithFees } from "@/features/channels/types";
+import type { DeleteWarnings } from "@/services/supabase/deleteDependencies";
 import styles from "./ChannelsPanel.module.css";
 
 type ChannelsPanelProps = {
   items: ChannelWithFees[];
+  /** Avisos de dependências por canal, exibidos na confirmação de exclusão. */
+  warnings?: DeleteWarnings;
 };
 
 /**
  * Painel de canais de venda: formulário de cadastro/edição e lista com taxas.
  *
  * @param items canais com as taxas agrupadas
+ * @param warnings avisos de dependências por canal
  * @returns painel com tabela e formulário
  */
-export function ChannelsPanel({ items }: ChannelsPanelProps) {
+export function ChannelsPanel({ items, warnings }: ChannelsPanelProps) {
   const router = useRouter();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formVersion, setFormVersion] = useState(0);
@@ -129,6 +133,7 @@ export function ChannelsPanel({ items }: ChannelsPanelProps) {
                             id={channel.id}
                             label={channel.name}
                             entityName="canal"
+                            warnings={warnings?.[channel.id]}
                           />
                         </div>
                       </td>

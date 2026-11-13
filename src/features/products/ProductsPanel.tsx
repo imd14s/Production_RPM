@@ -10,19 +10,23 @@ import { ProductForm } from "@/features/products/ProductForm";
 import type { ProductCatalog, ProductWithComponents } from "@/features/products/types";
 import { PRODUCT_KIND_LABELS } from "@/features/products/types";
 import { SUPPLY_UNIT_LABELS } from "@/features/supplies/types";
+import type { DeleteWarnings } from "@/services/supabase/deleteDependencies";
 import styles from "./ProductsPanel.module.css";
 
 type ProductsPanelProps = {
   catalog: ProductCatalog;
+  /** Avisos de dependências por produto, exibidos na confirmação de exclusão. */
+  warnings?: DeleteWarnings;
 };
 
 /**
  * Painel de produtos com ficha técnica e controles de situação.
  *
  * @param catalog produtos com composições e insumos disponíveis
+ * @param warnings avisos de dependências por produto
  * @returns lista de produtos e formulário de cadastro/edição
  */
-export function ProductsPanel({ catalog }: ProductsPanelProps) {
+export function ProductsPanel({ catalog, warnings }: ProductsPanelProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formVersion, setFormVersion] = useState(0);
 
@@ -64,6 +68,7 @@ export function ProductsPanel({ catalog }: ProductsPanelProps) {
                     key={product.id}
                     product={product}
                     onEdit={() => setEditingId(product.id)}
+                    warnings={warnings?.[product.id]}
                   />
                 ))}
               </tbody>
@@ -89,6 +94,8 @@ export function ProductsPanel({ catalog }: ProductsPanelProps) {
 type ProductRowProps = {
   product: ProductWithComponents;
   onEdit: () => void;
+  /** Avisos de dependências do produto, exibidos na confirmação de exclusão. */
+  warnings?: string[];
 };
 
 /**
@@ -96,9 +103,10 @@ type ProductRowProps = {
  *
  * @param product produto e ficha técnica
  * @param onEdit abre o produto no formulário
+ * @param warnings avisos de dependências do produto
  * @returns linha da tabela de produtos
  */
-function ProductRow({ product, onEdit }: ProductRowProps) {
+function ProductRow({ product, onEdit, warnings }: ProductRowProps) {
   return (
     <tr className={product.isActive ? "" : styles.inactive}>
       <td data-label="Produto">
@@ -164,6 +172,7 @@ function ProductRow({ product, onEdit }: ProductRowProps) {
             id={product.id}
             label={product.name}
             entityName="produto"
+            warnings={warnings}
           />
         </div>
       </td>

@@ -10,19 +10,23 @@ import { SupplyForm } from "@/features/supplies/SupplyForm";
 import type { SupplyWithCost } from "@/features/supplies/types";
 import { SUPPLY_KIND_LABELS, SUPPLY_UNIT_LABELS } from "@/features/supplies/types";
 import { formatCents } from "@/lib/money";
+import type { DeleteWarnings } from "@/services/supabase/deleteDependencies";
 import styles from "./SuppliesPanel.module.css";
 
 type SuppliesPanelProps = {
   items: SupplyWithCost[];
+  /** Avisos de dependências por insumo, exibidos na confirmação de exclusão. */
+  warnings?: DeleteWarnings;
 };
 
 /**
  * Painel de insumos: formulário de cadastro/edição e lista com custo atual.
  *
  * @param items insumos com o custo mais recente por unidade
+ * @param warnings avisos de dependências por insumo
  * @returns painel com tabela e formulário
  */
-export function SuppliesPanel({ items }: SuppliesPanelProps) {
+export function SuppliesPanel({ items, warnings }: SuppliesPanelProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formVersion, setFormVersion] = useState(0);
 
@@ -111,6 +115,7 @@ export function SuppliesPanel({ items }: SuppliesPanelProps) {
                             id={supply.id}
                             label={supply.name}
                             entityName="insumo"
+                            warnings={warnings?.[supply.id]}
                           />
                         </div>
                     </td>
