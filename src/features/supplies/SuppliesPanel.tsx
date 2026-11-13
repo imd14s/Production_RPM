@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { toggleSupplyAction } from "@/app/actions/supplies";
+import { deleteSupplyAction, toggleSupplyAction } from "@/app/actions/supplies";
 import { Badge } from "@/components/ui/Badge/Badge";
 import { Button } from "@/components/ui/Button/Button";
+import { DeleteRowButton } from "@/components/ui/DeleteRowButton/DeleteRowButton";
 import { PendingButton } from "@/components/ui/PendingButton/PendingButton";
 import { SupplyForm } from "@/features/supplies/SupplyForm";
 import type { SupplyWithCost } from "@/features/supplies/types";
@@ -100,11 +101,18 @@ export function SuppliesPanel({ items }: SuppliesPanelProps) {
                                 ? "Desativando insumo..."
                                 : "Ativando insumo..."
                             }
-                          >
-                            {supply.isActive ? "Desativar" : "Ativar"}
-                          </PendingButton>
-                        </form>
-                      </div>
+                            >
+                              {supply.isActive ? "Desativar" : "Ativar"}
+                            </PendingButton>
+                          </form>
+
+                          <DeleteRowButton
+                            action={deleteSupplyAction}
+                            id={supply.id}
+                            label={supply.name}
+                            entityName="insumo"
+                          />
+                        </div>
                     </td>
                   </tr>
                 ))}

@@ -28,7 +28,7 @@ etapa **não calcula preço** — apenas guarda e audita parâmetros.
 | Percentual em `numeric(9,6)` | exato; o motor usará inteiros escalados |
 | Empresa em linha única (`id = 1`) | um ateliê, sem cadastros duplicados |
 | Taxa como tabela filha | um canal tem várias taxas, não uma coluna |
-| Exclusão lógica (`is_active`) | registro usado em cálculo nunca desaparece |
+| Exclusão lógica (`is_active`) + exclusão física na lixeira | toggle preserva histórico de uso; DELETE remove cadastro sem referência RESTRICT |
 | Auditoria por gatilho (`security definer`) | nenhuma sessão forja histórico |
 | Percentual e fixo mutuamente exclusivos | `check` impede registro ambíguo |
 
@@ -57,10 +57,18 @@ configuration_history   ── alimentada por gatilho nas tabelas acima
 | Tabela | SELECT | INSERT / UPDATE | DELETE |
 |---|---|---|---|
 | `company_settings` | autenticado | administrador | ninguém |
-| `tax_settings` | autenticado | administrador | ninguém |
-| `sales_channels` | autenticado | administrador | ninguém |
-| `channel_fees` | autenticado | administrador | ninguém |
+| `tax_settings` | autenticado | administrador | administrador |
+| `sales_channels` | autenticado | administrador | administrador |
+| `channel_fees` | autenticado | administrador | administrador |
+| `payment_methods` | autenticado | administrador | administrador |
+| `payment_fees` | autenticado | administrador | administrador |
+| `operating_expenses` | autenticado | administrador | administrador |
+| `labor_costs` | autenticado | administrador | administrador |
 | `configuration_history` | administrador | gatilho apenas | ninguém |
+
+DELETE admin concedido em `20261111090000_allow_admin_delete_domain_rows.sql`.
+FKs RESTRICT (simulações de precificação) bloqueiam exclusão com histórico;
+a aplicação traduz `23503` em mensagem amigável.
 
 ### Regras do banco (constraints)
 

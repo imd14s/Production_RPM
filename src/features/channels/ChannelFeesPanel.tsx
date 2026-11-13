@@ -2,9 +2,10 @@
 
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
-import { toggleChannelFeeAction } from "@/app/actions/channels";
+import { deleteChannelFeeAction, toggleChannelFeeAction } from "@/app/actions/channels";
 import { Badge } from "@/components/ui/Badge/Badge";
 import { Button } from "@/components/ui/Button/Button";
+import { DeleteRowButton } from "@/components/ui/DeleteRowButton/DeleteRowButton";
 import { PendingButton } from "@/components/ui/PendingButton/PendingButton";
 import { FeeForm } from "@/features/channels/FeeForm";
 import { TAX_KIND_LABELS, type Channel, type ChannelFee } from "@/features/channels/types";
@@ -117,11 +118,19 @@ export function ChannelFeesPanel({ channel, fees }: ChannelFeesPanelProps) {
                             pendingMessage={
                               fee.isActive ? "Desativando taxa..." : "Ativando taxa..."
                             }
-                          >
-                            {fee.isActive ? "Desativar" : "Ativar"}
-                          </PendingButton>
-                        </form>
-                      </div>
+                            >
+                              {fee.isActive ? "Desativar" : "Ativar"}
+                            </PendingButton>
+                          </form>
+
+                          <DeleteRowButton
+                            action={deleteChannelFeeAction}
+                            id={fee.id}
+                            label={fee.label}
+                            entityName="taxa"
+                            extraFields={{ channelId: channel.id }}
+                          />
+                        </div>
                     </td>
                   </tr>
                 ))}

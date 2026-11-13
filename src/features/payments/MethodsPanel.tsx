@@ -3,9 +3,10 @@
 import { useCallback, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { togglePaymentMethodAction } from "@/app/actions/payments";
+import { deletePaymentMethodAction, togglePaymentMethodAction } from "@/app/actions/payments";
 import { Badge } from "@/components/ui/Badge/Badge";
 import { Button } from "@/components/ui/Button/Button";
+import { DeleteRowButton } from "@/components/ui/DeleteRowButton/DeleteRowButton";
 import { PendingButton } from "@/components/ui/PendingButton/PendingButton";
 import { MethodForm } from "@/features/payments/MethodForm";
 import {
@@ -126,6 +127,13 @@ export function MethodsPanel({ items }: MethodsPanelProps) {
                               {method.isActive ? "Desativar" : "Ativar"}
                             </PendingButton>
                           </form>
+
+                          <DeleteRowButton
+                            action={deletePaymentMethodAction}
+                            id={method.id}
+                            label={method.name}
+                            entityName="meio de pagamento"
+                          />
                         </div>
                       </td>
                     </tr>

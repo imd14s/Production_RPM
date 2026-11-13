@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { toggleProductAction } from "@/app/actions/products";
+import { deleteProductAction, toggleProductAction } from "@/app/actions/products";
 import { Badge } from "@/components/ui/Badge/Badge";
 import { Button } from "@/components/ui/Button/Button";
+import { DeleteRowButton } from "@/components/ui/DeleteRowButton/DeleteRowButton";
 import { PendingButton } from "@/components/ui/PendingButton/PendingButton";
 import { ProductForm } from "@/features/products/ProductForm";
 import type { ProductCatalog, ProductWithComponents } from "@/features/products/types";
@@ -157,6 +158,13 @@ function ProductRow({ product, onEdit }: ProductRowProps) {
               {product.isActive ? "Desativar" : "Ativar"}
             </PendingButton>
           </form>
+
+          <DeleteRowButton
+            action={deleteProductAction}
+            id={product.id}
+            label={product.name}
+            entityName="produto"
+          />
         </div>
       </td>
     </tr>

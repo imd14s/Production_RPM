@@ -10,6 +10,7 @@ import type {
   TaxSettingInput,
 } from "@/features/settings/types";
 import { createClient } from "@/services/supabase/server";
+import { mapDeleteError } from "@/services/supabase/deleteErrors";
 
 /**
  * Lê a configuração da empresa (linha única).
@@ -124,5 +125,19 @@ export async function setTaxSettingActive(id: string, isActive: boolean): Promis
     throw new Error(
       `Não foi possível alterar a situação do imposto. (código ${error.code ?? "desconhecido"})`,
     );
+  }
+}
+
+/**
+ * Exclui fisicamente um imposto configurável.
+ *
+ * @param id identificador do imposto
+ */
+export async function deleteTaxSetting(id: string): Promise<void> {
+  const supabase = await createClient();
+  const { error } = await supabase.from("tax_settings").delete().eq("id", id);
+
+  if (error) {
+    throw new Error(mapDeleteError(error, "imposto"));
   }
 }

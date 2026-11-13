@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getAdminSession } from "@/app/actions/settings";
 import { validateSupply } from "@/lib/validations/supplies";
 import type { SettingsFormState } from "@/features/settings/formState";
-import { saveSupply, setSupplyActive } from "@/services/supabase/supplies";
+import { deleteSupply, saveSupply, setSupplyActive } from "@/services/supabase/supplies";
 
 const UNEXPECTED_MESSAGE = "Não foi possível concluir a operação. Tente novamente.";
 
@@ -88,4 +88,50 @@ export async function toggleSupplyAction(formData: FormData): Promise<void> {
   revalidatePath("/insumos");
   revalidatePath("/home");
   revalidatePath("/relatorios");
+}
+
+/**
+ * Exclui fisicamente um insumo.
+ *
+ * @param previousState estado anterior do formulário (não utilizado)
+ * @param formData campo `id`
+ * @returns estado com mensagem de sucesso ou erro
+ */
+export async function deleteSupplyAction(
+  previousState: SettingsFormState,
+  formData: FormData,
+): Promise<SettingsFormState> {
+  void previousState;
+
+  const session = await getAdminSession();
+
+  if (!session) {
+    return {
+      status: "error",
+      message: "Apenas administradores podem alterar os cadastros.",
+      errors: {},
+    };
+  }
+
+  const id = String(formData.get("id") ?? "").trim();
+
+  if (!id) {
+    return { status: "error", message: "Insumo não informado.", errors: {} };
+  }
+
+  try {
+    await deleteSupply(id);
+  } catch (error) {
+    return {
+      status: "error",
+      message: error instanceof Error ? error.message : UNEXPECTED_MESSAGE,
+      errors: {},
+    };
+  }
+
+  revalidatePath("/insumos");
+  revalidatePath("/home");
+  revalidatePath("/relatorios");
+
+  return { status: "success", message: "Insumo excluído.", errors: {} };
 }

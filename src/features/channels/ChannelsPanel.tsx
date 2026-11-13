@@ -3,9 +3,10 @@
 import { useCallback, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { toggleChannelAction } from "@/app/actions/channels";
+import { deleteChannelAction, toggleChannelAction } from "@/app/actions/channels";
 import { Badge } from "@/components/ui/Badge/Badge";
 import { Button } from "@/components/ui/Button/Button";
+import { DeleteRowButton } from "@/components/ui/DeleteRowButton/DeleteRowButton";
 import { PendingButton } from "@/components/ui/PendingButton/PendingButton";
 import { ChannelForm } from "@/features/channels/ChannelForm";
 import { CHANNEL_KIND_LABELS, type ChannelWithFees } from "@/features/channels/types";
@@ -122,6 +123,13 @@ export function ChannelsPanel({ items }: ChannelsPanelProps) {
                               {channel.isActive ? "Desativar" : "Ativar"}
                             </PendingButton>
                           </form>
+
+                          <DeleteRowButton
+                            action={deleteChannelAction}
+                            id={channel.id}
+                            label={channel.name}
+                            entityName="canal"
+                          />
                         </div>
                       </td>
                     </tr>

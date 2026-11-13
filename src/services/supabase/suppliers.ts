@@ -3,6 +3,7 @@ import { parseSupplierRow } from "@/features/suppliers/parse";
 import { buildSupplierPayload } from "@/features/suppliers/payload";
 import type { Supplier, SupplierInput } from "@/features/suppliers/types";
 import { createClient } from "@/services/supabase/server";
+import { mapDeleteError } from "@/services/supabase/deleteErrors";
 
 /**
  * Carrega os fornecedores, ativos primeiro.
@@ -71,5 +72,20 @@ export async function setSupplierActive(id: string, isActive: boolean): Promise<
     throw new Error(
       `Não foi possível alterar a situação do fornecedor. (código ${error.code ?? "desconhecido"})`,
     );
+  }
+}
+
+/**
+ * Exclui fisicamente um fornecedor.
+ * Falha com 23503 quando há insumos vinculados.
+ *
+ * @param id identificador do fornecedor
+ */
+export async function deleteSupplier(id: string): Promise<void> {
+  const supabase = await createClient();
+  const { error } = await supabase.from("suppliers").delete().eq("id", id);
+
+  if (error) {
+    throw new Error(mapDeleteError(error, "fornecedor"));
   }
 }

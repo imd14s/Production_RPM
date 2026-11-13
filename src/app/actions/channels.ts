@@ -5,6 +5,8 @@ import { getAdminSession } from "@/app/actions/settings";
 import { validateChannel, validateChannelFee } from "@/lib/validations/channels";
 import type { SettingsFormState } from "@/features/settings/formState";
 import {
+  deleteChannel,
+  deleteChannelFee,
   saveChannel,
   saveChannelFee,
   setChannelActive,
@@ -171,4 +173,94 @@ export async function toggleChannelFeeAction(formData: FormData): Promise<void> 
   await setChannelFeeActive(id, isActive);
   revalidatePath(`/configuracoes/canais/${channelId}`);
   revalidatePath("/configuracoes/canais");
+}
+
+/**
+ * Exclui fisicamente um canal de venda.
+ *
+ * @param previousState estado anterior do formulário (não utilizado)
+ * @param formData campo `id`
+ * @returns estado com mensagem de sucesso ou erro
+ */
+export async function deleteChannelAction(
+  previousState: SettingsFormState,
+  formData: FormData,
+): Promise<SettingsFormState> {
+  void previousState;
+
+  const session = await getAdminSession();
+
+  if (!session) {
+    return {
+      status: "error",
+      message: "Apenas administradores podem alterar as configurações.",
+      errors: {},
+    };
+  }
+
+  const id = String(formData.get("id") ?? "").trim();
+
+  if (!id) {
+    return { status: "error", message: "Canal não informado.", errors: {} };
+  }
+
+  try {
+    await deleteChannel(id);
+  } catch (error) {
+    return {
+      status: "error",
+      message: error instanceof Error ? error.message : UNEXPECTED_MESSAGE,
+      errors: {},
+    };
+  }
+
+  revalidatePath("/configuracoes/canais");
+
+  return { status: "success", message: "Canal excluído.", errors: {} };
+}
+
+/**
+ * Exclui fisicamente uma taxa de canal.
+ *
+ * @param previousState estado anterior do formulário (não utilizado)
+ * @param formData campos `id` e `channelId`
+ * @returns estado com mensagem de sucesso ou erro
+ */
+export async function deleteChannelFeeAction(
+  previousState: SettingsFormState,
+  formData: FormData,
+): Promise<SettingsFormState> {
+  void previousState;
+
+  const session = await getAdminSession();
+
+  if (!session) {
+    return {
+      status: "error",
+      message: "Apenas administradores podem alterar as configurações.",
+      errors: {},
+    };
+  }
+
+  const id = String(formData.get("id") ?? "").trim();
+  const channelId = String(formData.get("channelId") ?? "").trim();
+
+  if (!id || !channelId) {
+    return { status: "error", message: "Taxa ou canal não informado.", errors: {} };
+  }
+
+  try {
+    await deleteChannelFee(id);
+  } catch (error) {
+    return {
+      status: "error",
+      message: error instanceof Error ? error.message : UNEXPECTED_MESSAGE,
+      errors: {},
+    };
+  }
+
+  revalidatePath(`/configuracoes/canais/${channelId}`);
+  revalidatePath("/configuracoes/canais");
+
+  return { status: "success", message: "Taxa excluída.", errors: {} };
 }

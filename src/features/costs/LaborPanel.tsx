@@ -2,9 +2,10 @@
 
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
-import { toggleLaborCostAction } from "@/app/actions/costs";
+import { deleteLaborCostAction, toggleLaborCostAction } from "@/app/actions/costs";
 import { Badge } from "@/components/ui/Badge/Badge";
 import { Button } from "@/components/ui/Button/Button";
+import { DeleteRowButton } from "@/components/ui/DeleteRowButton/DeleteRowButton";
 import { PendingButton } from "@/components/ui/PendingButton/PendingButton";
 import { LaborForm } from "@/features/costs/LaborForm";
 import type { LaborCost } from "@/features/costs/types";
@@ -108,11 +109,18 @@ export function LaborPanel({ items }: LaborPanelProps) {
                             pendingMessage={
                               item.isActive ? "Desativando..." : "Ativando..."
                             }
-                          >
-                            {item.isActive ? "Desativar" : "Ativar"}
-                          </PendingButton>
-                        </form>
-                      </div>
+                            >
+                              {item.isActive ? "Desativar" : "Ativar"}
+                            </PendingButton>
+                          </form>
+
+                          <DeleteRowButton
+                            action={deleteLaborCostAction}
+                            id={item.id}
+                            label={item.name}
+                            entityName="custo de mão de obra"
+                          />
+                        </div>
                     </td>
                   </tr>
                 ))}

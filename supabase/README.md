@@ -26,6 +26,7 @@ SQL versionado do banco. Aplicar sempre na ordem do nome do arquivo.
 | `20261103072000_add_printing_costs_to_products.sql` | Custos auxiliares de impressão 3D em `products` |
 | `20261103073000_extend_product_costs.sql` | RPC de produto atualizada para gravar os custos auxiliares |
 | `20261103080000_seed_market_base_fees.sql` | Valores base de mercado (11/2026): comissão e tarifa do ML, TikTok Shop, canais novos, Point desmembrado, DAS-MEI como despesa |
+| `20261111090000_allow_admin_delete_domain_rows.sql` | Exclusão física (lixeira): policies de DELETE e `grant delete` para administrador em canais, taxas, meios, impostos, despesas, mão de obra, fornecedores, insumos, conversões e produtos |
 
 ## Como aplicar
 

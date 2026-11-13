@@ -72,8 +72,10 @@
 - RLS permite leitura autenticada e restringe escrita a administradores.
   Produto e composição são gravados atomicamente por RPC, com validação
   administrativa no servidor e no banco, auditoria e bloqueio de ciclos.
-- Tela `/produtos` permite cadastrar, editar e ativar/desativar produtos; link
-  disponível somente para administradores.
+- Tela `/produtos` permite cadastrar, editar, ativar/desativar e **excluir**
+  produtos (lixeira com confirmação); link disponível somente para administradores.
+  Exclusão física bloqueada pelo banco quando há snapshots, simulações ou kits
+  que referenciam o produto (mensagem amigável na linha).
 - Sem cálculo de custo ou preço de venda nesta etapa. Detalhes em
   [`060-produtos.md`](./060-produtos.md).
 

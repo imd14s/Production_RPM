@@ -6,6 +6,7 @@ import type { SettingsFormState } from "@/features/settings/formState";
 import { createsCompositionCycle } from "@/features/products/cycle";
 import { isUuid, validateProduct } from "@/lib/validations/products";
 import {
+  deleteProduct,
   listProductCompositionEdges,
   saveProduct,
   setProductActive,
@@ -129,4 +130,49 @@ export async function toggleProductAction(formData: FormData): Promise<void> {
   await setProductActive(productId, activeText === "true");
   revalidatePath("/produtos");
   revalidatePath("/home");
+}
+
+/**
+ * Exclui fisicamente um produto.
+ *
+ * @param previousState estado anterior do formulário (não utilizado)
+ * @param formData campo `id`
+ * @returns estado com mensagem de sucesso ou erro
+ */
+export async function deleteProductAction(
+  previousState: SettingsFormState,
+  formData: FormData,
+): Promise<SettingsFormState> {
+  void previousState;
+
+  const session = await getAdminSession();
+
+  if (!session) {
+    return { status: "error", message: FORBIDDEN_MESSAGE, errors: {} };
+  }
+
+  const productId = String(formData.get("id") ?? "").trim();
+
+  if (!isUuid(productId)) {
+    return {
+      status: "error",
+      message: "O identificador do produto é inválido.",
+      errors: {},
+    };
+  }
+
+  try {
+    await deleteProduct(productId);
+  } catch (error) {
+    if (error instanceof Error) {
+      return { status: "error", message: error.message, errors: {} };
+    }
+
+    throw error;
+  }
+
+  revalidatePath("/produtos");
+  revalidatePath("/home");
+
+  return { status: "success", message: "Produto excluído.", errors: {} };
 }

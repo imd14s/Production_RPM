@@ -44,7 +44,10 @@ erDiagram
   - `failure_rate_percent` — percentual de perda 0–100, usado para ampliar o
     custo de material (`material × (1 + taxa)`).
   Todos opcionais: **entram no custo apenas quando informados**.
-- Desativação lógica por `is_active`; não há exclusão física pela aplicação.
+- Desativação lógica por `is_active`; exclusão física (lixeira) disponível ao
+  administrador quando não há snapshots, simulações ou kits referenciando o
+  produto — caso contrário o banco bloqueia (23503) e a UI mostra mensagem
+  amigável. Migration `20261111090000_allow_admin_delete_domain_rows.sql`.
 
 ### `product_components`
 
@@ -62,8 +65,10 @@ erDiagram
 - Escrita de produtos e composições é exclusiva de administradores, validada
   nas Server Actions e novamente pelo banco/RLS.
 - Alterações são registradas em `configuration_history`.
-- Sem hard delete de produtos; composições são substituídas na transação de
-  gravação e não representam histórico financeiro.
+- Exclusão lógica e exclusão física (lixeira) de produtos; composições são
+  substituídas na transação de gravação. O DELETE físico de produto cascata a
+  ficha técnica própria, mas é bloqueado por RESTRICT quando há histórico ou
+  referência de kit.
 - Conversões de unidade foram implementadas na subetapa 5.4 (ver spec 040);
   a integração ao cálculo de custo ocorre na Etapa 6.
 
@@ -71,7 +76,7 @@ erDiagram
 
 - Rota `/produtos`, restrita ao administrador no servidor e no menu.
 - Lista produtos ativos e inativos, modalidade, composição e situação.
-- Permite criar, editar e ativar/desativar produtos.
+- Permite criar, editar, ativar/desativar e excluir produtos.
 - Formulário compõe cada linha com um insumo ou produto existente e quantidade.
 - Não exibe preço nem apresenta cálculo financeiro como resultado desta etapa.
 

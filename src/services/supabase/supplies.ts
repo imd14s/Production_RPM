@@ -7,6 +7,7 @@ import type {
   SupplyWithCost,
 } from "@/features/supplies/types";
 import { createClient } from "@/services/supabase/server";
+import { mapDeleteError } from "@/services/supabase/deleteErrors";
 
 export type { SupplyWithCost };
 
@@ -84,5 +85,20 @@ export async function setSupplyActive(id: string, isActive: boolean): Promise<vo
     throw new Error(
       `Não foi possível alterar a situação do insumo. (código ${error.code ?? "desconhecido"})`,
     );
+  }
+}
+
+/**
+ * Exclui fisicamente um insumo (com conversões em cascata).
+ * Falha com 23503 quando o insumo aparece em composições de produto.
+ *
+ * @param id identificador do insumo
+ */
+export async function deleteSupply(id: string): Promise<void> {
+  const supabase = await createClient();
+  const { error } = await supabase.from("supplies").delete().eq("id", id);
+
+  if (error) {
+    throw new Error(mapDeleteError(error, "insumo"));
   }
 }

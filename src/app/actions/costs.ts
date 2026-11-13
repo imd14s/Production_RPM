@@ -5,6 +5,8 @@ import { getAdminSession } from "@/app/actions/settings";
 import { validateLaborCost, validateOperatingExpense } from "@/lib/validations/costs";
 import type { SettingsFormState } from "@/features/settings/formState";
 import {
+  deleteLaborCost,
+  deleteOperatingExpense,
   saveLaborCost,
   saveOperatingExpense,
   setLaborCostActive,
@@ -163,4 +165,92 @@ export async function toggleLaborCostAction(formData: FormData): Promise<void> {
 
   await setLaborCostActive(id, isActive);
   revalidatePath("/configuracoes/mao-de-obra");
+}
+
+/**
+ * Exclui fisicamente uma despesa fixa.
+ *
+ * @param previousState estado anterior do formulário (não utilizado)
+ * @param formData campo `id`
+ * @returns estado com mensagem de sucesso ou erro
+ */
+export async function deleteOperatingExpenseAction(
+  previousState: SettingsFormState,
+  formData: FormData,
+): Promise<SettingsFormState> {
+  void previousState;
+
+  const session = await getAdminSession();
+
+  if (!session) {
+    return {
+      status: "error",
+      message: "Apenas administradores podem alterar as configurações.",
+      errors: {},
+    };
+  }
+
+  const id = String(formData.get("id") ?? "").trim();
+
+  if (!id) {
+    return { status: "error", message: "Despesa não informada.", errors: {} };
+  }
+
+  try {
+    await deleteOperatingExpense(id);
+  } catch (error) {
+    return {
+      status: "error",
+      message: error instanceof Error ? error.message : UNEXPECTED_MESSAGE,
+      errors: {},
+    };
+  }
+
+  revalidatePath("/configuracoes/despesas");
+
+  return { status: "success", message: "Despesa fixa excluída.", errors: {} };
+}
+
+/**
+ * Exclui fisicamente um custo de mão de obra.
+ *
+ * @param previousState estado anterior do formulário (não utilizado)
+ * @param formData campo `id`
+ * @returns estado com mensagem de sucesso ou erro
+ */
+export async function deleteLaborCostAction(
+  previousState: SettingsFormState,
+  formData: FormData,
+): Promise<SettingsFormState> {
+  void previousState;
+
+  const session = await getAdminSession();
+
+  if (!session) {
+    return {
+      status: "error",
+      message: "Apenas administradores podem alterar as configurações.",
+      errors: {},
+    };
+  }
+
+  const id = String(formData.get("id") ?? "").trim();
+
+  if (!id) {
+    return { status: "error", message: "Custo de mão de obra não informado.", errors: {} };
+  }
+
+  try {
+    await deleteLaborCost(id);
+  } catch (error) {
+    return {
+      status: "error",
+      message: error instanceof Error ? error.message : UNEXPECTED_MESSAGE,
+      errors: {},
+    };
+  }
+
+  revalidatePath("/configuracoes/mao-de-obra");
+
+  return { status: "success", message: "Custo de mão de obra excluído.", errors: {} };
 }

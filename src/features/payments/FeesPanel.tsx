@@ -2,9 +2,10 @@
 
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
-import { togglePaymentFeeAction } from "@/app/actions/payments";
+import { deletePaymentFeeAction, togglePaymentFeeAction } from "@/app/actions/payments";
 import { Badge } from "@/components/ui/Badge/Badge";
 import { Button } from "@/components/ui/Button/Button";
+import { DeleteRowButton } from "@/components/ui/DeleteRowButton/DeleteRowButton";
 import { PendingButton } from "@/components/ui/PendingButton/PendingButton";
 import { FeeForm } from "@/features/payments/FeeForm";
 import { type PaymentFee, type PaymentMethod, TAX_KIND_LABELS } from "@/features/payments/types";
@@ -117,11 +118,19 @@ export function FeesPanel({ method, fees }: FeesPanelProps) {
                             pendingMessage={
                               fee.isActive ? "Desativando taxa..." : "Ativando taxa..."
                             }
-                          >
-                            {fee.isActive ? "Desativar" : "Ativar"}
-                          </PendingButton>
-                        </form>
-                      </div>
+                            >
+                              {fee.isActive ? "Desativar" : "Ativar"}
+                            </PendingButton>
+                          </form>
+
+                          <DeleteRowButton
+                            action={deletePaymentFeeAction}
+                            id={fee.id}
+                            label={fee.label}
+                            entityName="taxa"
+                            extraFields={{ methodId: method.id }}
+                          />
+                        </div>
                     </td>
                   </tr>
                 ))}

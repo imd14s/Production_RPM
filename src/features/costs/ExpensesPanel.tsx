@@ -2,9 +2,10 @@
 
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
-import { toggleOperatingExpenseAction } from "@/app/actions/costs";
+import { deleteOperatingExpenseAction, toggleOperatingExpenseAction } from "@/app/actions/costs";
 import { Badge } from "@/components/ui/Badge/Badge";
 import { Button } from "@/components/ui/Button/Button";
+import { DeleteRowButton } from "@/components/ui/DeleteRowButton/DeleteRowButton";
 import { PendingButton } from "@/components/ui/PendingButton/PendingButton";
 import { ExpenseForm } from "@/features/costs/ExpenseForm";
 import type { OperatingExpense } from "@/features/costs/types";
@@ -112,11 +113,18 @@ export function ExpensesPanel({ items }: ExpensesPanelProps) {
                                 ? "Desativando despesa..."
                                 : "Ativando despesa..."
                             }
-                          >
-                            {item.isActive ? "Desativar" : "Ativar"}
-                          </PendingButton>
-                        </form>
-                      </div>
+                            >
+                              {item.isActive ? "Desativar" : "Ativar"}
+                            </PendingButton>
+                          </form>
+
+                          <DeleteRowButton
+                            action={deleteOperatingExpenseAction}
+                            id={item.id}
+                            label={item.name}
+                            entityName="despesa fixa"
+                          />
+                        </div>
                     </td>
                   </tr>
                 ))}

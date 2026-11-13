@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getAdminSession } from "@/app/actions/settings";
 import { validateSupplier } from "@/lib/validations/suppliers";
 import type { SettingsFormState } from "@/features/settings/formState";
-import { saveSupplier, setSupplierActive } from "@/services/supabase/suppliers";
+import { deleteSupplier, saveSupplier, setSupplierActive } from "@/services/supabase/suppliers";
 
 const UNEXPECTED_MESSAGE = "Não foi possível concluir a operação. Tente novamente.";
 
@@ -82,4 +82,48 @@ export async function toggleSupplierAction(formData: FormData): Promise<void> {
 
   await setSupplierActive(id, isActive);
   revalidatePath("/fornecedores");
+}
+
+/**
+ * Exclui fisicamente um fornecedor.
+ *
+ * @param previousState estado anterior do formulário (não utilizado)
+ * @param formData campo `id`
+ * @returns estado com mensagem de sucesso ou erro
+ */
+export async function deleteSupplierAction(
+  previousState: SettingsFormState,
+  formData: FormData,
+): Promise<SettingsFormState> {
+  void previousState;
+
+  const session = await getAdminSession();
+
+  if (!session) {
+    return {
+      status: "error",
+      message: "Apenas administradores podem alterar os cadastros.",
+      errors: {},
+    };
+  }
+
+  const id = String(formData.get("id") ?? "").trim();
+
+  if (!id) {
+    return { status: "error", message: "Fornecedor não informado.", errors: {} };
+  }
+
+  try {
+    await deleteSupplier(id);
+  } catch (error) {
+    return {
+      status: "error",
+      message: error instanceof Error ? error.message : UNEXPECTED_MESSAGE,
+      errors: {},
+    };
+  }
+
+  revalidatePath("/fornecedores");
+
+  return { status: "success", message: "Fornecedor excluído.", errors: {} };
 }

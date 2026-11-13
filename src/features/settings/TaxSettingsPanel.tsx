@@ -2,9 +2,10 @@
 
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
-import { toggleTaxAction } from "@/app/actions/settings";
+import { deleteTaxAction, toggleTaxAction } from "@/app/actions/settings";
 import { Badge } from "@/components/ui/Badge/Badge";
 import { Button } from "@/components/ui/Button/Button";
+import { DeleteRowButton } from "@/components/ui/DeleteRowButton/DeleteRowButton";
 import { PendingButton } from "@/components/ui/PendingButton/PendingButton";
 import { TaxForm } from "@/features/settings/TaxForm";
 import { TAX_KIND_LABELS, type TaxSetting } from "@/features/settings/types";
@@ -105,11 +106,18 @@ export function TaxSettingsPanel({ items }: TaxSettingsPanelProps) {
                             pendingMessage={
                               tax.isActive ? "Desativando imposto..." : "Ativando imposto..."
                             }
-                          >
-                            {tax.isActive ? "Desativar" : "Ativar"}
-                          </PendingButton>
-                        </form>
-                      </div>
+                            >
+                              {tax.isActive ? "Desativar" : "Ativar"}
+                            </PendingButton>
+                          </form>
+
+                          <DeleteRowButton
+                            action={deleteTaxAction}
+                            id={tax.id}
+                            label={tax.name}
+                            entityName="imposto"
+                          />
+                        </div>
                     </td>
                   </tr>
                 ))}

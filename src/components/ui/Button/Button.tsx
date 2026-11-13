@@ -1,7 +1,7 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import styles from "./Button.module.css";
 
-type ButtonVariant = "primary" | "secondary" | "ghost";
+type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
 type ButtonSize = "md" | "sm";
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
@@ -13,7 +13,7 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 /**
  * Botão padrão do sistema.
  *
- * @param variant aparência (primary, secondary ou ghost)
+ * @param variant aparência (primary, secondary, ghost ou danger)
  * @param size altura do botão
  * @param children conteúdo do botão
  * @returns elemento button com os estilos do design system

@@ -11,6 +11,7 @@ import type {
   OperatingExpenseInput,
 } from "@/features/costs/types";
 import { createClient } from "@/services/supabase/server";
+import { mapDeleteError } from "@/services/supabase/deleteErrors";
 
 /**
  * Carrega as despesas fixas, ativas primeiro.
@@ -152,5 +153,33 @@ export async function setLaborCostActive(id: string, isActive: boolean): Promise
     throw new Error(
       `Não foi possível alterar a situação da mão de obra. (código ${error.code ?? "desconhecido"})`,
     );
+  }
+}
+
+/**
+ * Exclui fisicamente uma despesa fixa.
+ *
+ * @param id identificador da despesa
+ */
+export async function deleteOperatingExpense(id: string): Promise<void> {
+  const supabase = await createClient();
+  const { error } = await supabase.from("operating_expenses").delete().eq("id", id);
+
+  if (error) {
+    throw new Error(mapDeleteError(error, "despesa fixa"));
+  }
+}
+
+/**
+ * Exclui fisicamente um custo de mão de obra.
+ *
+ * @param id identificador do custo
+ */
+export async function deleteLaborCost(id: string): Promise<void> {
+  const supabase = await createClient();
+  const { error } = await supabase.from("labor_costs").delete().eq("id", id);
+
+  if (error) {
+    throw new Error(mapDeleteError(error, "custo de mão de obra"));
   }
 }

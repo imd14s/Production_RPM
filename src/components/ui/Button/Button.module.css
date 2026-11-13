@@ -61,3 +61,12 @@
   background: var(--color-surface-muted);
   color: var(--color-text);
 }
+
+.danger {
+  background: var(--color-danger);
+  color: var(--color-surface);
+}
+
+.danger:hover:not(:disabled) {
+  filter: brightness(0.92);
+}

@@ -15,6 +15,7 @@ import type {
   PaymentMethodWithFees,
 } from "@/features/payments/types";
 import { createClient } from "@/services/supabase/server";
+import { mapDeleteError } from "@/services/supabase/deleteErrors";
 
 export type { PaymentMethodWithFees };
 
@@ -187,5 +188,34 @@ export async function setPaymentFeeActive(id: string, isActive: boolean): Promis
 
   if (error) {
     throw new Error(`Não foi possível alterar a situação da taxa. (código ${error.code ?? "desconhecido"})`);
+  }
+}
+
+/**
+ * Exclui fisicamente um meio de pagamento (com as taxas em cascata).
+ * Falha com 23503 quando há simulações de precificação vinculadas.
+ *
+ * @param id identificador do meio
+ */
+export async function deletePaymentMethod(id: string): Promise<void> {
+  const supabase = await createClient();
+  const { error } = await supabase.from("payment_methods").delete().eq("id", id);
+
+  if (error) {
+    throw new Error(mapDeleteError(error, "meio de pagamento"));
+  }
+}
+
+/**
+ * Exclui fisicamente uma taxa de meio de pagamento.
+ *
+ * @param id identificador da taxa
+ */
+export async function deletePaymentFee(id: string): Promise<void> {
+  const supabase = await createClient();
+  const { error } = await supabase.from("payment_fees").delete().eq("id", id);
+
+  if (error) {
+    throw new Error(mapDeleteError(error, "taxa do meio de pagamento"));
   }
 }

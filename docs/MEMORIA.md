@@ -805,3 +805,89 @@ linha (impostos, canais, taxas, meios, despesas).
   recebimento — conferir no painel do canal antes de fixar preços.
 - Percentuais do sistema usam formato micro-percentual ("12.000000"); o SQL da
   migration aceita `12` e o Postgres normaliza.
+
+---
+
+## [Decisão] - Home reorganizada como tabela produto × plataforma (2026-11-11)
+
+**Problema Identificado:** a home exibia um bloco por produto com tabela
+interna (plataforma | margem | preço), o que forçava rolagem vertical e
+dificultava comparar o mesmo canal entre produtos.
+
+**Alternativas:** (a) manter blocos por produto; (b) tabela única com uma
+linha por produto e uma coluna por canal. Escolhida a **(b)**, mantendo
+`buildPricingMatrix` intacto — mudança só de apresentação
+(`PricingMatrix.tsx` + CSS).
+
+**Correção:** colunas Produto (nome + etiquetas), Custo de fabricação, uma
+coluna por canal ativo (varejo, com preço e margem) e coluna de Atacado
+(venda direta) destacada. Responsivo com `data-label` (mesmo padrão dos
+painéis). Specs `020` e `070` atualizadas na mesma entrega.
+
+**Validação:** `npm run typecheck`, `npm run lint` e 289 testes verdes.
+
+**Lição:** comparar preços entre canais pede **produto nas linhas e canais nas
+colunas**; o motor de cálculo já devolve células por canal na mesma ordem — a
+tabela só precisa transpor a apresentação.
+
+---
+
+## [Decisão] - Gaveta de menu em todas as telas e tabela da home a 80% (2026-11-11)
+
+**Problema Identificado:** o hambúrguer só existia até 900px (coluna fixa de
+256px acima disso); a tabela da home ficava presa em `max-width: 1200px` do
+shell e as margens exibiam `numeric(9,6)` cru (ex.: `33,333333 %`) ou ruído de
+multiplicação por 100.
+
+**Alternativas:** (a) manter sidebar fixa no desktop; (b) gaveta em qualquer
+largura com conteúdo full-width. Escolhida a **(b)** para liberar largura
+horizontal e atender o pedido de tabela a 80% da tela.
+
+**Correção:**
+- `Sidebar`: drawer sempre (fora da tela sem `.open`), overlay, `Escape`,
+  fecho automático na troca de rota e `aria-hidden` quando fechado;
+- `AppShell`: conteúdo sem `max-width: 1200px`; `AppHeader` reserva
+  `padding-left: 64px` para o botão fixo;
+- `PricingMatrix`: `width: 80%` (mín. 720px, rolagem se preciso; 100% no
+  mobile em cartões) e margem formatada com `Math.round(x * 10000) / 100`
+  (2 casas, sem float sujo).
+
+**Validação:** `npm run typecheck`, `npm run lint` e `pre-push.sh` verdes.
+
+**Lição:** em tabela densa, **formatar percentual de exibição é papel da
+apresentação** — arredondar para 2 casas na camada de UI evita vazar a
+precisão de armazenamento (`numeric(9,6)`) sem tocar no motor.
+
+---
+
+## [Decisão] - CRUD completo com exclusão física (lixeira) (2026-11-11)
+
+**Problema Identificado:** painéis tinham criação, edição e toggle
+(Ativar/Desativar), mas nenhuma forma de remover registro — decisão antiga
+proibia DELETE na interface. O responsável pediu lixeira em todo cadastro.
+
+**Alternativas:** (a) manter só exclusão lógica; (b) DELETE físico com
+confirmação, mantendo toggle. Escolhida a **(b)**.
+
+**Correção:**
+- Migration `20261111090000_allow_admin_delete_domain_rows.sql`: policies e
+  `grant delete` para admin em taxas, canais, meios, impostos, despesas, mão
+  de obra, fornecedores, insumos, conversões e produtos (`company_settings`
+  permanece sem DELETE);
+- componente `DeleteRowButton` (confirmação + `Alert` de erro na linha) e
+  variante `danger` em `Button`/`PendingButton`;
+- `deleteX` nos services (traduz `23503` via `mapDeleteError`) e
+  `deleteXAction` nas Server Actions (`getAdminSession` + `revalidatePath`);
+- botão de lixeira em 10 painéis; `rowActions` com `flex-wrap`.
+
+**Restrições preservadas:** FKs RESTRICT (simulações, snapshots, composições,
+insumos de fornecedor) bloqueiam exclusão no banco — histórico financeiro não é
+apagado em cascata.
+
+**Validação:** `./pre-push.sh` (typecheck, lint, jest). Migração a aplicar no
+Supabase.
+
+**Lição:** exclusão física de **configuração** é segura quando o histórico
+financeiro mora em tabelas separadas com RESTRICT; o erro `23503` é o contrato
+— a UI só precisa traduzi-lo.
+

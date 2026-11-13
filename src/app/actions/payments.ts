@@ -5,6 +5,8 @@ import { getAdminSession } from "@/app/actions/settings";
 import { validatePaymentFee, validatePaymentMethod } from "@/lib/validations/payments";
 import type { SettingsFormState } from "@/features/settings/formState";
 import {
+  deletePaymentFee,
+  deletePaymentMethod,
   savePaymentFee,
   savePaymentMethod,
   setPaymentFeeActive,
@@ -171,4 +173,94 @@ export async function togglePaymentFeeAction(formData: FormData): Promise<void> 
   await setPaymentFeeActive(id, isActive);
   revalidatePath(`/configuracoes/pagamentos/${methodId}`);
   revalidatePath("/configuracoes/pagamentos");
+}
+
+/**
+ * Exclui fisicamente um meio de pagamento.
+ *
+ * @param previousState estado anterior do formulário (não utilizado)
+ * @param formData campo `id`
+ * @returns estado com mensagem de sucesso ou erro
+ */
+export async function deletePaymentMethodAction(
+  previousState: SettingsFormState,
+  formData: FormData,
+): Promise<SettingsFormState> {
+  void previousState;
+
+  const session = await getAdminSession();
+
+  if (!session) {
+    return {
+      status: "error",
+      message: "Apenas administradores podem alterar as configurações.",
+      errors: {},
+    };
+  }
+
+  const id = String(formData.get("id") ?? "").trim();
+
+  if (!id) {
+    return { status: "error", message: "Meio de pagamento não informado.", errors: {} };
+  }
+
+  try {
+    await deletePaymentMethod(id);
+  } catch (error) {
+    return {
+      status: "error",
+      message: error instanceof Error ? error.message : UNEXPECTED_MESSAGE,
+      errors: {},
+    };
+  }
+
+  revalidatePath("/configuracoes/pagamentos");
+
+  return { status: "success", message: "Meio de pagamento excluído.", errors: {} };
+}
+
+/**
+ * Exclui fisicamente uma taxa de meio de pagamento.
+ *
+ * @param previousState estado anterior do formulário (não utilizado)
+ * @param formData campos `id` e `methodId`
+ * @returns estado com mensagem de sucesso ou erro
+ */
+export async function deletePaymentFeeAction(
+  previousState: SettingsFormState,
+  formData: FormData,
+): Promise<SettingsFormState> {
+  void previousState;
+
+  const session = await getAdminSession();
+
+  if (!session) {
+    return {
+      status: "error",
+      message: "Apenas administradores podem alterar as configurações.",
+      errors: {},
+    };
+  }
+
+  const id = String(formData.get("id") ?? "").trim();
+  const methodId = String(formData.get("methodId") ?? "").trim();
+
+  if (!id || !methodId) {
+    return { status: "error", message: "Taxa ou meio não informado.", errors: {} };
+  }
+
+  try {
+    await deletePaymentFee(id);
+  } catch (error) {
+    return {
+      status: "error",
+      message: error instanceof Error ? error.message : UNEXPECTED_MESSAGE,
+      errors: {},
+    };
+  }
+
+  revalidatePath(`/configuracoes/pagamentos/${methodId}`);
+  revalidatePath("/configuracoes/pagamentos");
+
+  return { status: "success", message: "Taxa excluída.", errors: {} };
 }

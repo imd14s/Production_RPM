@@ -8,6 +8,7 @@ import {
 } from "@/lib/validations/settings";
 import type { SettingsFormState } from "@/features/settings/formState";
 import {
+  deleteTaxSetting,
   saveCompanySettings,
   saveTaxSetting,
   setTaxSettingActive,
@@ -145,4 +146,44 @@ export async function toggleTaxAction(formData: FormData): Promise<void> {
 
   await setTaxSettingActive(id, isActive);
   revalidatePath("/configuracoes/impostos");
+}
+
+/**
+ * Exclui fisicamente um imposto configurável.
+ *
+ * @param previousState estado anterior do formulário (não utilizado)
+ * @param formData campo `id`
+ * @returns estado com mensagem de sucesso ou erro
+ */
+export async function deleteTaxAction(
+  previousState: SettingsFormState,
+  formData: FormData,
+): Promise<SettingsFormState> {
+  void previousState;
+
+  const session = await getAdminSession();
+
+  if (!session) {
+    return { status: "error", message: FORBIDDEN_MESSAGE, errors: {} };
+  }
+
+  const id = String(formData.get("id") ?? "").trim();
+
+  if (!id) {
+    return { status: "error", message: "Imposto não informado.", errors: {} };
+  }
+
+  try {
+    await deleteTaxSetting(id);
+  } catch (error) {
+    return {
+      status: "error",
+      message: error instanceof Error ? error.message : UNEXPECTED_MESSAGE,
+      errors: {},
+    };
+  }
+
+  revalidatePath("/configuracoes/impostos");
+
+  return { status: "success", message: "Imposto excluído.", errors: {} };
 }

@@ -8,7 +8,7 @@ import { LoadingOverlay } from "@/components/ui/LoadingOverlay/LoadingOverlay";
 type PendingButtonProps = {
   children: ReactNode;
   pendingMessage?: string;
-  variant?: "primary" | "secondary" | "ghost";
+  variant?: "primary" | "secondary" | "ghost" | "danger";
   size?: "md" | "sm";
 };
 
@@ -19,7 +19,7 @@ type PendingButtonProps = {
  *
  * @param children conteúdo do botão
  * @param pendingMessage texto exibido na cortina de espera
- * @param variant aparência do botão
+ * @param variant aparência do botão (primary, secondary, ghost ou danger)
  * @param size tamanho do botão
  * @returns botão com bloqueio durante o envio
  */

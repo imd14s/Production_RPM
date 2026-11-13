@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { toggleSupplierAction } from "@/app/actions/suppliers";
+import { deleteSupplierAction, toggleSupplierAction } from "@/app/actions/suppliers";
 import { Badge } from "@/components/ui/Badge/Badge";
 import { Button } from "@/components/ui/Button/Button";
+import { DeleteRowButton } from "@/components/ui/DeleteRowButton/DeleteRowButton";
 import { PendingButton } from "@/components/ui/PendingButton/PendingButton";
 import { SupplierForm } from "@/features/suppliers/SupplierForm";
 import type { Supplier } from "@/features/suppliers/types";
@@ -101,11 +102,18 @@ export function SuppliersPanel({ items }: SuppliersPanelProps) {
                                 ? "Desativando fornecedor..."
                                 : "Ativando fornecedor..."
                             }
-                          >
-                            {item.isActive ? "Desativar" : "Ativar"}
-                          </PendingButton>
-                        </form>
-                      </div>
+                            >
+                              {item.isActive ? "Desativar" : "Ativar"}
+                            </PendingButton>
+                          </form>
+
+                          <DeleteRowButton
+                            action={deleteSupplierAction}
+                            id={item.id}
+                            label={item.name}
+                            entityName="fornecedor"
+                          />
+                        </div>
                     </td>
                   </tr>
                 ))}

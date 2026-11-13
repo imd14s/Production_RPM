@@ -15,6 +15,7 @@ import type {
   ChannelWithFees,
 } from "@/features/channels/types";
 import { createClient } from "@/services/supabase/server";
+import { mapDeleteError } from "@/services/supabase/deleteErrors";
 
 export type { ChannelWithFees };
 
@@ -187,5 +188,34 @@ export async function setChannelFeeActive(id: string, isActive: boolean): Promis
 
   if (error) {
     throw new Error(`Não foi possível alterar a situação da taxa. (código ${error.code ?? "desconhecido"})`);
+  }
+}
+
+/**
+ * Exclui fisicamente um canal de venda (com as taxas em cascata).
+ * Falha com 23503 quando há simulações de precificação vinculadas.
+ *
+ * @param id identificador do canal
+ */
+export async function deleteChannel(id: string): Promise<void> {
+  const supabase = await createClient();
+  const { error } = await supabase.from("sales_channels").delete().eq("id", id);
+
+  if (error) {
+    throw new Error(mapDeleteError(error, "canal de venda"));
+  }
+}
+
+/**
+ * Exclui fisicamente uma taxa de canal.
+ *
+ * @param id identificador da taxa
+ */
+export async function deleteChannelFee(id: string): Promise<void> {
+  const supabase = await createClient();
+  const { error } = await supabase.from("channel_fees").delete().eq("id", id);
+
+  if (error) {
+    throw new Error(mapDeleteError(error, "taxa do canal"));
   }
 }
